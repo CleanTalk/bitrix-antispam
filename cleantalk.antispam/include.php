@@ -158,7 +158,7 @@ class CleantalkAntispam {
 	    					COption::SetOptionString( 'cleantalk.antispam', 'is_paid', 1 );
 	    					$show_notice=1;
 	    					CAdminNotify::Add(array(          
-								'MESSAGE' => "Like Anti-spam by CleanTalk? Help others learn about CleanTalk! <a  target='_blank' href='http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/#rating'>Leave a review at the Bitrix.Marketplace</a>",          
+								'MESSAGE' => "Нравится антиспам от CleanTalk? Помогите другим узнать о нас! <a target='_blank' href='http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/#rating'>Оставьте отзыв на Битрикс.Маркетплейс</a>",          
 								'TAG' => 'review_notify',          
 								'MODULE_ID' => 'main',          
 							'ENABLE_CLOSE' => 'Y'));
