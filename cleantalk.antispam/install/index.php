@@ -43,8 +43,8 @@ class cleantalk_antispam extends CModule {
             $this->MODULE_VERSION = $arModuleVersion["VERSION"];
             $this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
         } else {
-            $this->MODULE_VERSION = "3.1.0";
-            $this->MODULE_VERSION_DATE = "2015-06-24 00:00:00";
+            $this->MODULE_VERSION = "3.2.0";
+            $this->MODULE_VERSION_DATE = "2015-08-26 00:00:00";
         }
         $this->MODULE_NAME = GetMessage('CLEANTALK_MODULE_NAME');
         $this->MODULE_DESCRIPTION = GetMessage('CLEANTALK_MODULE_DESCRIPTION');
