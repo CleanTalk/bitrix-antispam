@@ -27,7 +27,7 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
 			'method_name'=> 'check_message',
 			'message'=>'CleanTalk connection test',
 			'example'=>null,
-			'agent'=>'bitrix-300',
+			'agent'=>'bitrix-320',
 			'sender_ip'=>$_SERVER['REMOTE_ADDR'],
 			'sender_email'=>'stop_email@example.com',
 			'sender_nickname'=>'CleanTalk',

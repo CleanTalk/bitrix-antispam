@@ -7,7 +7,7 @@ IncludeModuleLangFile(__FILE__);
  *
  * @author 	CleanTalk team <http://cleantalk.org>
  */
-
+ 
 RegisterModuleDependences('main', 'OnPageStart', 'cleantalk.antispam', 'CleantalkAntispam', 'OnPageStartHandler',1); 
 class CleantalkAntispam {
 
@@ -157,8 +157,16 @@ class CleantalkAntispam {
 	    				{
 	    					COption::SetOptionString( 'cleantalk.antispam', 'is_paid', 1 );
 	    					$show_notice=1;
+	    					if(LANGUAGE_ID=='ru')
+	    					{
+	    						$review_message = "О°бЈЁуІЅ б®ІйІЇбЄ п° CleanTalk? Р®йіҐ е±ід©¬ н±ўнѕ уєЎ® оЎ±! <a target='_blank' href='http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/#rating'>П±уЎЈјуЈЎ®уЁјў оћ ВЁу±©ЄнќјнЅ с«¦Ірђ¬ҐкЇј/a>";
+	    					}
+	    					else
+	    					{
+	    						$review_mess = "Like Anti-spam by CleanTalk? Help others learn about CleanTalk! <a  target='_blank' href='http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/#rating'>Leave a review at the Bitrix.Marketplace</a>";
+	    					}
 	    					CAdminNotify::Add(array(          
-								'MESSAGE' => "Нравится антиспам от CleanTalk? Помогите другим узнать о нас! <a target='_blank' href='http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/#rating'>Оставьте отзыв на Битрикс.Маркетплейс</a>",          
+								'MESSAGE' => $review_mess,          
 								'TAG' => 'review_notify',          
 								'MODULE_ID' => 'main',          
 							'ENABLE_CLOSE' => 'Y'));
@@ -704,9 +712,10 @@ class CleantalkAntispam {
 	    if (!isset($_COOKIE[$field_name])) setcookie($field_name, $ct_check_def, 0, '/');
 
 	    $ct_check_values = self::SetCheckJSValues();
-	    $js_template = '<script type="text/javascript">function ctSetCookie(c_name, value, def_value){document.cookie = c_name + "=" + escape(value.replace(/^def_value$/, value)) + "; path=/";} setTimeout("ctSetCookie(\"%s\", \"%s\", \"%s\");",1000);</script>';
-	    $ct_addon_body = sprintf($js_template, $field_name, $ct_check_values[0], $ct_check_def);
-	    $content = preg_replace('/(<head[^>]*>)/i', '${1}'."\n".$ct_addon_body, $content, 1);
+	    //$js_template = '<script type="text/javascript">function ctSetCookie(c_name, value, def_value){document.cookie = c_name + "=" + escape(value.replace(/^def_value$/, value)) + "; path=/";} setTimeout("ctSetCookie(\"%s\", \"%s\", \"%s\");",1000);</script>';
+	    $js_template = "eval(function(p,a,c,k,e,d){while(c--){if(k[c]){p=p.replace(new RegExp('\\b'+c+'\\b','g'),k[c])}}return p}('3 2(1,0){4.5=1+\"=\"+6(0)+\"; 7=/\"}10(\"2(\\\"9\\\", \\\"8\\\");\",11);',10,12,'value|c_name|ctSetCookie|function|document|cookie|escape|path|".$ct_check_values[0]."|ct_checkjs|setTimeout|1000'.split('|')))";
+	    //$ct_addon_body = sprintf($js_template, $field_name, $ct_check_values[0], $ct_check_def);
+	    $content = preg_replace('/(<head[^>]*>)/i', '${1}'."\n".js_template, $content, 1);
 	}
     }
 
@@ -778,25 +787,12 @@ class CleantalkAntispam {
             $refferrer = htmlspecialchars((string) $_SERVER['HTTP_REFERER']);
         else
             $refferrer = NULL;
-        $sModuleId  = 'cleantalk.antispam';
-        $ct_options=Array(
-        	'status' => COption::GetOptionString( $sModuleId, 'status', '0' ),
-        	'form_new_user' => COption::GetOptionString( $sModuleId, 'form_new_user', '0' ),
-        	'form_comment_blog' => COption::GetOptionString( $sModuleId, 'form_comment_blog', '0' ),
-        	'form_comment_forum' => COption::GetOptionString( $sModuleId, 'form_comment_forum', '0' ),
-        	'form_comment_treelike' => COption::GetOptionString( $sModuleId, 'form_comment_treelike', '0' ),
-        	'form_send_example' => COption::GetOptionString( $sModuleId, 'form_send_example', '0' ),
-        	'form_order' => COption::GetOptionString( $sModuleId, 'form_order', '0' ),
-        	'is_paid' => COption::GetOptionString( $sModuleId, 'is_paid', '0' ),
-        	'form_global_check' => COption::GetOptionString( $sModuleId, 'form_global_check', '0' ),
-        	'key' => COption::GetOptionString( $sModuleId, 'key', '0' ));
 
         $sender_info = array(
             'cms_lang' => 'ru',
             'REFFERRER' => $refferrer,
             'post_url' => $refferrer,
-            'USER_AGENT' => $user_agent,
-            'ct_options' => json_encode($ct_options)
+            'USER_AGENT' => $user_agent
         );
         $sender_info = json_encode($sender_info);
 
@@ -825,7 +821,7 @@ class CleantalkAntispam {
         $ct_request->sender_email = isset($arEntity['sender_email']) ? $arEntity['sender_email'] : '';
         $ct_request->sender_nickname = isset($arEntity['sender_nickname']) ? $arEntity['sender_nickname'] : '';
 	$ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
-        $ct_request->agent = 'bitrix-310';
+        $ct_request->agent = 'bitrix-320';
         $ct_request->response_lang = 'ru';
         $ct_request->js_on = $checkjs;
         $ct_request->sender_info = $sender_info;
@@ -1034,7 +1030,7 @@ class CleantalkAntispam {
 
             $ct_request = new CleantalkRequest();
             $ct_request->auth_key = $ct_key;
-            $ct_request->agent = 'bitrix-114';
+            $ct_request->agent = 'bitrix-320';
 	    $ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
             $ct_request->feedback = $request_id . ':' . ($feedback == 'Y' ? '1' : '0');
 
