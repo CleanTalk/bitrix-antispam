@@ -19,22 +19,22 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
      */
     $old_key=COption::GetOptionString( $sModuleId, 'key', '' );
     $new_key=$_POST['key'];
-    if($old_key!=$new_key)
-    {
+    //if($old_key!=$new_key)
+    //{
     	$url = 'http://moderate.cleantalk.org/api2.0';
     	$dt=Array(
 			'auth_key'=>$new_key,
 			'method_name'=> 'check_message',
-			'message'=>'CleanTalk connection test',
+			'message'=>'CleanTalk setup test',
 			'example'=>null,
-			'agent'=>'bitrix-320',
+			'agent'=>'bitrix-330',
 			'sender_ip'=>$_SERVER['REMOTE_ADDR'],
-			'sender_email'=>'stop_email@example.com',
+			'sender_email'=>'good@cleantalk.org',
 			'sender_nickname'=>'CleanTalk',
 			'js_on'=>1);
 		
 		$result=CleantalkAntispam::CleantalkSendRequest($url,$dt,true);
-    }
+    //}
     COption::SetOptionString( $sModuleId, 'status', $_POST['status'] == '1' ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_new_user', $_POST['form_new_user'] == '1' ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_comment_blog', $_POST['form_comment_blog'] == '1' ? '1' : '0' );
