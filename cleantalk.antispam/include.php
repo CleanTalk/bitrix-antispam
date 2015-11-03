@@ -159,7 +159,7 @@ class CleantalkAntispam {
 	    					$show_notice=1;
 	    					if(LANGUAGE_ID=='ru')
 	    					{
-	    						$review_message = "О°бЈЁуІЅ б®ІйІЇбЄ п° CleanTalk? Р®йіҐ е±ід©¬ н±ўнѕ уєЎ® оЎ±! <a target='_blank' href='http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/#rating'>П±уЎЈјуЈЎ®уЁјў оћ ВЁу±©ЄнќјнЅ с«¦Ірђ¬ҐкЇј/a>";
+	    						$review_message = "Нравится антиспам от CleanTalk? Расскажите другим об этом! <a target='_blank' href='http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/#rating'>Оставьте отзыв в Bitrix.Marketplace</a>";
 	    					}
 	    					else
 	    					{
@@ -821,7 +821,7 @@ class CleantalkAntispam {
         $ct_request->sender_email = isset($arEntity['sender_email']) ? $arEntity['sender_email'] : '';
         $ct_request->sender_nickname = isset($arEntity['sender_nickname']) ? $arEntity['sender_nickname'] : '';
 	$ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
-        $ct_request->agent = 'bitrix-320';
+        $ct_request->agent = 'bitrix-330';
         $ct_request->response_lang = 'ru';
         $ct_request->js_on = $checkjs;
         $ct_request->sender_info = $sender_info;
