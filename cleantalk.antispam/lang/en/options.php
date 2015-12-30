@@ -11,6 +11,7 @@ $MESS['CLEANTALK_BUTTON_SAVE']  = 'Save';
 $MESS['CLEANTALK_BUTTON_RESET'] = 'Reset';
 $MESS['CLEANTALK_TITLE']        = 'Module setting';
 $MESS['CLEANTALK_LABEL_GLOBAL_CHECK']        = 'Any forms protection';
+$MESS['CLEANTALK_LABEL_SFW']        = 'Spam FireWall';
 $MESS['CLEANTALK_LABEL_NOTIFY']        = "Like Anti-spam by CleanTalk? Help others learn about CleanTalk! <a  target='_blank' href='http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/#rating'>Leave a review at the Bitrix.Marketplace</a>";
 
 ?>

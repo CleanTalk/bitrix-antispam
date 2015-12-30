@@ -45,7 +45,11 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     COption::SetOptionString( $sModuleId, 'is_paid', $_POST['is_paid'] == '1' ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'last_checked', $_POST['last_checked'] == '1' ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_global_check', $_POST['form_global_check'] == '1' ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'form_sfw', $_POST['form_sfw'] == '1' ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'sfw_last_updated', $_POST['sfw_last_updated'] == '1' ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'sfw_last_updated', $_POST['sfw_last_updated'] == '1' ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'key', $_POST['key'] );
+    
 }
  
 /**
@@ -121,6 +125,13 @@ $oTabControl->Begin();
         <td width="50%" valign="top"><label for="form_global_check"><?echo GetMessage( 'CLEANTALK_LABEL_GLOBAL_CHECK' );?>:</td>
         <td  valign="top">
             <input type="checkbox" name="form_global_check" id="form_global_check" <? if ( COption::GetOptionString( $sModuleId, 'form_global_check', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
+        </td>
+    </tr>
+    <tr>
+        <td width="50%" valign="top"><label for="form_global_check"><?echo GetMessage( 'CLEANTALK_LABEL_SFW' );?>:</td>
+        <td  valign="top">
+            <input type="checkbox" name="form_sfw" id="form_sfw" <? if ( COption::GetOptionString( $sModuleId, 'form_sfw', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
+            <input type="hidden" name="sfw_last_updated" value="<?php echo COption::GetOptionString( $sModuleId, 'sfw_last_updated', '0' ) ?>" />
         </td>
     </tr>
     <tr>
