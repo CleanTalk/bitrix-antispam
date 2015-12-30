@@ -25,6 +25,36 @@ class CleantalkAntispam {
 		die();
     }
     
+    static function CleantalkGetIP()
+	{
+		$result=Array();
+		if ( function_exists( 'apache_request_headers' ) )
+		{
+			$headers = apache_request_headers();
+		}
+		else
+		{
+			$headers = $_SERVER;
+		}
+		if ( array_key_exists( 'X-Forwarded-For', $headers ) )
+		{
+			$the_ip=explode(",", trim($headers['X-Forwarded-For']));
+			$result[] = trim($the_ip[0]);
+		}
+		if ( array_key_exists( 'HTTP_X_FORWARDED_FOR', $headers ))
+		{
+			$the_ip=explode(",", trim($headers['HTTP_X_FORWARDED_FOR']));
+			$result[] = trim($the_ip[0]);
+		}
+		$result[] = filter_var( $_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 );
+	
+		if(isset($_GET['sfw_test_ip']))
+		{
+			$result[]=$_GET['sfw_test_ip'];
+		}
+		return $result;
+	}
+    
     /**
      * Send request to cleantalk API
      * @param string server url
@@ -136,6 +166,86 @@ class CleantalkAntispam {
         $last_checked=COption::GetOptionString( 'cleantalk.antispam', 'last_checked', 0 );
 		$last_status=COption::GetOptionString( 'cleantalk.antispam', 'is_paid', 0 );
 		$new_checked=time();
+		$is_sfw=COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 );
+		$sfw_last_updated=COption::GetOptionString( 'cleantalk.antispam', 'sfw_last_updated', 0 );
+		
+		if($is_sfw==1 && time()-$sfw_last_updated>60)
+		{
+			global $DB;
+			$data = Array(	'auth_key' => $ct_options['apikey'],
+						'method_name' => '2s_blacklists_db'
+			 	);
+		
+			$result=CleantalkAntispam::CleantalkSendRequest('https://api.cleantalk.org/2.1',$data,false);
+			$result=json_decode($result, true);
+			if(isset($result['data']))
+			{
+				$result=$result['data'];
+				$query="INSERT INTO `".$wpdb->base_prefix."cleantalk_sfw` VALUES ";
+				//$wpdb->query("TRUNCATE TABLE `".$wpdb->base_prefix."cleantalk_sfw`;");
+				for($i=0;$i<sizeof($result);$i++)
+				{
+					if($i==sizeof($result)-1)
+					{
+						$query.="(".$result[$i][0].",".$result[$i][1].");";
+					}
+					else
+					{
+						$query.="(".$result[$i][0].",".$result[$i][1]."), ";
+					}
+				}
+				$DB->Query($query);
+			}
+			include_once("cleantalk-sfw.class.php");
+			$sfw = new CleanTalkSFW();
+    		$sfw->send_logs();
+    		COption::SetOptionString( 'cleantalk.antispam', 'sfw_last_updated', time() );
+		}
+		
+		if($is_sfw==1 && !$USER->IsAdmin())
+		{
+			include_once("cleantalk-sfw.class.php");
+			$is_sfw_check=true;
+		   	$ip=CleantalkAntispam::CleantalkGetIP();
+		   	$ip=array_unique($ip);
+		   	$sfw_log=COption::GetOptionString( 'cleantalk.antispam', 'sfw_log', '' );
+		   	for($i=0;$i<sizeof($ip);$i++)
+			{
+		    	if(isset($_COOKIE['ct_sfw_pass_key']) && $_COOKIE['ct_sfw_pass_key']==md5($ip[$i].$key))
+		    	{
+		    		$is_sfw_check=false;
+		    		if(isset($_COOKIE['ct_sfw_passed']))
+		    		{
+						if($sfw_log=='')
+						{
+							$sfw_log=Array();
+							$sfw_log[$ip[$i]]=Array();
+						}
+						else
+						{
+							$sfw_log=json_decode($sfw_log, true);
+						}
+			
+		    			$sfw_log[$ip[$i]]['allow']++;
+		    			COption::SetOptionString( 'cleantalk.antispam', 'sfw_log', json_encode($sfw_log));
+		    			@setcookie ('ct_sfw_passed', '0', 1, "/");
+		    		}
+
+		    	}
+		    }
+	    	if($is_sfw_check)
+	    	{
+	    		include_once("cleantalk-sfw.class.php");
+	    		$sfw = new CleanTalkSFW();
+	    		$sfw->cleantalk_get_real_ip();
+	    		$sfw->check_ip();
+	    		if($sfw->result)
+	    		{
+	    			$sfw->sfw_die();
+	    		}
+	    	}
+		}
+		
 
     	if($key!=''&&$key!='enter key'&&$USER->IsAdmin())
     	{

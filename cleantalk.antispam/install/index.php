@@ -222,6 +222,12 @@ class cleantalk_antispam extends CModule {
 
     function InstallDB() {
 	global $DB;
+	$DB->Query('DROP TABLE IF EXISTS `cleantalk_sfw`');
+	$DB->Query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw` (
+`network` int(11) unsigned NOT NULL,
+`mask` int(11) unsigned NOT NULL,
+INDEX (  `network` ,  `mask` )
+) ENGINE = MYISAM ;");
 	$DB->Query('DROP TABLE IF EXISTS cleantalk_timelabels');
 	if(!$DB->Query('CREATE TABLE cleantalk_timelabels ( ct_key varchar(255), ct_value int(11), PRIMARY KEY (ct_key))')){
 	    $this->errors[] = GetMessage('CLEANTALK_ERROR_CREATE_TIMELABELS');
