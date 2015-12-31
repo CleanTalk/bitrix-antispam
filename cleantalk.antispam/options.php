@@ -47,7 +47,6 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     COption::SetOptionString( $sModuleId, 'form_global_check', $_POST['form_global_check'] == '1' ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_sfw', $_POST['form_sfw'] == '1' ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'sfw_last_updated', $_POST['sfw_last_updated'] == '1' ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'sfw_last_updated', $_POST['sfw_last_updated'] == '1' ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'key', $_POST['key'] );
     
 }

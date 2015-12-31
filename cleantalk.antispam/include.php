@@ -230,7 +230,6 @@ class CleantalkAntispam {
 		    			COption::SetOptionString( 'cleantalk.antispam', 'sfw_log', json_encode($sfw_log));
 		    			@setcookie ('ct_sfw_passed', '0', 1, "/");
 		    		}
-
 		    	}
 		    }
 	    	if($is_sfw_check)
