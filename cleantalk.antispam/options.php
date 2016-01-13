@@ -47,6 +47,9 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     COption::SetOptionString( $sModuleId, 'form_global_check', $_POST['form_global_check'] == '1' ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_sfw', $_POST['form_sfw'] == '1' ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'sfw_last_updated', $_POST['sfw_last_updated'] == '1' ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'ip_license', $_POST['ip_license'] == '1' ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'moderate_ip', $_POST['moderate_ip'] == '1' ? '1' : '0' );
+    
     COption::SetOptionString( $sModuleId, 'key', $_POST['key'] );
     
 }
@@ -134,12 +137,28 @@ $oTabControl->Begin();
         </td>
     </tr>
     <tr>
+    	<?php
+    		$moderate_ip=COption::GetOptionString( $sModuleId, 'moderate_ip', '0' );
+    		if($moderate_ip == 1)
+    		{
+    			print '<td width="100%" valign="top" colspan="2">';
+    			print "The anti-spam service is paid by your hosting provider. License #".COption::GetOptionString( $sModuleId, 'ip_license', '0' ).".";
+    			print '</td>';
+    		}
+    		else
+    		{
+    	?>
         <td width="50%" valign="top"><label for="key"><?echo GetMessage( 'CLEANTALK_LABEL_KEY' );?>:</td>
         <td  valign="top">
             <input type="text" name="key" id="key" value="<?php echo COption::GetOptionString( $sModuleId, 'key', '' ) ?>" />
             <input type="hidden" name="is_paid" value="<?php echo COption::GetOptionString( $sModuleId, 'is_paid', '0' ) ?>" />
-            <input type="hidden" name="last_checked" value="<?php echo COption::GetOptionString( $sModuleId, 'last_checked', '0' ) ?>" />
+            <input type="hidden" name="last_checked" value="0" />
+            <input type="hidden" name="moderate_ip" value="<?php echo COption::GetOptionString( $sModuleId, 'moderate_ip', '0' ) ?>" />
+            <input type="hidden" name="ip_license" value="<?php echo COption::GetOptionString( $sModuleId, 'ip_license', '0' ) ?>" />
         </td>
+        <?php
+        	}
+        ?>
     </tr>
     <?$oTabControl->Buttons();?>
     <input type="submit" name="Update" value="<?php echo GetMessage( 'CLEANTALK_BUTTON_SAVE' ) ?>" />

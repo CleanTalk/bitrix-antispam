@@ -282,6 +282,26 @@ class CleantalkAntispam {
 	    				}
 	    			}
 	    		}
+	    		$url = 'https://api.cleantalk.org';
+	    		$dt=Array(
+	    			'auth_key'=>$key,
+	    			'method_name'=> 'notice_paid_till');
+	    		$result=CleantalkAntispam::CleantalkSendRequest($url,$dt,false);
+	    		if($result!==null)
+	    		{
+	    			$result=json_decode($result);
+	    			if (isset($result['moderate_ip']) && $result['moderate_ip'] == 1)
+					{
+						COption::SetOptionString( 'cleantalk.antispam', 'moderate_ip', 1 );
+						COption::SetOptionString( 'cleantalk.antispam', 'ip_license', $result['ip_license'] );
+					}
+					else
+					{
+						COption::SetOptionString( 'cleantalk.antispam', 'moderate_ip', 0 );
+						COption::SetOptionString( 'cleantalk.antispam', 'ip_license', 0 );
+					}
+	    		}
+	    		
 	    		COption::SetOptionString( 'cleantalk.antispam', 'last_checked', $new_checked );
     		}
    		
