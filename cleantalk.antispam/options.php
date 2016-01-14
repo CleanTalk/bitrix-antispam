@@ -27,7 +27,7 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
 			'method_name'=> 'check_message',
 			'message'=>'CleanTalk setup test',
 			'example'=>null,
-			'agent'=>'bitrix-330',
+			'agent'=>'bitrix-370',
 			'sender_ip'=>$_SERVER['REMOTE_ADDR'],
 			'sender_email'=>'good@cleantalk.org',
 			'sender_nickname'=>'CleanTalk',
@@ -51,6 +51,16 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     COption::SetOptionString( $sModuleId, 'moderate_ip', $_POST['moderate_ip'] == '1' ? '1' : '0' );
     
     COption::SetOptionString( $sModuleId, 'key', $_POST['key'] );
+    
+    global $DB;
+    if($_POST['form_sfw'] == 1)
+    {
+    	$r = $DB->Query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw` (
+`network` int(11) unsigned NOT NULL,
+`mask` int(11) unsigned NOT NULL,
+INDEX (  `network` ,  `mask` )
+) ENGINE = MYISAM ;");
+    }
     
 }
  

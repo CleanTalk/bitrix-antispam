@@ -21,7 +21,11 @@ if( @file_exists($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/cleantalk.antispam/i
 	    $arModuleVersion['VERSION'] == '2.0.7' ||
 	    $arModuleVersion['VERSION'] == '3.0.0' ||
 	    $arModuleVersion['VERSION'] == '3.1.0' ||
-	    $arModuleVersion['VERSION'] == '3.2.0'
+	    $arModuleVersion['VERSION'] == '3.2.0' ||
+	    $arModuleVersion['VERSION'] == '3.3.0' ||
+	    $arModuleVersion['VERSION'] == '3.4.0' ||
+	    $arModuleVersion['VERSION'] == '3.5.0' ||
+	    $arModuleVersion['VERSION'] == '3.6.0'
 	)
     ) {
 	// Here is checking version of existing (old) code.
@@ -85,6 +89,14 @@ if( @file_exists($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/cleantalk.antispam/i
 		case '3.1.0' :
 		// No changes in tables and additional files since 3.0.0
 		case '3.2.0' :
+		// No changes in tables and additional files since 3.1.0
+		case '3.3.0' :
+		// No changes in tables and additional files since 3.1.0
+		case '3.4.0' :
+		// No changes in tables and additional files since 3.1.0
+		case '3.5.0' :
+		// No changes in tables and additional files since 3.1.0
+		case '3.6.0' :
 		// No changes in tables and additional files since 3.1.0
 	    }
 	    unset($obModule);
