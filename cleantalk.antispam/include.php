@@ -168,16 +168,16 @@ class CleantalkAntispam {
 		$new_checked=time();
 		$is_sfw=COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 );
 		$sfw_last_updated=COption::GetOptionString( 'cleantalk.antispam', 'sfw_last_updated', 0 );
-		
-		if($is_sfw==1 && time()-$sfw_last_updated>60)
+		if($is_sfw==1 && time()-$sfw_last_updated>10)
 		{
 			global $DB;
-			$data = Array(	'auth_key' => $ct_options['apikey'],
+			$data = Array(	'auth_key' => $key,
 						'method_name' => '2s_blacklists_db'
 			 	);
 		
 			$result=CleantalkAntispam::CleantalkSendRequest('https://api.cleantalk.org/2.1',$data,false);
 			$result=json_decode($result, true);
+
 			if(isset($result['data']))
 			{
 				$result=$result['data'];
@@ -841,10 +841,10 @@ class CleantalkAntispam {
 	    if (!isset($_COOKIE[$field_name])) setcookie($field_name, $ct_check_def, 0, '/');
 
 	    $ct_check_values = self::SetCheckJSValues();
-	    //$js_template = '<script type="text/javascript">function ctSetCookie(c_name, value, def_value){document.cookie = c_name + "=" + escape(value.replace(/^def_value$/, value)) + "; path=/";} setTimeout("ctSetCookie(\"%s\", \"%s\", \"%s\");",1000);</script>';
-	    $js_template = "eval(function(p,a,c,k,e,d){while(c--){if(k[c]){p=p.replace(new RegExp('\\b'+c+'\\b','g'),k[c])}}return p}('3 2(1,0){4.5=1+\"=\"+6(0)+\"; 7=/\"}10(\"2(\\\"9\\\", \\\"8\\\");\",11);',10,12,'value|c_name|ctSetCookie|function|document|cookie|escape|path|".$ct_check_values[0]."|ct_checkjs|setTimeout|1000'.split('|')))";
-	    //$ct_addon_body = sprintf($js_template, $field_name, $ct_check_values[0], $ct_check_def);
-	    $content = preg_replace('/(<head[^>]*>)/i', '${1}'."\n".js_template, $content, 1);
+	    $js_template = '<script type="text/javascript">function ctSetCookie(c_name, value, def_value){document.cookie = c_name + "=" + escape(value.replace(/^def_value$/, value)) + "; path=/";} setTimeout("ctSetCookie(\"%s\", \"%s\", \"%s\");",1000);</script>';
+	    //$js_template = "eval(function(p,a,c,k,e,d){while(c--){if(k[c]){p=p.replace(new RegExp('\\b'+c+'\\b','g'),k[c])}}return p}('3 2(1,0){4.5=1+\"=\"+6(0)+\"; 7=/\"}10(\"2(\\\"9\\\", \\\"8\\\");\",11);',10,12,'value|c_name|ctSetCookie|function|document|cookie|escape|path|".$ct_check_values[0]."|ct_checkjs|setTimeout|1000'.split('|')))";
+	    $ct_addon_body = sprintf($js_template, $field_name, $ct_check_values[0], $ct_check_def);
+	    $content = preg_replace('/(<head[^>]*>)/i', '${1}'."\n".$ct_addon_body, $content, 1);
 	}
     }
 
@@ -950,7 +950,7 @@ class CleantalkAntispam {
         $ct_request->sender_email = isset($arEntity['sender_email']) ? $arEntity['sender_email'] : '';
         $ct_request->sender_nickname = isset($arEntity['sender_nickname']) ? $arEntity['sender_nickname'] : '';
 	$ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
-        $ct_request->agent = 'bitrix-330';
+        $ct_request->agent = 'bitrix-370';
         $ct_request->response_lang = 'ru';
         $ct_request->js_on = $checkjs;
         $ct_request->sender_info = $sender_info;
@@ -1159,7 +1159,7 @@ class CleantalkAntispam {
 
             $ct_request = new CleantalkRequest();
             $ct_request->auth_key = $ct_key;
-            $ct_request->agent = 'bitrix-320';
+            $ct_request->agent = 'bitrix-370';
 	    $ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
             $ct_request->feedback = $request_id . ':' . ($feedback == 'Y' ? '1' : '0');
 

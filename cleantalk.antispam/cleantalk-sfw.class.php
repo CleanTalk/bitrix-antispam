@@ -53,9 +53,7 @@ class CleanTalkSFW
 		$passed_ip='';
 		for($i=0;$i<sizeof($this->ip_array);$i++)
 		{
-			//print "select network from `".$wpdb->base_prefix."cleantalk_sfw` where ".$this->ip." & mask = network;";
-			//$r = $wpdb->get_results("select network from `".$wpdb->base_prefix."cleantalk_sfw` where network = ".$this->ip." & mask;", ARRAY_A);
-			$r = $DB->Query("select network from `cleantalk_sfw` where network = ".$this->ip_array[$i]." & mask;");
+			$r = $DB->Query("select count(network) as cnt from `cleantalk_sfw` where network = ".$this->ip_array[$i]." & mask;");
 			
 			$sfw_log=COption::GetOptionString( 'cleantalk.antispam', 'sfw_log', '' );
 			
@@ -67,8 +65,8 @@ class CleanTalkSFW
 			{
 				$sfw_log=json_decode($sfw_log, true);
 			}
-			
-			if($r::SelectedRowsCount()>0)
+			$cnt=$r->Fetch();
+			if($cnt['cnt']>0)
 			{
 				$this->result=true;
 				$this->blocked_ip=$this->ip_str_array[$i];
@@ -126,7 +124,7 @@ class CleanTalkSFW
 			);
 			if(!function_exists('sendRawRequest'))
 			{
-				require_once('cleantalk.class.php');
+				require_once('classes/general/cleantalk.class.php');
 			}
 			
 			$result = sendRawRequest('https://api.cleantalk.org/?method_name=sfw_logs&auth_key='.$ct_options['apikey'],$qdata);
