@@ -290,7 +290,7 @@ class CleantalkAntispam {
 	    		if($result!==null)
 	    		{
 	    			$result=json_decode($result);
-	    			if (isset($result['moderate_ip']) && $result['moderate_ip'] == 1)
+	    			if (isset($result->moderate_ip) && $result->moderate_ip == 1)
 					{
 						COption::SetOptionString( 'cleantalk.antispam', 'moderate_ip', 1 );
 						COption::SetOptionString( 'cleantalk.antispam', 'ip_license', $result['ip_license'] );
