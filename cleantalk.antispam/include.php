@@ -181,8 +181,8 @@ class CleantalkAntispam {
 			if(isset($result['data']))
 			{
 				$result=$result['data'];
-				$query="INSERT INTO `".$wpdb->base_prefix."cleantalk_sfw` VALUES ";
-				//$wpdb->query("TRUNCATE TABLE `".$wpdb->base_prefix."cleantalk_sfw`;");
+				$query="INSERT INTO `cleantalk_sfw` VALUES ";
+				$DB->Query("TRUNCATE TABLE `cleantalk_sfw`;");
 				for($i=0;$i<sizeof($result);$i++)
 				{
 					if($i==sizeof($result)-1)
@@ -268,7 +268,7 @@ class CleantalkAntispam {
 	    					$show_notice=1;
 	    					if(LANGUAGE_ID=='ru')
 	    					{
-	    						$review_message = "Нравится антиспам от CleanTalk? Расскажите другим об этом! <a target='_blank' href='http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/#rating'>Оставьте отзыв в Bitrix.Marketplace</a>";
+	    						$review_message = "ГЌГ°Г ГўГЁГІГ±Гї Г Г­ГІГЁГ±ГЇГ Г¬ Г®ГІ CleanTalk? ГђГ Г±Г±ГЄГ Г¦ГЁГІГҐ Г¤Г°ГіГЈГЁГ¬ Г®ГЎ ГЅГІГ®Г¬! <a target='_blank' href='http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/#rating'>ГЋГ±ГІГ ГўГјГІГҐ Г®ГІГ§Г»Гў Гў Bitrix.Marketplace</a>";
 	    					}
 	    					else
 	    					{
