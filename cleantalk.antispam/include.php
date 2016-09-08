@@ -1,13 +1,14 @@
 <?php
 global $MESS;
 IncludeModuleLangFile(__FILE__);
+include_once("cleantalk-sfw.class.php");
 
 /**
  * CleanTalk module class
  *
  * @author 	CleanTalk team <http://cleantalk.org>
  */
- 
+
 RegisterModuleDependences('main', 'OnPageStart', 'cleantalk.antispam', 'CleantalkAntispam', 'OnPageStartHandler',1); 
 class CleantalkAntispam {
 
@@ -167,41 +168,7 @@ class CleantalkAntispam {
 		$last_status=COption::GetOptionString( 'cleantalk.antispam', 'is_paid', 0 );
 		$new_checked=time();
 		$is_sfw=COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 );
-		$sfw_last_updated=COption::GetOptionString( 'cleantalk.antispam', 'sfw_last_updated', 0 );
-		if($is_sfw==1 && time()-$sfw_last_updated>10)
-		{
-			global $DB;
-			$data = Array(	'auth_key' => $key,
-						'method_name' => '2s_blacklists_db'
-			 	);
-		
-			$result=CleantalkAntispam::CleantalkSendRequest('https://api.cleantalk.org/2.1',$data,false);
-			$result=json_decode($result, true);
-
-			if(isset($result['data']))
-			{
-				$result=$result['data'];
-				$query="INSERT INTO `cleantalk_sfw` VALUES ";
-				$DB->Query("TRUNCATE TABLE `cleantalk_sfw`;");
-				for($i=0;$i<sizeof($result);$i++)
-				{
-					if($i==sizeof($result)-1)
-					{
-						$query.="(".$result[$i][0].",".$result[$i][1].");";
-					}
-					else
-					{
-						$query.="(".$result[$i][0].",".$result[$i][1]."), ";
-					}
-				}
-				$DB->Query($query);
-			}
-			include_once("cleantalk-sfw.class.php");
-			$sfw = new CleanTalkSFW();
-    		$sfw->send_logs();
-    		COption::SetOptionString( 'cleantalk.antispam', 'sfw_last_updated', time() );
-		}
-		
+						
 		if($is_sfw==1 && !$USER->IsAdmin())
 		{
 			include_once("cleantalk-sfw.class.php");
@@ -268,7 +235,7 @@ class CleantalkAntispam {
 	    					$show_notice=1;
 	    					if(LANGUAGE_ID=='ru')
 	    					{
-	    						$review_message = "ГЌГ°Г ГўГЁГІГ±Гї Г Г­ГІГЁГ±ГЇГ Г¬ Г®ГІ CleanTalk? ГђГ Г±Г±ГЄГ Г¦ГЁГІГҐ Г¤Г°ГіГЈГЁГ¬ Г®ГЎ ГЅГІГ®Г¬! <a target='_blank' href='http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/#rating'>ГЋГ±ГІГ ГўГјГІГҐ Г®ГІГ§Г»Гў Гў Bitrix.Marketplace</a>";
+	    						$review_message = "Нравится антиспам от CleanTalk? Расскажите другим об этом! <a target='_blank' href='http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/#rating'>Оставьте отзыв в Bitrix.Marketplace</a>";
 	    					}
 	    					else
 	    					{
@@ -309,7 +276,7 @@ class CleantalkAntispam {
     	
     	
         
-    	if (!$USER->IsAdmin()&&$ct_status == 1 && $ct_global == 1)
+    	if (!$USER->IsAdmin() && $ct_status == 1 && $ct_global == 1)
     	{
 	    	$sender_email = null;
 		    $message = '';
@@ -950,7 +917,7 @@ class CleantalkAntispam {
         $ct_request->sender_email = isset($arEntity['sender_email']) ? $arEntity['sender_email'] : '';
         $ct_request->sender_nickname = isset($arEntity['sender_nickname']) ? $arEntity['sender_nickname'] : '';
 	$ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
-        $ct_request->agent = 'bitrix-370';
+        $ct_request->agent = 'bitrix-382';
         $ct_request->response_lang = 'ru';
         $ct_request->js_on = $checkjs;
         $ct_request->sender_info = $sender_info;
@@ -1159,7 +1126,7 @@ class CleantalkAntispam {
 
             $ct_request = new CleantalkRequest();
             $ct_request->auth_key = $ct_key;
-            $ct_request->agent = 'bitrix-370';
+            $ct_request->agent = 'bitrix-382';
 	    $ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
             $ct_request->feedback = $request_id . ':' . ($feedback == 'Y' ? '1' : '0');
 
@@ -1291,11 +1258,10 @@ class CleantalkAntispam {
         global $DB;
         $db_result = $DB->Query('SELECT time_range,js_values FROM cleantalk_checkjs LIMIT 1')->Fetch();
         if($db_result !== FALSE){
-	    return array_slice(explode(' ', $db_result['js_values'], self::KEYS_NUM+1), 0, self::KEYS_NUM);
-	}else{
-	    return array(md5(COption::GetOptionString('cleantalk.antispam', 'key', '0') . '+' . COption::GetOptionString('main', 'email_from')));
-	}
+			return array_slice(explode(' ', $db_result['js_values'], self::KEYS_NUM+1), 0, self::KEYS_NUM);
+		}else{
+			return array(md5(COption::GetOptionString('cleantalk.antispam', 'key', '0') . '+' . COption::GetOptionString('main', 'email_from')));
+		}
     }
-
 }
 ?>

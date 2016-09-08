@@ -19,22 +19,15 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
      */
     $old_key=COption::GetOptionString( $sModuleId, 'key', '' );
     $new_key=$_POST['key'];
-    //if($old_key!=$new_key)
-    //{
-    	$url = 'http://moderate.cleantalk.org/api2.0';
-    	$dt=Array(
-			'auth_key'=>$new_key,
-			'method_name'=> 'check_message',
-			'message'=>'CleanTalk setup test',
-			'example'=>null,
-			'agent'=>'bitrix-370',
-			'sender_ip'=>$_SERVER['REMOTE_ADDR'],
-			'sender_email'=>'good@cleantalk.org',
-			'sender_nickname'=>'CleanTalk',
-			'js_on'=>1);
-		
-		$result=CleantalkAntispam::CleantalkSendRequest($url,$dt,true);
-    //}
+
+    $url = 'http://moderate.cleantalk.org/api2.0';
+    $dt = Array(
+	'auth_key' => $new_key,
+	'method_name' => 'send_feedback',
+	'feedback' => 0 . ':' . 'bitrix-382'
+    );
+    $result=CleantalkAntispam::CleantalkSendRequest($url,$dt,true);
+
     COption::SetOptionString( $sModuleId, 'status', $_POST['status'] == '1' ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_new_user', $_POST['form_new_user'] == '1' ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_comment_blog', $_POST['form_comment_blog'] == '1' ? '1' : '0' );
@@ -46,12 +39,11 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     COption::SetOptionString( $sModuleId, 'last_checked', $_POST['last_checked'] == '1' ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_global_check', $_POST['form_global_check'] == '1' ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_sfw', $_POST['form_sfw'] == '1' ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'sfw_last_updated', $_POST['sfw_last_updated'] == '1' ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'ip_license', $_POST['ip_license'] == '1' ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'moderate_ip', $_POST['moderate_ip'] == '1' ? '1' : '0' );
     
     COption::SetOptionString( $sModuleId, 'key', $_POST['key'] );
-    
+	  
     global $DB;
     if($_POST['form_sfw'] == 1)
     {
@@ -60,10 +52,14 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
 `mask` int(11) unsigned NOT NULL,
 INDEX (  `network` ,  `mask` )
 ) ENGINE = MYISAM ;");
+		CAgent::AddAgent("CleanTalkSFW::send_logs();", 	"cleantalk.antispam", "N", 3600);
+		CAgent::AddAgent("CleanTalkSFW::update_local();", 	"cleantalk.antispam", "N", 86400);
+		CleanTalkSFW::update_local();
+		CleanTalkSFW::send_logs();
     }
     
 }
- 
+
 /**
  * Describe tabs
  */
@@ -143,7 +139,6 @@ $oTabControl->Begin();
         <td width="50%" valign="top"><label for="form_global_check"><?echo GetMessage( 'CLEANTALK_LABEL_SFW' );?>:</td>
         <td  valign="top">
             <input type="checkbox" name="form_sfw" id="form_sfw" <? if ( COption::GetOptionString( $sModuleId, 'form_sfw', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
-            <input type="hidden" name="sfw_last_updated" value="<?php echo COption::GetOptionString( $sModuleId, 'sfw_last_updated', '0' ) ?>" />
         </td>
     </tr>
     <tr>

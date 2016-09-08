@@ -7,13 +7,13 @@ $errors = is_array($errors) ? $errors : array();
 $messages = is_array($messages) ? $messages : array();
 
 if(is_array($errors) && count($errors)>0){
-        foreach($errors as $val)
-                $alErrors .= $val."<br>";
-        echo CAdminMessage::ShowMessage(Array("TYPE"=>"ERROR", "MESSAGE" =>GetMessage("MOD_INST_ERR"), "DETAILS"=>$alErrors, "HTML"=>true));
+	foreach($errors as $val)
+			$alErrors .= $val."<br>";
+	echo CAdminMessage::ShowMessage(Array("TYPE"=>"ERROR", "MESSAGE" =>GetMessage("MOD_INST_ERR"), "DETAILS"=>$alErrors, "HTML"=>true));
 }else{
-        foreach($messages as $val)
-                $alMessages .= $val."<br>";
-        echo CAdminMessage::ShowNote($alMessages . GetMessage("MOD_INST_OK"));
+	foreach($messages as $val)
+			$alMessages .= $val."<br>";
+	echo CAdminMessage::ShowNote($alMessages . GetMessage("MOD_INST_OK"));
 }
 
 ?>
