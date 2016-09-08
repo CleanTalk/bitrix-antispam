@@ -104,40 +104,61 @@ class CleanTalkSFW
 		die();
 	}
 	
-	public function send_logs()
-	{
-		$is_sfw=COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 );
-		$sfw_log=COption::GetOptionString( 'cleantalk.antispam', 'sfw_log', '' );
-
-	    if($is_sfw==1 && $sfw_log!='')
-	    {
+	function send_logs(){
+		
+		$is_sfw = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 );
+		$sfw_log = COption::GetOptionString( 'cleantalk.antispam', 'sfw_log', '' );
+		$ct_key = COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
+			
+	    if($is_sfw==1 && $sfw_log!=''){
+			
 	    	$sfw_log=json_decode($sfw_log, true);
 	    	$data=Array();
-	    	foreach($sfw_log as $key=>$value)
-	    	{
+	    	foreach($sfw_log as $key=>$value){
 	    		$data[]=Array($key, $value['all'], $value['allow'], $value['datetime']);
-	    	}
+			}
+			unset($key, $value);
 	    	$qdata = array (
 				'data' => json_encode($data),
 				'rows' => count($data),
 				'timestamp' => time()
 			);
-			if(!function_exists('sendRawRequest'))
-			{
-				require_once('classes/general/cleantalk.class.php');
-			}
-			
-			$result = sendRawRequest('https://api.cleantalk.org/?method_name=sfw_logs&auth_key='.$ct_options['apikey'],$qdata);
-			$result=CleantalkAntispam::CleantalkSendRequest('https://api.cleantalk.org/?method_name=sfw_logs&auth_key='.$key, $qdata, false);
+						
+			$result = CleantalkAntispam::CleantalkSendRequest('https://api.cleantalk.org/?method_name=sfw_logs&auth_key='.$ct_key, $qdata, false);
+						
 			$result = json_decode($result);
-			if(isset($result->data) && isset($result->data->rows))
-			{
-				if($result->data->rows == count($data))
-				{
-					COption::SetOptionString( 'cleantalk.antispam', 'sfw_log', '');
-				}
-			}
 			
+			if(isset($result->data) && isset($result->data->rows))
+				if($result->data->rows == count($data))
+					COption::SetOptionString( 'cleantalk.antispam', 'sfw_log', '');
 	    }
+		return "CleanTalkSFW::send_logs();";
+	}
+	
+	function update_local(){
+		global $DB;
+		
+		$key=COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
+		
+		$data = Array(	'auth_key' => $key,
+			'method_name' => '2s_blacklists_db'
+		);
+	
+		$result=CleantalkAntispam::CleantalkSendRequest('https://api.cleantalk.org/2.1',$data,false);
+		$result=json_decode($result, true);
+
+		if(isset($result['data'])){
+			$result=$result['data'];
+			$query="INSERT INTO `cleantalk_sfw` VALUES ";
+			for($i=0;$i<sizeof($result);$i++){
+				if($i==sizeof($result)-1)
+					$query.="(".$result[$i][0].",".$result[$i][1].");";
+				else
+					$query.="(".$result[$i][0].",".$result[$i][1]."), ";
+			}
+			$DB->Query("TRUNCATE TABLE `cleantalk_sfw`;"); //Clean before write
+			$DB->Query($query);
+		}
+		return "CleanTalkSFW::update_local();";
 	}
 }
