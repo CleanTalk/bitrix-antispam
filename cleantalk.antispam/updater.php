@@ -32,7 +32,9 @@ if( @file_exists($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/cleantalk.antispam/i
 			$arModuleVersion['VERSION'] == '3.8.2' ||
 			$arModuleVersion['VERSION'] == '3.8.3' ||
 			$arModuleVersion['VERSION'] == '3.9.0' ||
-			$arModuleVersion['VERSION'] == '3.9.1'
+			$arModuleVersion['VERSION'] == '3.9.1' ||
+			$arModuleVersion['VERSION'] == '3.9.2'
+
 		)
     ){
 		// Here is checking version of existing (old) code.
@@ -121,13 +123,13 @@ if( @file_exists($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/cleantalk.antispam/i
 				// No changes in tables and additional files since 3.1.0
 				case '3.9.1' :
 				// No changes in tables and additional files since 3.1.0
+				case '3.9.2' :
+				// No changes in tables and additional files since 3.1.0
 			}
 			unset($obModule);
 		}
-		if( @file_exists($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/cleantalk.antispam/JSON.php') )
-			unlink($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/cleantalk.antispam/JSON.php');
-		if( @file_exists($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/cleantalk.antispam/cleantalk.class.php') )
-			unlink($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/cleantalk.antispam/cleantalk.class.php');
+		if( @file_exists($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/cleantalk.antispam/Cleantalk.php') )
+			unlink($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/cleantalk.antispam/Cleantalk.php');
 	}
     unset($arModuleVersion);
 }

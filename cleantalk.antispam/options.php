@@ -54,7 +54,7 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     $dt = Array(
 		'auth_key' => $new_key,
 		'method_name' => 'send_feedback',
-		'feedback' => 0 . ':' . 'bitrix-392'
+		'feedback' => 0 . ':' . 'bitrix-3100'
     );
 	
 	//Validating key

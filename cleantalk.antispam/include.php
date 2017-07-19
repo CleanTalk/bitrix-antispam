@@ -1,8 +1,10 @@
 <?php
 global $MESS;
 IncludeModuleLangFile(__FILE__);
-include_once("cleantalk-sfw.class.php");
-
+require_once(dirname(__FILE__) . '/CleantalkSFW.php');
+require_once(dirname(__FILE__) . '/classes/general/Cleantalk.php');
+require_once(dirname(__FILE__) . '/classes/general/CleantalkRequest.php');
+require_once(dirname(__FILE__) . '/classes/general/CleantalkResponse.php');
 /**
  * CleanTalk module class
  *
@@ -165,7 +167,6 @@ class CleantalkAntispam {
 						
 		if($is_sfw==1 && !$USER->IsAdmin())
 		{
-			include_once("cleantalk-sfw.class.php");
 			$is_sfw_check=true;
 		   	$ip=CleantalkAntispam::CleantalkGetIP();
 		   	$ip=array_unique($ip);
@@ -195,7 +196,6 @@ class CleantalkAntispam {
 		    }
 	    	if($is_sfw_check)
 	    	{
-	    		include_once("cleantalk-sfw.class.php");
 	    		$sfw = new CleanTalkSFW();
 	    		$sfw->cleantalk_get_real_ip();
 	    		$sfw->check_ip();
@@ -840,8 +840,7 @@ class CleantalkAntispam {
             'CLEANTALK_E_SERVER' => '[CLEANTALK_E_SERVER] ' . GetMessage('CLEANTALK_E_SERVER'),
             'CLEANTALK_E_INTERNAL' => '[CLEANTALK_E_INTERNAL] ' . GetMessage('CLEANTALK_E_INTERNAL')
         );
-    }
-    
+    }   
     /**
      * Content modification - adding JavaScript code to final content
      * @param string Content to modify
@@ -986,8 +985,6 @@ class CleantalkAntispam {
             return;
         }
 
-        require_once(dirname(__FILE__) . '/classes/general/cleantalk.class.php');
-
         $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '0');
         $ct_ws = self::GetWorkServer();
 
@@ -1028,7 +1025,7 @@ class CleantalkAntispam {
         );
         $sender_info = json_encode($sender_info);
 
-        $ct = new Cleantalk();
+        $ct = new cleantalk\classes\general\Cleantalk();
         $ct->work_url = $ct_ws['work_url'];
         $ct->server_url = $ct_ws['server_url'];
         $ct->server_ttl = $ct_ws['server_ttl'];
@@ -1048,12 +1045,12 @@ class CleantalkAntispam {
         $logicalEncoding = strtolower($logicalEncoding);
         $ct->data_codepage = $logicalEncoding == 'utf-8' ? NULL : $logicalEncoding;
 
-        $ct_request = new CleantalkRequest();
+        $ct_request = new cleantalk\classes\general\CleantalkRequest();
         $ct_request->auth_key = $ct_key;
         $ct_request->sender_email = isset($arEntity['sender_email']) ? $arEntity['sender_email'] : '';
         $ct_request->sender_nickname = isset($arEntity['sender_nickname']) ? $arEntity['sender_nickname'] : '';
 		$ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
-        $ct_request->agent = 'bitrix-392';
+        $ct_request->agent = 'bitrix-3100';
         $ct_request->response_lang = 'ru';
         $ct_request->js_on = $checkjs;
         $ct_request->sender_info = $sender_info;
@@ -1309,12 +1306,11 @@ class CleantalkAntispam {
         $request_id = $DB->Query('SELECT ct_request_id FROM cleantalk_cids WHERE module=\''. $module .'\' AND cid=' . $id)->Fetch();
         if($request_id !== FALSE){
     	    $DB->Query('DELETE FROM cleantalk_cids WHERE module=\''. $module .'\' AND cid=' . $id);
-            require_once(dirname(__FILE__) . '/classes/general/cleantalk.class.php');
 
             $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '0');
             $ct_ws = self::GetWorkServer();
 
-            $ct = new Cleantalk();
+            $ct = new cleantalk\classes\general\Cleantalk();
             $ct->work_url = $ct_ws['work_url'];
             $ct->server_url = $ct_ws['server_url'];
             $ct->server_ttl = $ct_ws['server_ttl'];
@@ -1322,7 +1318,7 @@ class CleantalkAntispam {
 
             $ct_request = new CleantalkRequest();
             $ct_request->auth_key = $ct_key;
-            $ct_request->agent = 'bitrix-392';
+            $ct_request->agent = 'bitrix-3100';
 	    $ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
             $ct_request->feedback = $request_id . ':' . ($feedback == 'Y' ? '1' : '0');
 
@@ -1355,7 +1351,7 @@ class CleantalkAntispam {
     /**
      * CleanTalk inner function - gets working server.
      */
-    private static function GetWorkServer() {
+	private static function GetWorkServer() {
         global $DB;
         $result = $DB->Query('SELECT work_url,server_url,server_ttl,server_changed FROM cleantalk_server LIMIT 1')->Fetch();
         if($result !== FALSE)
@@ -1367,8 +1363,8 @@ class CleantalkAntispam {
             );
         else
             return array(
-                'work_url' => 'http://moderate.cleantalk.ru',
-                'server_url' => 'http://moderate.cleantalk.ru',
+                'work_url' => 'http://moderate.cleantalk.org',
+                'server_url' => 'http://moderate.cleantalk.org',
                 'server_ttl' => 0,
                 'server_changed' => 0,
             );
@@ -1377,10 +1373,10 @@ class CleantalkAntispam {
     /**
      * CleanTalk inner function - sets working server.
      */
-    private static function SetWorkServer($work_url = 'http://moderate.cleantalk.ru', $server_url = 'http://moderate.cleantalk.ru', $server_ttl = 0, $server_changed = 0) {
+    private static function SetWorkServer($work_url = 'http://moderate.cleantalk.org', $server_url = 'http://moderate.cleantalk.org', $server_ttl = 0, $server_changed = 0) {
         global $DB;
-        $count = $DB->Query('SELECT count(*) AS count FROM cleantalk_server')->Fetch();
-        if($count == 0){
+        $result = $DB->Query('SELECT count(*) AS count FROM cleantalk_server')->Fetch();
+        if($result['count'] == 0){
             $arInsert = $DB->PrepareInsert(
                 'cleantalk_server',
                 array(

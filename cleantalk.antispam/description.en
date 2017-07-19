@@ -1,3 +1,4 @@
-- Fixed interception of authorization form if you enable "Protect all forms"
-- Added posibility to protect forms without email field
-- Added posibility to protect forum private messages
+- Improved spam protection
+- Base class update
+- New logic of server selection
+- Bug fixes and other minor improvements
