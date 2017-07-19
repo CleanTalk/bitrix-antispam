@@ -1,1 +1,3 @@
-- Some backend fixes- Improved JavaScript protection
+- Fixed interception of authorization form if you enable "Protect all forms"
+- Added posibility to protect forms without email field
+- Added posibility to protect forum private messages

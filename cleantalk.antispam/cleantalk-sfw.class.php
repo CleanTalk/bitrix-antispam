@@ -144,8 +144,8 @@ class CleanTalkSFW
 			'method_name' => '2s_blacklists_db'
 		);
 	
-		$result=CleantalkAntispam::CleantalkSendRequest('https://api.cleantalk.org/2.1',$data,false);
-		$result=json_decode($result, true);
+		$result = CleantalkAntispam::CleantalkSendRequest('https://api.cleantalk.org/2.1', $data, false);
+		$result = json_decode($result, true);
 
 		if(isset($result['data'])){
 			$result=$result['data'];

@@ -4,14 +4,24 @@ $MESS['CLEANTALK_LABEL_KEY']    = 'Access key';
 $MESS['CLEANTALK_LABEL_NEW_USER']       = 'Registration form protection';
 $MESS['CLEANTALK_LABEL_COMMENT_BLOG']   = 'Blog comment form protection';
 $MESS['CLEANTALK_LABEL_COMMENT_FORUM']  = 'Forum comment form protection';
+$MESS['CLEANTALK_LABEL_FORUM_PRIVATE_MESSAGES']  = 'Forum private messages protection';
 $MESS['CLEANTALK_LABEL_COMMENT_TREELIKE']  = 'Treelike comments forms protection';
 $MESS['CLEANTALK_LABEL_SEND_EXAMPLE']  = 'Send texts for off-top analysis';
 $MESS['CLEANTALK_LABEL_ORDER'] = 'Order form protection';
 $MESS['CLEANTALK_BUTTON_SAVE']  = 'Save';
+$MESS['CLEANTALK_GET_AUTO_KEY']  = 'Get access key automatically';
+$MESS['CLEANTALK_GET_MANUAL_KEY']  = 'Get access key manually';
+$MESS['CLEANTALK_GET_TO_CP']  = 'Get to the CleanTalk dashboard';
 $MESS['CLEANTALK_BUTTON_RESET'] = 'Reset';
 $MESS['CLEANTALK_TITLE']        = 'Module setting';
 $MESS['CLEANTALK_LABEL_GLOBAL_CHECK']        = 'Any forms protection';
+$MESS['CLEANTALK_LABEL_GLOBAL_CHECK_WITHOUT_EMAIL'] = 'Check all POST data';
+$MESS['CLEANTALK_WARNING_GLOBAL_CHECK_WITHOUT_EMAIL'] = '- Warning, conflict possibility!';
 $MESS['CLEANTALK_LABEL_SFW']        = 'Spam FireWall';
 $MESS['CLEANTALK_LABEL_NOTIFY']        = "Like Anti-spam by CleanTalk? Help others learn about CleanTalk! <a  target='_blank' href='http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/#rating'>Leave a review at the Bitrix.Marketplace</a>";
-
+$MESS['CLEANTALK_ENTER_KEY']        = 'Enter the access key';
+$MESS['CLEANTALK_KEY_VALID']        = 'Key is valid';
+$MESS['CLEANTALK_KEY_NOT_VALID']    = 'Key is not valid';
+$MESS['CLEANTALK_EMAIL_REGISTRATION_WARNING']	= "Administrator's e-mail will be used for registration";
+$MESS['CLEANTALK_LICENSE_AGREEMENT'] = 'License agreement';
 ?>

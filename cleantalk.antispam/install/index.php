@@ -109,6 +109,8 @@ class cleantalk_antispam extends CModule {
 
     function DoInstall() {
         global $DOCUMENT_ROOT, $APPLICATION;
+		
+		//Installng DB
         if($this->InstallDB()){	
 			RegisterModule('cleantalk.antispam');
             RegisterModuleDependences('main', 'OnPageStart', 'cleantalk.antispam', 'CleantalkAntispam', 'OnPageStartHandler');
@@ -123,6 +125,7 @@ class cleantalk_antispam extends CModule {
               RegisterModuleDependences('forum', 'OnAfterMessageAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnAfterMessageAddHandler');
               RegisterModuleDependences('forum', 'OnMessageModerate', 'cleantalk.antispam', 'CleantalkAntispam', 'OnMessageModerateHandler');
               RegisterModuleDependences('forum', 'OnBeforeMessageDelete', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeMessageDeleteHandler');
+			  RegisterModuleDependences('forum', 'onBeforePMSend', 'cleantalk.antispam', 'CleantalkAntispam', 'onBeforePMSendHandler');
             }
             if (IsModuleInstalled('prmedia.treelikecomments')){
               RegisterModuleDependences('prmedia.treelikecomments', 'OnBeforePrmediaCommentAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforePrmediaCommentAddHandler');
@@ -132,6 +135,29 @@ class cleantalk_antispam extends CModule {
 				RegisterModuleDependences('sale', 'OnBeforeOrderAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeOrderAddHandler');
 			} 
 		}
+		
+		//Adding agents
+		if(COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 )){
+			CAgent::AddAgent("CleanTalkSFW::send_logs();", 	"cleantalk.antispam", "N", 3600);
+			CAgent::AddAgent("CleanTalkSFW::update_local();", 	"cleantalk.antispam", "N", 86400);
+		}
+	
+		//Checking API key if already set
+		$api_key = COption::GetOptionString( 'cleantalk.antispam', 'key', '');
+		$form_sfw = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 );
+		
+		if($api_key && $api_key != ''){
+			
+			$data = array(
+				"method_name" => "notice_validate_key",
+				"auth_key" => $api_key,
+			);
+			$result = self::cleantalk_setup_sendRawRequest('https://api.cleantalk.org', $data);
+			$result = ($result != false ? json_decode($result, true): null);
+			
+			COption::SetOptionString( 'cleantalk.antispam', 'key_is_ok', isset($result['valid']) && $result['valid'] == '1' ? '1' : '0');
+		}
+		
 		if(!empty($this->template_messages)){
 			$this->messages[] = GetMessage("CLEANTALK_TEMPLATES_HEADER");
 			foreach($this->template_messages as $val)
@@ -140,7 +166,7 @@ class cleantalk_antispam extends CModule {
 		}
 		$GLOBALS["errors"] = $this->errors;
 		$GLOBALS["messages"] = $this->messages;
-		$APPLICATION->IncludeAdminFile(GetMessage('CLEANTALK_INSTALL_TITLE'), $DOCUMENT_ROOT.'/bitrix/modules/cleantalk.antispam/install/step.php');
+		$APPLICATION->IncludeAdminFile(GetMessage('CLEANTALK_INSTALL_TITLE'), $DOCUMENT_ROOT.'/bitrix/modules/cleantalk.antispam/install/step.php');		
     }
 
     function DoUninstall() {
@@ -326,5 +352,53 @@ class cleantalk_antispam extends CModule {
 		// Here all is OK - new template PHP file without any CLEANTALK addon is ready
 		return 0;
     }
+	
+	function cleantalk_setup_sendRawRequest($url,$data,$isJSON=false,$timeout=3){
+		
+		if(!$isJSON){
+			$data=http_build_query($data);
+			$data=str_replace("&amp;", "&", $data);
+		}else{
+			$data= json_encode($data);
+		}
+		
+		if (function_exists('curl_init') && function_exists('json_decode')){
+		
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+			curl_setopt($ch, CURLOPT_POST, true);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+			
+			// receive server response ...
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			// resolve 'Expect: 100-continue' issue
+			curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:'));
+			
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+			
+			$result = @curl_exec($ch);
+			
+			$curl_exec = $result !== false ? true : false;
+			
+			@curl_close($ch);
+		}
+		
+		if(!$curl_exec){
+			$opts = array(
+				'http'=>array(
+					'method' => "POST",
+					'timeout'=> $timeout,
+					'content' => $data
+				)
+			);
+			$context = stream_context_create($opts);
+			$result = @file_get_contents($url, 0, $context);
+		}
+		
+		$result = isset($result) ? $result : null;
+		return $result;
+	}
 }
 ?>
