@@ -274,7 +274,9 @@ class CleantalkAntispam {
 			
 			// Exclusions
 			if( empty($_POST) ||
-				isset($_POST['AUTH_FORM'], $_POST['TYPE'], $_POST['USER_LOGIN']))
+				(isset($_POST['AUTH_FORM'], $_POST['TYPE'], $_POST['USER_LOGIN'])) ||
+				(isset($_POST['action']) && $_POST['action'] == 'refreshOrderAjax') // Order AJAX refresh
+			)
 			{
 				return;
 			}
@@ -840,7 +842,8 @@ class CleantalkAntispam {
             'CLEANTALK_E_SERVER' => '[CLEANTALK_E_SERVER] ' . GetMessage('CLEANTALK_E_SERVER'),
             'CLEANTALK_E_INTERNAL' => '[CLEANTALK_E_INTERNAL] ' . GetMessage('CLEANTALK_E_INTERNAL')
         );
-    }   
+    }
+    
     /**
      * Content modification - adding JavaScript code to final content
      * @param string Content to modify
