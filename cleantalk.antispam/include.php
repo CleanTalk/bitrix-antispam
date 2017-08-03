@@ -275,7 +275,8 @@ class CleantalkAntispam {
 			// Exclusions
 			if( empty($_POST) ||
 				(isset($_POST['AUTH_FORM'], $_POST['TYPE'], $_POST['USER_LOGIN'])) ||
-				(isset($_POST['action']) && $_POST['action'] == 'refreshOrderAjax') // Order AJAX refresh
+				(isset($_POST['order']['action']) && $_POST['order']['action'] == 'refreshOrderAjax')|| // Order AJAX refresh
+				(isset($_POST['order']['action']) && $_POST['order']['action'] == 'saveOrderAjax')				
 			)
 			{
 				return;
