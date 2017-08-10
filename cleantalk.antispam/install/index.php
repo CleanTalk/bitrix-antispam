@@ -154,7 +154,6 @@ class cleantalk_antispam extends CModule {
 			);
 			$result = self::cleantalk_setup_sendRawRequest('https://api.cleantalk.org', $data);
 			$result = ($result != false ? json_decode($result, true): null);
-			
 			COption::SetOptionString( 'cleantalk.antispam', 'key_is_ok', isset($result['valid']) && $result['valid'] == '1' ? '1' : '0');
 		}
 		
@@ -248,30 +247,96 @@ class cleantalk_antispam extends CModule {
     }
 
     function InstallDB() {
+		
 		global $DB;
-		$DB->Query('DROP TABLE IF EXISTS `cleantalk_sfw`');
-		$DB->Query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw` (
-	`network` int(11) unsigned NOT NULL,
-	`mask` int(11) unsigned NOT NULL,
-	INDEX (  `network` ,  `mask` )
-	) ENGINE = MYISAM ;");
-		$DB->Query('DROP TABLE IF EXISTS cleantalk_timelabels');
-		if(!$DB->Query('CREATE TABLE cleantalk_timelabels ( ct_key varchar(255), ct_value int(11), PRIMARY KEY (ct_key))')){
+		
+		// Creating SFW DATA
+		$result = $DB->Query(
+			"CREATE 
+			TABLE IF NOT EXISTS `cleantalk_sfw` (
+				`network` int(11) unsigned NOT NULL,
+				`mask` int(11) unsigned NOT NULL,
+				INDEX (  `network` ,  `mask` )
+			)
+			ENGINE = MYISAM ;"
+		);
+		if(!$result){
+			$this->errors[] = GetMessage('CLEANTALK_ERROR_CREATE_SFW_DATA');
+			return FALSE;
+		}
+		
+		// Creating SFW LOGS
+		$result = $DB->Query(
+			"CREATE 
+			TABLE IF NOT EXISTS `cleantalk_sfw_logs` (
+				`ip` VARCHAR(15) NOT NULL,
+				`all_entries` INT NOT NULL,
+				`blocked_entries` INT NOT NULL,
+				`entries_timestamp` INT NOT NULL,
+				PRIMARY KEY (`ip`)
+			)
+			ENGINE = MYISAM ;"
+		);
+		if(!$result){
+			$this->errors[] = GetMessage('CLEANTALK_ERROR_CREATE_SFW_LOGS');
+			return FALSE;
+		}
+		
+		// Creating TIMELABELS
+		$result = $DB->Query(
+			'CREATE 
+			TABLE IF NOT EXISTS cleantalk_timelabels (
+				ct_key varchar(255),
+				ct_value int(11),
+				PRIMARY KEY (ct_key)
+			)'
+		);
+		if(!$result){
 			$this->errors[] = GetMessage('CLEANTALK_ERROR_CREATE_TIMELABELS');
 			return FALSE;
 		}
-		$DB->Query('DROP TABLE IF EXISTS cleantalk_cids');
-		if(!$DB->Query('CREATE TABLE cleantalk_cids ( module varchar(255), cid int(11), ct_request_id varchar(255), ct_result_comment varchar(255), PRIMARY KEY (module, cid))')){
+		
+		// Creating CIDS
+		$result = $DB->Query(
+			'CREATE
+			TABLE cleantalk_cids (
+				module varchar(255),
+				cid int(11),
+				ct_request_id varchar(255),
+				ct_result_comment varchar(255),
+				PRIMARY KEY (module, cid)
+			);'
+		);
+		if(!$result){
 			$this->errors[] = GetMessage('CLEANTALK_ERROR_CREATE_CIDS');
 			return FALSE;
 		}
-		$DB->Query('DROP TABLE IF EXISTS cleantalk_server');
-		if(!$DB->Query('CREATE TABLE cleantalk_server ( work_url varchar(255), server_url varchar(255), server_ttl int(11), server_changed int(11))')){
+		
+		// Creating SERVER
+		$result = $DB->Query(
+			'CREATE 
+			TABLE cleantalk_server (
+				work_url varchar(255),
+				server_url varchar(255),
+				server_ttl int(11),
+				server_changed int(11)
+			);'
+		);
+		if(!$result){
 			$this->errors[] = GetMessage('CLEANTALK_ERROR_CREATE_SERVER');
 			return FALSE;
 		}
-		$DB->Query('DROP TABLE IF EXISTS cleantalk_checkjs');
-		if(!$DB->Query('CREATE TABLE cleantalk_checkjs ( time_range varchar(10), js_values varchar(1024), PRIMARY KEY (time_range))')){
+		
+		// Creating CHECKJS
+		$result = $DB->Query(
+			'CREATE 
+			TABLE cleantalk_checkjs (
+				time_range varchar(10),
+				js_values varchar(1024),
+				PRIMARY KEY (time_range)
+			);'
+		);
+		if(!$result){
 			$this->errors[] = GetMessage('CLEANTALK_ERROR_CREATE_SERVER');
 			return FALSE;
 		}
@@ -280,6 +345,8 @@ class cleantalk_antispam extends CModule {
 
     function UnInstallDB($arParams = Array()) {
 		global $DB;
+		$DB->Query('DROP TABLE IF EXISTS cleantalk_sfw');
+		$DB->Query('DROP TABLE IF EXISTS cleantalk_sfw_logs');
 		$DB->Query('DROP TABLE IF EXISTS cleantalk_timelabels');
 		$DB->Query('DROP TABLE IF EXISTS cleantalk_cids');
 		$DB->Query('DROP TABLE IF EXISTS cleantalk_server');
@@ -401,4 +468,3 @@ class cleantalk_antispam extends CModule {
 		return $result;
 	}
 }
-?>

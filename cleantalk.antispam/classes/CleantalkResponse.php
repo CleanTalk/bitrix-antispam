@@ -1,13 +1,26 @@
-<?
-namespace cleantalk\classes\general;
-class CleantalkResponse {
+<?php
+/**
+ * Cleantalk Response class
+ *
+ * @version 2.3
+ * @package Cleantalk
+ * @subpackage Response
+ * @author Cleantalk team (welcome@cleantalk.org)
+ * @copyright (C) 2014 CleanTalk team (http://cleantalk.org)
+ * @license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
+ * @see https://github.com/CleanTalk/php-antispam 
+ *
+ */
+
+class CleantalkResponse
+{
 
     /**
      * Received feedback nubmer
      * @var int
      */
     public $received = null;
-    
+	
     /**
      *  Is stop words
      * @var int
@@ -50,6 +63,12 @@ class CleantalkResponse {
      */
     public $errstr = null;
 
+	/**
+     * Error string
+     * @var string
+     */
+    public $curl_err = null;
+	
     /**
      * Is fast submit, 1|0
      * @var string
@@ -79,25 +98,25 @@ class CleantalkResponse {
      * @var type 
      */
     public $sms = null;
-    
+	
     /**
      * Sms error code
      * @var type 
      */
     public $sms_error_code = null;
-    
+	
     /**
      * Sms error code
      * @var type 
      */
     public $sms_error_text = null;
     
-    /**
+	/**
      * Stop queue message, 1|0
      * @var int  
      */
     public $stop_queue = null;
-    
+	
     /**
      * Account shuld by deactivated after registration, 1|0
      * @var int  
@@ -124,8 +143,9 @@ class CleantalkResponse {
         } else {
             $this->errno = $obj->errno;
             $this->errstr = $obj->errstr;
+			$this->curl_err = !empty($obj->curl_err) ? $obj->curl_err : false;
 
-            $this->errstr = preg_replace("/.+(\*\*\*.+\*\*\*).+/", "$1", $this->errstr);
+			$this->errstr = preg_replace("/.+(\*\*\*.+\*\*\*).+/", "$1", $this->errstr);
 
             $this->stop_words = isset($obj->stop_words) ? utf8_decode($obj->stop_words) : null;
             $this->comment = isset($obj->comment) ? utf8_decode($obj->comment) : null;
@@ -142,12 +162,10 @@ class CleantalkResponse {
             $this->stop_queue = (isset($obj->stop_queue)) ? $obj->stop_queue : 0;
             $this->inactive = (isset($obj->inactive)) ? $obj->inactive : 0;
             $this->account_status = (isset($obj->account_status)) ? $obj->account_status : -1;
-            $this->received = (isset($obj->received)) ? $obj->received : -1;
+			$this->received = (isset($obj->received)) ? $obj->received : -1;
 
             if ($this->errno !== 0 && $this->errstr !== null && $this->comment === null)
                 $this->comment = '*** ' . $this->errstr . ' Antispam service cleantalk.org ***'; 
         }
     }
-
 }
-?>

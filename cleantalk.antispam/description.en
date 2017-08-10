@@ -1,4 +1,4 @@
 - Improved spam protection
-- Base class update
-- New logic of server selection
-- Bug fixes and other minor improvements
+- Fixed possible problems with bitrix CAPTCHA
+- Improved JS code
+- Other Fixes and improvements

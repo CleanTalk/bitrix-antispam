@@ -15,89 +15,68 @@ IncludeModuleLangFile( __FILE__ );
 
 if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
 	
-	$url = 'https://api.cleantalk.org/';
 	$old_key = COption::GetOptionString( $sModuleId, 'key', '' );
+	
 	
 	//Getting key automatically
 	if(isset($_POST['getautokey'])){
-				
-		$data = array(
-			'method_name' => 'get_api_key',
-			'email' => COption::GetOptionString("main", "email_from"),
-			'website' => $_SERVER["SERVER_NAME"],
-			'platform' => 'bitrix'
-		);
 		
-		$result = CleantalkAntispam::CleantalkSendRequest($url, $data);
-
-		$result = json_decode($result, true);
-		if (isset($result['data']) && is_array($result['data']))
-			$result = $result['data'];
+		$result = CleantalkHelper::getApiKey(COption::GetOptionString("main", "email_from"), $_SERVER["SERVER_NAME"], 'bitrix');
 		
-		if(isset($result['user_token']))
-			COption::SetOptionString( $sModuleId, 'user_token', $result['user_token']);
+		if (empty($result['error'])){
 		
-		if(isset($result['auth_key'])){
-			COption::SetOptionString( $sModuleId, 'key', $result['auth_key']);
-			$new_key = $result['auth_key'];
+			if(isset($result['user_token'])){
+				COption::SetOptionString( $sModuleId, 'user_token', $result['user_token']);
+			}
+			
+			if(isset($result['auth_key'])){
+				COption::SetOptionString( $sModuleId, 'key', $result['auth_key']);
+				$new_key = $result['auth_key'];
+			}
 		}
 		
 	}else{
 		$new_key = $_POST['key'];
 	}
 	
+	// Send empty feedback for version comparison in Dashboard
+	$result = CleantalkHelper::sendEmptyFeedback($new_key, 'bitrix-310');
+	
     /**
      * Set settings when submit
      */
-   
-
-    $dt = Array(
-		'auth_key' => $new_key,
-		'method_name' => 'send_feedback',
-		'feedback' => 0 . ':' . 'bitrix-3100'
-    );
-	
 	//Validating key
-    CleantalkAntispam::CleantalkSendRequest($url,$dt,true);
+	$result = CleantalkHelper::noticeValidateKey($new_key);
+	if(empty($result['error'])){
+		COption::SetOptionString( $sModuleId, 'key_is_ok', strval($result['valid']));
+	}
 	
-	$data = array(
-		"method_name" => "notice_validate_key",
-		"auth_key" => $new_key
-	);
-	$result = CleantalkAntispam::CleantalkSendRequest('https://api.cleantalk.org', $data);	
-	$result = ($result != false ? json_decode($result, true): null);	
-	COption::SetOptionString( 'cleantalk.antispam', 'key_is_ok', (isset($result['valid']) && $result['valid'] == '1' ? '1' : '0'));
-	
-    COption::SetOptionString( $sModuleId, 'status', $_POST['status'] == '1' ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_new_user', $_POST['form_new_user'] == '1' ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_comment_blog', $_POST['form_comment_blog'] == '1' ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_comment_forum', $_POST['form_comment_forum'] == '1' ? '1' : '0' );
-	COption::SetOptionString( $sModuleId, 'form_forum_private_messages', $_POST['form_forum_private_messages'] == '1' ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_comment_treelike', $_POST['form_comment_treelike'] == '1' ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_send_example', $_POST['form_send_example'] == '1' ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_order', $_POST['form_order'] == '1' ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'is_paid', $_POST['is_paid'] == '1' ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'last_checked', $_POST['last_checked'] == '1' ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_global_check', $_POST['form_global_check'] == '1' ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'status',                          $_POST['status'] == '1'                          ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'form_new_user',                   $_POST['form_new_user'] == '1'                   ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'form_comment_blog',               $_POST['form_comment_blog'] == '1'               ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'form_comment_forum',              $_POST['form_comment_forum'] == '1'              ? '1' : '0' );
+	COption::SetOptionString( $sModuleId, 'form_forum_private_messages',     $_POST['form_forum_private_messages'] == '1'     ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'form_comment_treelike',           $_POST['form_comment_treelike'] == '1'           ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'form_send_example',               $_POST['form_send_example'] == '1'               ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'form_order',                      $_POST['form_order'] == '1'                      ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'is_paid',                         $_POST['is_paid'] == '1'                         ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'last_checked',                    $_POST['last_checked'] == '1'                    ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'form_global_check',               $_POST['form_global_check'] == '1'               ? '1' : '0' );
 	COption::SetOptionString( $sModuleId, 'form_global_check_without_email', $_POST['form_global_check_without_email'] == '1' ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_sfw', $_POST['form_sfw'] == '1' ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'ip_license', $_POST['ip_license'] == '1' ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'moderate_ip', $_POST['moderate_ip'] == '1' ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'form_sfw',                        $_POST['form_sfw'] == '1'                        ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'ip_license',                      $_POST['ip_license'] == '1'                      ? '1' : '0' );
+    COption::SetOptionString( $sModuleId, 'moderate_ip',                     $_POST['moderate_ip'] == '1'                     ? '1' : '0' );
     
     COption::SetOptionString( $sModuleId, 'key', $new_key );
 	  
     if($_POST['form_sfw'] == 1)
     {	
-		global $DB;
-    	$r = $DB->Query("CREATE TABLE IF NOT EXISTS `cleantalk_sfw` (
-`network` int(11) unsigned NOT NULL,
-`mask` int(11) unsigned NOT NULL,
-INDEX (  `network` ,  `mask` )
-) ENGINE = MYISAM ;");
-		CAgent::AddAgent("CleanTalkSFW::send_logs();", 	"cleantalk.antispam", "N", 3600);
-		CAgent::AddAgent("CleanTalkSFW::update_local();", 	"cleantalk.antispam", "N", 86400);
-		CleanTalkSFW::update_local();
-		CleanTalkSFW::send_logs();
+		CAgent::RemoveModuleAgents("cleantalk.antispam");
+		CAgent::AddAgent("CleantalkAntispam::sfw_send_logs();", "cleantalk.antispam", "N", 3600);
+		CAgent::AddAgent("CleantalkAntispam::sfw_update();",    "cleantalk.antispam", "N", 86400);
+		$sfw = new CleantalkSFW();
+		$sfw->sfw_update($new_key);
+		$sfw->send_logs($new_key);
     }else{
 		CAgent::RemoveModuleAgents("cleantalk.antispam");
 	}

@@ -33,8 +33,8 @@ if( @file_exists($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/cleantalk.antispam/i
 			$arModuleVersion['VERSION'] == '3.8.3' ||
 			$arModuleVersion['VERSION'] == '3.9.0' ||
 			$arModuleVersion['VERSION'] == '3.9.1' ||
-			$arModuleVersion['VERSION'] == '3.9.2'
-
+			$arModuleVersion['VERSION'] == '3.9.2' ||
+			$arModuleVersion['VERSION'] == '3.10.0'
 		)
     ){
 		// Here is checking version of existing (old) code.
@@ -125,6 +125,43 @@ if( @file_exists($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/cleantalk.antispam/i
 				// No changes in tables and additional files since 3.1.0
 				case '3.9.2' :
 				// No changes in tables and additional files since 3.1.0
+				case '3.10.0' :
+					if (IsModuleInstalled('cleantalk.antispam')){
+						// Creating SFW DATA
+						$DB->Query('DROP TABLE IF EXISTS cleantalk_sfw');
+						$result = $DB->Query(
+							"CREATE 
+							TABLE IF NOT EXISTS `cleantalk_sfw` (
+								`network` int(11) unsigned NOT NULL,
+								`mask` int(11) unsigned NOT NULL,
+								INDEX (  `network` ,  `mask` )
+							)
+							ENGINE = MYISAM ;"
+						);
+						if(!$result){
+							$this->errors[] = GetMessage('CLEANTALK_ERROR_CREATE_SFW_DATA');
+							return FALSE;
+						}
+						
+						// Creating SFW LOGS
+						$DB->Query('DROP TABLE IF EXISTS cleantalk_sfw_logs');
+						$result = $DB->Query(
+							"CREATE 
+							TABLE IF NOT EXISTS `cleantalk_sfw_logs` (
+								`ip` VARCHAR(15) NOT NULL,
+								`all_entries` INT NOT NULL,
+								`blocked_entries` INT NOT NULL,
+								`entries_timestamp` INT NOT NULL,
+								PRIMARY KEY (`ip`)
+							)
+							ENGINE = MYISAM ;"
+						);
+						if(!$result){
+							$this->errors[] = GetMessage('CLEANTALK_ERROR_CREATE_SFW_LOGS');
+							return FALSE;
+						}
+
+				}
 			}
 			unset($obModule);
 		}
