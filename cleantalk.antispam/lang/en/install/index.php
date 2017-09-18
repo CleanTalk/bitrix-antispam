@@ -20,4 +20,3 @@ $MESS["CLEANTALK_TEMPLATES_HEADER"] = "Changes have been made in next DEFAULT te
 $MESS["CLEANTALK_TEMPLATES_FOOTER"] = "If you use other templates, you MUST change them MANUALLY";
 $MESS["MOD_INST_OK"] = "The module has been successfully installed.";
 $MESS["MOD_UNINST_OK"] = "The module has been successfully removed.";
-?>

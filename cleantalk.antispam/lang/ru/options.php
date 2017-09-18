@@ -24,4 +24,3 @@ $MESS['CLEANTALK_KEY_VALID']        = 'Ключ активен';
 $MESS['CLEANTALK_KEY_NOT_VALID']    = 'Ключ не активен';
 $MESS['CLEANTALK_EMAIL_REGISTRATION_WARNING']	= 'Для регистрации будет использована почта администратора';
 $MESS['CLEANTALK_LICENSE_AGREEMENT'] = 'Лицензионное соглашение';
-?>

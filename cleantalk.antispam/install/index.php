@@ -138,8 +138,8 @@ class cleantalk_antispam extends CModule {
 		
 		//Adding agents
 		if(COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 )){
-			CAgent::AddAgent("CleanTalkSFW::send_logs();", 	"cleantalk.antispam", "N", 3600);
-			CAgent::AddAgent("CleanTalkSFW::update_local();", 	"cleantalk.antispam", "N", 86400);
+			CAgent::AddAgent("CleantalkAntispam::sfw_send_logs();", "cleantalk.antispam", "N", 3600);
+			CAgent::AddAgent("CleantalkAntispam::sfw_update();",    "cleantalk.antispam", "N", 86400);
 		}
 	
 		//Checking API key if already set

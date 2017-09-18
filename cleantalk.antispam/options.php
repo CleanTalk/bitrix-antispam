@@ -40,7 +40,7 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
 	}
 	
 	// Send empty feedback for version comparison in Dashboard
-	$result = CleantalkHelper::sendEmptyFeedback($new_key, 'bitrix-310');
+	$result = CleantalkHelper::sendEmptyFeedback($new_key, 'bitrix-3101');
 	
     /**
      * Set settings when submit
@@ -70,7 +70,7 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     COption::SetOptionString( $sModuleId, 'key', $new_key );
 	  
     if($_POST['form_sfw'] == 1)
-    {	
+    {
 		CAgent::RemoveModuleAgents("cleantalk.antispam");
 		CAgent::AddAgent("CleantalkAntispam::sfw_send_logs();", "cleantalk.antispam", "N", 3600);
 		CAgent::AddAgent("CleantalkAntispam::sfw_update();",    "cleantalk.antispam", "N", 86400);

@@ -34,7 +34,8 @@ if( @file_exists($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/cleantalk.antispam/i
 			$arModuleVersion['VERSION'] == '3.9.0' ||
 			$arModuleVersion['VERSION'] == '3.9.1' ||
 			$arModuleVersion['VERSION'] == '3.9.2' ||
-			$arModuleVersion['VERSION'] == '3.10.0'
+			$arModuleVersion['VERSION'] == '3.10.0'||
+			$arModuleVersion['VERSION'] == '3.10.1'
 		)
     ){
 		// Here is checking version of existing (old) code.
@@ -160,8 +161,13 @@ if( @file_exists($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/cleantalk.antispam/i
 							$this->errors[] = GetMessage('CLEANTALK_ERROR_CREATE_SFW_LOGS');
 							return FALSE;
 						}
-
-				}
+					}
+				case '3.10.1' :
+					if (IsModuleInstalled('cleantalk.antispam')){
+						CAgent::RemoveModuleAgents("cleantalk.antispam");
+						CAgent::AddAgent("CleantalkAntispam::sfw_send_logs();", "cleantalk.antispam", "N", 3600);
+						CAgent::AddAgent("CleantalkAntispam::sfw_update();",    "cleantalk.antispam", "N", 86400);
+					}
 			}
 			unset($obModule);
 		}
