@@ -6,4 +6,3 @@ $MESS['CLEANTALK_E_SERVER'] = 'CleanTalk server error';
 $MESS['CLEANTALK_E_INTERNAL'] = 'CleanTalk method calling error';
 $MESS['CLEANTALK_E_PARAM']  = 'Wrong CheckAllBefore method parameters';
 $MESS['CLEANTALK_E_TYPE']   = 'Wrong type parameter of CheckAllBefore method';
-?>

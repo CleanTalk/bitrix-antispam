@@ -24,4 +24,3 @@ $MESS['CLEANTALK_KEY_VALID']        = 'Key is valid';
 $MESS['CLEANTALK_KEY_NOT_VALID']    = 'Key is not valid';
 $MESS['CLEANTALK_EMAIL_REGISTRATION_WARNING']	= "Administrator's e-mail will be used for registration";
 $MESS['CLEANTALK_LICENSE_AGREEMENT'] = 'License agreement';
-?>

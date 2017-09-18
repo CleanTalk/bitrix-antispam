@@ -2,8 +2,8 @@
 
 /*
  * CleanTalk SpamFireWall base class
- * Compatible only with SMF.
- * Version 1.5-smf
+ * Compatible only with Bitrix.
+ * Version 1.5-bitrix
  * author Cleantalk team (welcome@cleantalk.org)
  * copyright (C) 2014 CleanTalk team (http://cleantalk.org)
  * license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
@@ -38,7 +38,7 @@ class CleantalkSFW
 		$this->db_result = $DB->Query($query);
 	}
 	
-	public function unversal_fetch()
+	public function unversal_fetch_row()
 	{
 		$this->db_result_data = $this->db_result->Fetch();
 	}
@@ -60,28 +60,29 @@ class CleantalkSFW
 		
 		$result=Array();
 		
-		$headers = function_exists('apache_request_headers')
-			? apache_request_headers()
-			: self::apache_request_headers();
-		
-		$headers['REMOTE_ADDR'] = $_SERVER['REMOTE_ADDR'];
-		$sfw_test_ip = isset($_GET['sfw_test_ip']) ? $_GET['sfw_test_ip'] : null;
-		
-		if( isset($headers['X-Forwarded-For']) ){
-			$the_ip = explode(",", trim($headers['X-Forwarded-For']));
-			$the_ip = trim($the_ip[0]);
-			$result[] = $the_ip;
-			$this->ip_str_array[]=$the_ip;
-			$this->ip_array[]=sprintf("%u", ip2long($the_ip));
-		}
-		
-		$the_ip = filter_var( $headers['REMOTE_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 );
+		// Getting IP
+		$the_ip = filter_var( $_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 );
 		$result[] = $the_ip;
 		$this->ip_str_array[]=$the_ip;
 		$this->ip_array[]=sprintf("%u", ip2long($the_ip));
 
+		// Getting proxy IP
+		$headers = function_exists('apache_request_headers')
+			? apache_request_headers()
+			: self::apache_request_headers();
+		
+		if( isset($headers['X-Forwarded-For']) ){
+			$the_ip = explode(",", trim($headers['X-Forwarded-For']));
+			$the_ip = trim($the_ip[0]);
+			$result[] = filter_var( $the_ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 );
+			$this->ip_str_array[]=$the_ip;
+			$this->ip_array[]=sprintf("%u", ip2long($the_ip));
+		}
+		
+		// Getting test IP
+		$sfw_test_ip = isset($_GET['sfw_test_ip']) ? $_GET['sfw_test_ip'] : null;
 		if($sfw_test_ip){
-			$result[] = $sfw_test_ip;
+			$result[] = filter_var( $sfw_test_ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 );
 			$this->ip_str_array[]=$sfw_test_ip;
 			$this->ip_array[]=sprintf("%u", ip2long($sfw_test_ip));
 		}
@@ -101,9 +102,9 @@ class CleantalkSFW
 				FROM ".$this->table_prefix."cleantalk_sfw
 				WHERE network = ".intval($this->ip_array[$i])." & mask;";
 			$this->unversal_query($query);
-			$this->unversal_fetch();
+			$this->unversal_fetch_row();
 			
-			$curr_ip = long2ip($this->ip_array[$i]);
+			$curr_ip = long2ip( (int) $this->ip_array[$i] );
 			
 			if($this->db_result_data['cnt']){
 				$this->result = true;
@@ -123,21 +124,30 @@ class CleantalkSFW
 			return;
 		}
 		
-		$blocked = ($result == 'blocked' ? ' + 1' : '');
+		$blocked = ($result == 'blocked' ? '1' : '0');
 		$time = time();
-
-		$query = "INSERT INTO ".$this->table_prefix."cleantalk_sfw_logs
-		SET 
-			ip = '$ip',
-			all_entries = 1,
-			blocked_entries = 1,
-			entries_timestamp = '".intval($time)."'
-		ON DUPLICATE KEY 
-		UPDATE 
-			all_entries = all_entries + 1,
-			blocked_entries = blocked_entries".strval($blocked).",
-			entries_timestamp = '".intval($time)."'";
-
+		
+		$query = "SELECT COUNT(ip) as cnt
+			FROM ".$this->table_prefix."cleantalk_sfw_logs
+			WHERE ip = '$ip';";
+		$this->unversal_query($query, true);
+		$this->unversal_fetch_row();
+		
+		if($this->db_result_data['cnt']){
+			$query = "UPDATE ".$this->table_prefix."cleantalk_sfw_logs
+				SET
+					all_entries = all_entries + 1,
+					blocked_entries = blocked_entries + $blocked,
+					entries_timestamp = $time
+				WHERE ip = '$ip';";
+		}else{	
+			$query = "INSERT INTO ".$this->table_prefix."cleantalk_sfw_logs
+			SET 
+				ip = '$ip',
+				all_entries = 1,
+				blocked_entries = $blocked,
+				entries_timestamp = $time;";
+		}
 		$this->unversal_query($query, true);
 	}
 	

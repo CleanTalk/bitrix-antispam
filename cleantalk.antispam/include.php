@@ -248,7 +248,9 @@ class CleantalkAntispam {
 			if( empty($_POST) ||
 				(isset($_POST['AUTH_FORM'], $_POST['TYPE'], $_POST['USER_LOGIN'])) ||
 				(isset($_POST['order']['action']) && $_POST['order']['action'] == 'refreshOrderAjax')|| // Order AJAX refresh
-				(isset($_POST['order']['action']) && $_POST['order']['action'] == 'saveOrderAjax')				
+				(isset($_POST['order']['action']) && $_POST['order']['action'] == 'saveOrderAjax') ||
+				(isset($_POST['action']) && $_POST['action'] == 'refreshOrderAjax') ||
+				(isset($_POST['action']) && $_POST['action'] == 'saveOrderAjax')
 			)
 			{
 				return;
@@ -832,10 +834,10 @@ class CleantalkAntispam {
 
 			$ct_check_values = self::SetCheckJSValues();
 			$js_template = '<script type="text/javascript">
-				var d = new Date(), 
+				var ct_date = new Date(), 
 					ctTimeMs = new Date().getTime(),
 					ctMouseEventTimerFlag = true, //Reading interval flag
-					ctMouseData = "[",
+					ctMouseData = [],
 					ctMouseDataCounter = 0;
 
 				function ctSetCookie(c_name, value) {
@@ -849,7 +851,7 @@ class CleantalkAntispam {
 
 				setTimeout(function(){
 					ctSetCookie("%s", "%s");
-					ctSetCookie("ct_timezone", d.getTimezoneOffset()/60*(-1));
+					ctSetCookie("ct_timezone", ct_date.getTimezoneOffset()/60*(-1));
 				},1000);
 
 				//Writing first key press timestamp
@@ -861,20 +863,24 @@ class CleantalkAntispam {
 
 				//Reading interval
 				var ctMouseReadInterval = setInterval(function(){
-						ctMouseEventTimerFlag = true;
-					}, 150);
+					ctMouseEventTimerFlag = true;
+				}, 150);
 					
 				//Writting interval
 				var ctMouseWriteDataInterval = setInterval(function(){
-						var ctMouseDataToSend = ctMouseData.slice(0,-1).concat("]");
-						ctSetCookie("ct_pointer_data", ctMouseDataToSend);
-					}, 1200);
+					ctSetCookie("ct_pointer_data", JSON.stringify(ctMouseData));
+				}, 1200);
 
-				//Logging mouse position each 300 ms
+				//Logging mouse position each 150 ms
 				var ctFunctionMouseMove = function output(event){
 					if(ctMouseEventTimerFlag == true){
-						var mouseDate = new Date();
-						ctMouseData += "[" + Math.round(event.pageY) + "," + Math.round(event.pageX) + "," + Math.round(mouseDate.getTime() - ctTimeMs) + "],";
+						
+						ctMouseData.push([
+							Math.round(event.pageY),
+							Math.round(event.pageX),
+							Math.round(new Date().getTime() - ctTimeMs)
+						]);
+						
 						ctMouseDataCounter++;
 						ctMouseEventTimerFlag = false;
 						if(ctMouseDataCounter >= 100){
@@ -885,10 +891,11 @@ class CleantalkAntispam {
 
 				//Stop mouse observing function
 				function ctMouseStopData(){
-					if(typeof window.addEventListener == "function")
+					if(typeof window.addEventListener == "function"){
 						window.removeEventListener("mousemove", ctFunctionMouseMove);
-					else
+					}else{
 						window.detachEvent("onmousemove", ctFunctionMouseMove);
+					}
 					clearInterval(ctMouseReadInterval);
 					clearInterval(ctMouseWriteDataInterval);				
 				}
@@ -975,10 +982,10 @@ class CleantalkAntispam {
 			$checkjs = 1;
 		else
 			$checkjs = 0;
-		$pointer_data = (isset($_COOKIE['ct_pointer_data']) ? json_decode($_COOKIE['ct_pointer_data']) : '');
-		$js_timezone = (isset($_COOKIE['ct_timezone']) ? $_COOKIE['ct_timezone'] : 'none');
-		$first_key_timestamp = (isset($_COOKIE['ct_fkp_timestamp']) ? $_COOKIE['ct_fkp_timestamp'] : 0);
-		$page_set_timestamp = (isset($_COOKIE['ct_ps_timestamp']) ? $_COOKIE['ct_ps_timestamp'] : 0);
+		$pointer_data        = (isset($_COOKIE['ct_pointer_data'])  ? json_decode($_COOKIE['ct_pointer_data']) : '');
+		$js_timezone         = (isset($_COOKIE['ct_timezone'])      ? $_COOKIE['ct_timezone']                  : 'none');
+		$first_key_timestamp = (isset($_COOKIE['ct_fkp_timestamp']) ? $_COOKIE['ct_fkp_timestamp']             : 0);
+		$page_set_timestamp  = (isset($_COOKIE['ct_ps_timestamp'])  ? $_COOKIE['ct_ps_timestamp']              : 0);
 
         if(isset($_SERVER['HTTP_USER_AGENT']))
             $user_agent = htmlspecialchars((string) $_SERVER['HTTP_USER_AGENT']);
@@ -1027,7 +1034,7 @@ class CleantalkAntispam {
         $ct_request->sender_email = isset($arEntity['sender_email']) ? $arEntity['sender_email'] : '';
         $ct_request->sender_nickname = isset($arEntity['sender_nickname']) ? $arEntity['sender_nickname'] : '';
 		$ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
-        $ct_request->agent = 'bitrix-310';
+        $ct_request->agent = 'bitrix-3101';
         $ct_request->response_lang = 'ru';
         $ct_request->js_on = $checkjs;
         $ct_request->sender_info = $sender_info;
@@ -1295,7 +1302,7 @@ class CleantalkAntispam {
 
             $ct_request = new CleantalkRequest();
             $ct_request->auth_key = $ct_key;
-            $ct_request->agent = 'bitrix-310';
+            $ct_request->agent = 'bitrix-3101';
 	    $ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
             $ct_request->feedback = $request_id . ':' . ($feedback == 'Y' ? '1' : '0');
 
