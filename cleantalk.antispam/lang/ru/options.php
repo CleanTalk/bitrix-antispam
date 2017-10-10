@@ -8,6 +8,7 @@ $MESS['CLEANTALK_LABEL_FORUM_PRIVATE_MESSAGES']  = 'Защита личных сообщений фору
 $MESS['CLEANTALK_LABEL_COMMENT_TREELIKE']  = 'Защита форм Древовидных комментариев';
 $MESS['CLEANTALK_LABEL_SEND_EXAMPLE']  = 'Отсылать тексты для офф-топ анализа';
 $MESS['CLEANTALK_LABEL_ORDER']  = 'Проверять формы заказов';
+$MESS['CLEANTALK_LABEL_WEB_FORMS'] = 'Защита Веб-форм';
 $MESS['CLEANTALK_BUTTON_SAVE']  = 'Сохранить';
 $MESS['CLEANTALK_GET_AUTO_KEY']  = 'Получить ключ автоматически';
 $MESS['CLEANTALK_GET_MANUAL_KEY']  = 'Получить ключ вручную';

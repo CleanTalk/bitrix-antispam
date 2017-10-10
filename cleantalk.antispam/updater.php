@@ -35,7 +35,8 @@ if( @file_exists($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/cleantalk.antispam/i
 			$arModuleVersion['VERSION'] == '3.9.1' ||
 			$arModuleVersion['VERSION'] == '3.9.2' ||
 			$arModuleVersion['VERSION'] == '3.10.0'||
-			$arModuleVersion['VERSION'] == '3.10.1'
+			$arModuleVersion['VERSION'] == '3.10.1'||
+			$arModuleVersion['VERSION'] == '3.10.2'
 		)
     ){
 		// Here is checking version of existing (old) code.
@@ -168,6 +169,11 @@ if( @file_exists($_SERVER['DOCUMENT_ROOT'].'/bitrix/modules/cleantalk.antispam/i
 						CAgent::AddAgent("CleantalkAntispam::sfw_send_logs();", "cleantalk.antispam", "N", 3600);
 						CAgent::AddAgent("CleantalkAntispam::sfw_update();",    "cleantalk.antispam", "N", 86400);
 					}
+				case '3.10.2' :
+					if (IsModuleInstalled('cleantalk.antispam') && IsModuleInstalled('form')){
+							RegisterModuleDependences('form', 'OnBeforeResultAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeResultAddHandler');
+					}
+					
 			}
 			unset($obModule);
 		}
