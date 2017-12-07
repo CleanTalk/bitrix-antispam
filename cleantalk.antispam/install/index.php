@@ -134,10 +134,6 @@ class cleantalk_antispam extends CModule {
 			{
 				RegisterModuleDependences('sale', 'OnBeforeOrderAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeOrderAddHandler');
 			} 
-			if (IsModuleInstalled('form'))
-			{
-				RegisterModuleDependences('form', 'OnBeforeResultAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeResultAddHandler');
-			} 
 		}
 		
 		//Adding agents
@@ -190,9 +186,6 @@ class cleantalk_antispam extends CModule {
         UnRegisterModuleDependences('main', 'OnBeforeUserRegister', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeUserRegisterHandler');
 		UnRegisterModuleDependences('main', 'OnEndBufferContent', 'cleantalk.antispam', 'CleantalkAntispam', 'OnEndBufferContentHandler');
         UnRegisterModuleDependences('main', 'OnEventLogGetAuditTypes', 'cleantalk.antispam', 'CleantalkAntispam', 'OnEventLogGetAuditTypesHandler');
-		if (IsModuleInstalled('form')){
-			UnRegisterModuleDependences('form', 'OnBeforeResultAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeResultAddHandler');
-		} 
         UnRegisterModule('cleantalk.antispam');
         $this->UnInstallDB();
         $this->UnInstallFiles();

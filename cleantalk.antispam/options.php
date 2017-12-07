@@ -59,7 +59,6 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     COption::SetOptionString( $sModuleId, 'form_comment_treelike',           $_POST['form_comment_treelike'] == '1'           ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_send_example',               $_POST['form_send_example'] == '1'               ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_order',                      $_POST['form_order'] == '1'                      ? '1' : '0' );
-	COption::SetOptionString( $sModuleId, 'web_form',                        $_POST['web_form'] == '1'                        ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'is_paid',                         $_POST['is_paid'] == '1'                         ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'last_checked',                    $_POST['last_checked'] == '1'                    ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_global_check',               $_POST['form_global_check'] == '1'               ? '1' : '0' );
@@ -173,12 +172,6 @@ $oTabControl->Begin();
         <td width="50%" valign="top"><label for="form_order"><?echo GetMessage( 'CLEANTALK_LABEL_ORDER' );?>:</td>
         <td  valign="top">
             <input type="checkbox" name="form_order" id="form_order" <? if ( COption::GetOptionString( $sModuleId, 'form_order', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
-        </td>
-    </tr>
-	 <tr>
-        <td width="50%" valign="top"><label for="web_form"><?echo GetMessage( 'CLEANTALK_LABEL_WEB_FORMS' );?>:</td>
-        <td  valign="top">
-            <input type="checkbox" name="web_form" id="web_form" <? if ( COption::GetOptionString( $sModuleId, 'web_form', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
         </td>
     </tr>
     <tr>

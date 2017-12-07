@@ -1,1 +1,2 @@
-- Added protection for Web-form component
+- "Display error on BuyOneClick forms"
+- "Protect forms with GET method"

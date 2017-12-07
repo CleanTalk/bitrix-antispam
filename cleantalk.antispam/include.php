@@ -83,8 +83,16 @@ class CleantalkAntispam {
     
     static function CleantalkDie($message)
     {
-    	$error_tpl=file_get_contents(dirname(__FILE__)."/error.html");
-		print str_replace('%ERROR_TEXT%',$message,$error_tpl);
+		if (isset($_POST['feedback_type']) && $_POST['feedback_type'] == 'buyoneclick')
+		{
+			$result=Array('error'=>true,'msg'=>'js_kr_error_send');
+			print json_encode($result);
+		}
+		else
+		{
+	    	$error_tpl=file_get_contents(dirname(__FILE__)."/error.html");
+			print str_replace('%ERROR_TEXT%',$message,$error_tpl);			
+		}    	
 		die();
     }
 	
@@ -259,7 +267,8 @@ class CleantalkAntispam {
 	    	$sender_email = null;
 		    $message = '';
 			CleantalkAntispam::CleantalkGetFields($sender_email,$message,$_POST); //Works via links need to be fixed
-			
+			if ($sender_email === null)
+				CleantalkAntispam::CleantalkGetFields($sender_email,$message,$_GET);
 		    if($sender_email!==null || $ct_global_without_email == 1)
 		    {
 		    	$arUser = array();
@@ -353,79 +362,6 @@ class CleantalkAntispam {
 					}
 					else
 					{
-						$APPLICATION->ThrowException($aResult['ct_result_comment']);
-						return false;
-					}
-				}
-			}
-		}
-	}
-   
-    /**
-     * *** Web forms section ***
-     */
-   
-   /**
-     * Checking web forms
-     * @param $WEB_FORM_ID, &$arFields, &$arrVALUES Comment fields to check
-     * @return null|boolean NULL when success or FALSE when spam detected
-     */
-    
-    function OnBeforeResultAddHandler($WEB_FORM_ID, &$arFields, &$arrVALUES)
-    {
-    	global $APPLICATION;
-		
-		$ct_status = COption::GetOptionString('cleantalk.antispam', 'status', '0');
-        $ct_webform= COption::GetOptionString('cleantalk.antispam', 'web_form', '0');
-		
-        if ($ct_status == 1 && $ct_webform == 1){
-			
-			$sender_email = null;
-	    	$message = '';
-			
-			$skip_keys = array(
-				'WEB_FORM_ID',
-				'RESULT_ID',
-				'formresult',
-				'sessid',
-				'captcha_',
-				'web_form_submit'
-			);
-			
-	    	foreach ($arrVALUES as $key => $value){
-				
-				// Skipping keys
-				foreach($skip_keys as $skip){
-					if(strpos($key, $skip) !== false)
-						continue 2;
-				}
-				
-				if ($sender_email === null && preg_match("/^\S+@\S+\.\S+$/", $value))
-					$sender_email = $value;
-				else
-					$message.="$value\n";
-		    }
-			
-		    $arUser = array();
-			$arUser["type"] = "webform";
-			$arUser["sender_email"] = $sender_email;
-			$arUser["sender_nickname"] = '';
-			$arUser["sender_ip"] = $_SERVER['REMOTE_ADDR'];
-			$arUser["message_title"] = "";
-			$arUser["message_body"] = $message;
-			$arUser["example_title"] = "";
-			$arUser["example_body"] = "";
-			$arUser["example_comments"] = "";
-			
-			$aResult =  CleantalkAntispam::CheckAllBefore($arUser,FALSE);
-
-			if(isset($aResult) && is_array($aResult)){
-				
-				if($aResult['errno'] == 0){
-					
-					if($aResult['allow'] == 1){
-						return; //Not spammer - just return;
-					}else{
 						$APPLICATION->ThrowException($aResult['ct_result_comment']);
 						return false;
 					}
@@ -1032,7 +968,7 @@ class CleantalkAntispam {
 		}
 
         $type = $arEntity['type'];
-        if($type != 'comment' && $type != 'webform' &&$type != 'register' && $type != 'order' && $type != 'feedback_general_contact_form' && $type != 'private_message'){
+        if($type != 'comment' && $type != 'register' && $type != 'order' && $type != 'feedback_general_contact_form' && $type != 'private_message'){
             CEventLog::Add(array(
                 'SEVERITY' => 'SECURITY',
                 'AUDIT_TYPE_ID' => 'CLEANTALK_E_INTERNAL',
@@ -1055,7 +991,6 @@ class CleantalkAntispam {
 			$checkjs = 1;
 		else
 			$checkjs = 0;
-		
 		$pointer_data        = (isset($_COOKIE['ct_pointer_data'])  ? json_decode($_COOKIE['ct_pointer_data']) : '');
 		$js_timezone         = (isset($_COOKIE['ct_timezone'])      ? $_COOKIE['ct_timezone']                  : 'none');
 		$first_key_timestamp = (isset($_COOKIE['ct_fkp_timestamp']) ? $_COOKIE['ct_fkp_timestamp']             : 0);
@@ -1159,20 +1094,6 @@ class CleantalkAntispam {
 			case 'feedback_general_contact_form':
 				
 				$a_post_info['comment_type'] = 'feedback_general_contact_form';
-                $post_info = json_encode($a_post_info);
-				$ct_request->post_info = $post_info;
-				
-				$timelabels_key = 'mail_error_comment';
-                $ct_request->submit_time = $ct_submit_time;
-
-                $ct_request->message .= isset($arEntity['message_body']) ? $arEntity['message_body'] : '';
-				
-				$ct_result = $ct->isAllowMessage($ct_request);
-				break;
-				
-			case 'webform':
-				
-				$a_post_info['comment_type'] = 'webform';
                 $post_info = json_encode($a_post_info);
 				$ct_request->post_info = $post_info;
 				
