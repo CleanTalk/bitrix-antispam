@@ -1,7 +1,7 @@
 bitrix-antispam
 ===============
 
-1C Bitrix anti-spam mod. 3.10.2
+1C Bitrix anti-spam mod. 3.10.3
 
 Information page,
 http://cleantalk.org/bitrix-antispam-module-bez-captcha

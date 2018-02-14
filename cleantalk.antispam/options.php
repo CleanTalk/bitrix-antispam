@@ -40,7 +40,7 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     }
     
     // Send empty feedback for version comparison in Dashboard
-    $result = CleantalkHelper::sendEmptyFeedback($new_key, 'bitrix-3102');
+    $result = CleantalkHelper::sendEmptyFeedback($new_key, 'bitrix-3103');
     
     /**
      * Set settings when submit
