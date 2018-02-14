@@ -24,7 +24,6 @@ RegisterModuleDependences('main', 'OnPageStart', 'cleantalk.antispam', 'Cleantal
 class CleantalkAntispam {
 
     const KEYS_NUM = 12; // 12 last JS keys are valid
-    
 	
 	/*
 	 * Updates SFW local database
@@ -906,9 +905,11 @@ class CleantalkAntispam {
      * @param string Content to modify
      */
     function OnEndBufferContentHandler(&$content) {
-		if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1){
+		if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1)
+			{
 				if (!session_id()) session_start();
 			$_SESSION['ct_submit_time'] = time();
+		
 
 			$field_name = 'ct_checkjs';
 			$ct_check_def = '0';
@@ -1050,7 +1051,10 @@ class CleantalkAntispam {
             ));
             return;
         }
-
+        $url_exclusion = explode(',',COption::GetOptionString( 'cleantalk.antispam', 'exclude_urls',       '' ));
+    	foreach ($url_exclusion as $key=>$value)
+    		if (strpos("http" . (($_SERVER['SERVER_PORT'] == 443) ? "s://" : "://") . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],$value) !== false)
+    			return;
         $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '0');
         $ct_ws = self::GetWorkServer();
 

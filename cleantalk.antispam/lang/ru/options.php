@@ -19,6 +19,7 @@ $MESS['CLEANTALK_LABEL_GLOBAL_CHECK']        = 'Защита любых форм
 $MESS['CLEANTALK_LABEL_GLOBAL_CHECK_WITHOUT_EMAIL'] = 'Проверять все POST данные';
 $MESS['CLEANTALK_WARNING_GLOBAL_CHECK_WITHOUT_EMAIL'] = '- Внимание, возможны конфликты!';
 $MESS['CLEANTALK_LABEL_SFW']        = 'Spam FireWall';
+$MESS['CLEANTALK_LABEL_EXCLUDE_URLS']        = 'Исключить страницы';
 $MESS['CLEANTALK_LABEL_NOTIFY']        = "Нравится антиспам от CleanTalk? Помогите другим узнать о нас! <a target='_blank' href='http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/#rating'>Оставьте отзыв на Битрикс.Маркетплейс</a>";
 $MESS['CLEANTALK_ENTER_KEY']        = 'Введите ключ';
 $MESS['CLEANTALK_KEY_VALID']        = 'Ключ активен';
