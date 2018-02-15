@@ -68,8 +68,7 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     COption::SetOptionString( $sModuleId, 'ip_license',                      $_POST['ip_license'] == '1'                      ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'moderate_ip',                     $_POST['moderate_ip'] == '1'                     ? '1' : '0' );
     
-    COption::SetOptionString( $sModuleId, 'key', $new_key );
-    COption::SetOptionString( $sModuleId, 'exclude_urls', $_POST['exclude_urls'] );       
+    COption::SetOptionString( $sModuleId, 'key', $new_key );     
     if($_POST['form_sfw'] == 1)
     {
         CAgent::RemoveModuleAgents("cleantalk.antispam");
@@ -206,13 +205,7 @@ $oTabControl->Begin();
         <td  valign="top">
             <input type="checkbox" name="form_sfw" id="form_sfw" <? if ( COption::GetOptionString( $sModuleId, 'form_sfw', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
         </td>
-    </tr>
-    <tr>
-        <td width="50%" valign="top"><label for="form_global_check"><?echo GetMessage( 'CLEANTALK_LABEL_EXCLUDE_URLS' );?>:</td>
-        <td  valign="top">
-            <input type="text" name="exclude_urls" id="exclude_urls" value="<?php echo COption::GetOptionString( $sModuleId, 'exclude_urls', '' ) ?>" />
-        </td>
-    </tr>    
+    </tr>   
     <tr>
         <?php
             $moderate_ip=COption::GetOptionString( $sModuleId, 'moderate_ip', '0' );

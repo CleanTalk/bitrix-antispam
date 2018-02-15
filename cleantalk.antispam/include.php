@@ -14,6 +14,8 @@ require_once(dirname(__FILE__) . '/classes/CleantalkHelper.php');
 // SFW class
 require_once(dirname(__FILE__) . '/classes/CleantalkSFW.php');
 
+// Custom config
+require_once(dirname(__FILE__) . '/custom_config.php');
 /**
  * CleanTalk module class
  *
@@ -905,11 +907,37 @@ class CleantalkAntispam {
      * @param string Content to modify
      */
     function OnEndBufferContentHandler(&$content) {
-		if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1)
+    	$custom_config = new CleantalkCustomConfig();
+    	$url_exclusion = $custom_config->get_url_exclusions();
+    	foreach ($url_exclusion as $key=>$value)
+    		if (strpos("http" . (($_SERVER['SERVER_PORT'] == 443) ? "s://" : "://") . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],$value) !== false)
+    			{
+    				if (isset($_COOKIE['ct_checkjs'])) {
+					    unset($_COOKIE['ct_checkjs']);
+					    setcookie('ct_checkjs', null, -1, '/');
+					}
+    				if (isset($_COOKIE['ct_fkp_timestamp'])) {
+					    unset($_COOKIE['ct_fkp_timestamp']);
+					    setcookie('ct_fkp_timestamp', null, -1, '/');
+					}
+    				if (isset($_COOKIE['ct_pointer_data'])) {
+					    unset($_COOKIE['ct_pointer_data']);
+					    setcookie('ct_pointer_data', null, -1, '/');
+					}
+    				if (isset($_COOKIE['ct_ps_timestamp'])) {
+					    unset($_COOKIE['ct_ps_timestamp']);
+					    setcookie('ct_ps_timestamp', null, -1, '/');
+					}
+    				if (isset($_COOKIE['ct_timezone'])) {
+					    unset($_COOKIE['ct_timezone']);
+					    setcookie('ct_timezone', null, -1, '/');
+					}											
+    				return;
+    			}
+		if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1 && strpos($content,'<head>') !== false)
 			{
 				if (!session_id()) session_start();
 			$_SESSION['ct_submit_time'] = time();
-		
 
 			$field_name = 'ct_checkjs';
 			$ct_check_def = '0';
@@ -1051,7 +1079,8 @@ class CleantalkAntispam {
             ));
             return;
         }
-        $url_exclusion = explode(',',COption::GetOptionString( 'cleantalk.antispam', 'exclude_urls',       '' ));
+        $custom_config = new CleantalkCustomConfig();
+    	$url_exclusion = $custom_config->get_url_exclusions();
     	foreach ($url_exclusion as $key=>$value)
     		if (strpos("http" . (($_SERVER['SERVER_PORT'] == 443) ? "s://" : "://") . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],$value) !== false)
     			return;
@@ -1121,7 +1150,7 @@ class CleantalkAntispam {
         $ct_request->sender_email = isset($arEntity['sender_email']) ? $arEntity['sender_email'] : '';
         $ct_request->sender_nickname = isset($arEntity['sender_nickname']) ? $arEntity['sender_nickname'] : '';
 		$ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
-        $ct_request->agent = 'bitrix-3103';
+        $ct_request->agent = 'bitrix-3102';
         $ct_request->response_lang = 'ru';
         $ct_request->js_on = $checkjs;
         $ct_request->sender_info = $sender_info;
@@ -1403,7 +1432,7 @@ class CleantalkAntispam {
 
             $ct_request = new CleantalkRequest();
             $ct_request->auth_key = $ct_key;
-            $ct_request->agent = 'bitrix-3103';
+            $ct_request->agent = 'bitrix-3102';
 	    $ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
             $ct_request->feedback = $request_id . ':' . ($feedback == 'Y' ? '1' : '0');
 
