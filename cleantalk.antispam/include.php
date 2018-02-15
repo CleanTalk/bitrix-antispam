@@ -14,6 +14,8 @@ require_once(dirname(__FILE__) . '/classes/CleantalkHelper.php');
 // SFW class
 require_once(dirname(__FILE__) . '/classes/CleantalkSFW.php');
 
+// Custom config
+require_once(dirname(__FILE__) . '/custom_config.php');
 /**
  * CleanTalk module class
  *
@@ -24,7 +26,6 @@ RegisterModuleDependences('main', 'OnPageStart', 'cleantalk.antispam', 'Cleantal
 class CleantalkAntispam {
 
     const KEYS_NUM = 12; // 12 last JS keys are valid
-    
 	
 	/*
 	 * Updates SFW local database
@@ -906,7 +907,35 @@ class CleantalkAntispam {
      * @param string Content to modify
      */
     function OnEndBufferContentHandler(&$content) {
-		if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1){
+    	$custom_config = new CleantalkCustomConfig();
+    	$url_exclusion = $custom_config->get_url_exclusions();
+    	foreach ($url_exclusion as $key=>$value)
+    		if (strpos($_SERVER['REQUEST_URI'],$value) !== false)
+    			{
+    				if (isset($_COOKIE['ct_checkjs'])) {
+					    unset($_COOKIE['ct_checkjs']);
+					    setcookie('ct_checkjs', null, -1, '/');
+					}
+    				if (isset($_COOKIE['ct_fkp_timestamp'])) {
+					    unset($_COOKIE['ct_fkp_timestamp']);
+					    setcookie('ct_fkp_timestamp', null, -1, '/');
+					}
+    				if (isset($_COOKIE['ct_pointer_data'])) {
+					    unset($_COOKIE['ct_pointer_data']);
+					    setcookie('ct_pointer_data', null, -1, '/');
+					}
+    				if (isset($_COOKIE['ct_ps_timestamp'])) {
+					    unset($_COOKIE['ct_ps_timestamp']);
+					    setcookie('ct_ps_timestamp', null, -1, '/');
+					}
+    				if (isset($_COOKIE['ct_timezone'])) {
+					    unset($_COOKIE['ct_timezone']);
+					    setcookie('ct_timezone', null, -1, '/');
+					}											
+    				return;
+    			}
+		if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1 && strpos($content,'<head>') !== false)
+			{
 				if (!session_id()) session_start();
 			$_SESSION['ct_submit_time'] = time();
 
@@ -1050,7 +1079,11 @@ class CleantalkAntispam {
             ));
             return;
         }
-
+        $custom_config = new CleantalkCustomConfig();
+    	$url_exclusion = $custom_config->get_url_exclusions();
+    	foreach ($url_exclusion as $key=>$value)
+    		if (strpos($_SERVER['REQUEST_URI'],$value) !== false)
+    			return;
         $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '0');
         $ct_ws = self::GetWorkServer();
 
