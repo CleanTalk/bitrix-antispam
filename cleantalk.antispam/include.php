@@ -910,7 +910,7 @@ class CleantalkAntispam {
     	$custom_config = new CleantalkCustomConfig();
     	$url_exclusion = $custom_config->get_url_exclusions();
     	foreach ($url_exclusion as $key=>$value)
-    		if (strpos("http" . (($_SERVER['SERVER_PORT'] == 443) ? "s://" : "://") . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],$value) !== false)
+    		if (strpos($_SERVER['REQUEST_URI'],$value) !== false)
     			{
     				if (isset($_COOKIE['ct_checkjs'])) {
 					    unset($_COOKIE['ct_checkjs']);
@@ -1082,7 +1082,7 @@ class CleantalkAntispam {
         $custom_config = new CleantalkCustomConfig();
     	$url_exclusion = $custom_config->get_url_exclusions();
     	foreach ($url_exclusion as $key=>$value)
-    		if (strpos("http" . (($_SERVER['SERVER_PORT'] == 443) ? "s://" : "://") . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],$value) !== false)
+    		if (strpos($_SERVER['REQUEST_URI'],$value) !== false)
     			return;
         $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '0');
         $ct_ws = self::GetWorkServer();
