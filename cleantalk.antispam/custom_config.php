@@ -3,7 +3,7 @@
 class CleantalkCustomConfig
 {
 	// Exclude urls from spam_check. List them separated by commas
-	private $cleantalk_url_exclusions = 'http://bitrix.loc/login/?register=yes';
+	private $cleantalk_url_exclusions = '';
 
 	function __construct()
 	{
