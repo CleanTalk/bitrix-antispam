@@ -1150,7 +1150,7 @@ class CleantalkAntispam {
         $ct_request->sender_email = isset($arEntity['sender_email']) ? $arEntity['sender_email'] : '';
         $ct_request->sender_nickname = isset($arEntity['sender_nickname']) ? $arEntity['sender_nickname'] : '';
 		$ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
-        $ct_request->agent = 'bitrix-3102';
+        $ct_request->agent = 'bitrix-3103';
         $ct_request->response_lang = 'ru';
         $ct_request->js_on = $checkjs;
         $ct_request->sender_info = $sender_info;
@@ -1432,7 +1432,7 @@ class CleantalkAntispam {
 
             $ct_request = new CleantalkRequest();
             $ct_request->auth_key = $ct_key;
-            $ct_request->agent = 'bitrix-3102';
+            $ct_request->agent = 'bitrix-3103';
 	    $ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
             $ct_request->feedback = $request_id . ':' . ($feedback == 'Y' ? '1' : '0');
 
