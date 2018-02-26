@@ -7,7 +7,7 @@ class CleantalkCustomConfig
 
 	function __construct()
 	{
-		$this->cleantalk_url_exclusions = explode(',', trim($this->cleantalk_url_exclusions));	
+		$this->cleantalk_url_exclusions = (!empty($this->cleantalk_url_exclusions) ? explode(',', trim($this->cleantalk_url_exclusions)) : null);	
 	}
 	public function get_url_exclusions()
 	{
