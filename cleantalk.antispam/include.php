@@ -909,7 +909,7 @@ class CleantalkAntispam {
     function OnEndBufferContentHandler(&$content) {
     	$custom_config = new CleantalkCustomConfig();
     	$url_exclusion = $custom_config->get_url_exclusions();
-    	if (!empty($url_exclusion))
+    	if ($url_exclusion)
     	{
 	     	foreach ($url_exclusion as $key=>$value)
 	    		if (strpos($_SERVER['REQUEST_URI'],$value) !== false)
@@ -1085,7 +1085,7 @@ class CleantalkAntispam {
         }
         $custom_config = new CleantalkCustomConfig();
     	$url_exclusion = $custom_config->get_url_exclusions();
-    	if (!empty($url_exclusion))
+    	if ($url_exclusion)
     	{
 	    	foreach ($url_exclusion as $key=>$value)
 	    		if (strpos($_SERVER['REQUEST_URI'],$value) !== false)
