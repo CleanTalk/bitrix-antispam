@@ -1079,38 +1079,8 @@ class CleantalkAntispam {
      * @param string Content to modify
      */
     function OnEndBufferContentHandler(&$content) {
-    	$custom_config = new CleantalkCustomConfig();
-    	$url_exclusion = $custom_config->get_url_exclusions();
-    	if ($url_exclusion)
-    	{
-	     	foreach ($url_exclusion as $key=>$value)
-	    		if (strpos($_SERVER['REQUEST_URI'],$value) !== false)
-	    			{
-	    				if (isset($_COOKIE['ct_checkjs'])) {
-						    unset($_COOKIE['ct_checkjs']);
-						    setcookie('ct_checkjs', null, -1, '/');
-						}
-	    				if (isset($_COOKIE['ct_fkp_timestamp'])) {
-						    unset($_COOKIE['ct_fkp_timestamp']);
-						    setcookie('ct_fkp_timestamp', null, -1, '/');
-						}
-	    				if (isset($_COOKIE['ct_pointer_data'])) {
-						    unset($_COOKIE['ct_pointer_data']);
-						    setcookie('ct_pointer_data', null, -1, '/');
-						}
-	    				if (isset($_COOKIE['ct_ps_timestamp'])) {
-						    unset($_COOKIE['ct_ps_timestamp']);
-						    setcookie('ct_ps_timestamp', null, -1, '/');
-						}
-	    				if (isset($_COOKIE['ct_timezone'])) {
-						    unset($_COOKIE['ct_timezone']);
-						    setcookie('ct_timezone', null, -1, '/');
-						}											
-	    				return;
-	    			}   		
-    	}
 
-		if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1 && strpos($content,'<head>') !== false)
+		if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1 && strpos($content,'<body>') !== false)
 			{
 				if (!session_id()) session_start();
 			$_SESSION['ct_submit_time'] = time();
@@ -1209,7 +1179,7 @@ class CleantalkAntispam {
 				}
 			</script>';
 			$ct_addon_body = sprintf($js_template, $field_name, $ct_check_values[0]);
-			$content = preg_replace('/(<head[^>]*>)/i', '${1}'."\n".$ct_addon_body, $content, 1);
+			$content = preg_replace('/(<body[^>]*>)/i', '${1}'."\n".$ct_addon_body, $content, 1);
 		}
     }
 
