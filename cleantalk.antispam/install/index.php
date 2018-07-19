@@ -145,7 +145,9 @@ class cleantalk_antispam extends CModule {
 			CAgent::AddAgent("CleantalkAntispam::sfw_send_logs();", "cleantalk.antispam", "N", 3600);
 			CAgent::AddAgent("CleantalkAntispam::sfw_update();",    "cleantalk.antispam", "N", 86400);
 		}
-	
+		//Add JS
+		CopyDirFiles($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/cleantalk.antispam/install/js",
+   		$_SERVER["DOCUMENT_ROOT"] . "/bitrix/js/cleantalk.antispam", true, true);
 		//Checking API key if already set
 		$api_key = COption::GetOptionString( 'cleantalk.antispam', 'key', '');
 		$form_sfw = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 );
@@ -250,6 +252,11 @@ class cleantalk_antispam extends CModule {
 			$this->template_messages[] = $this->PTLC_message;
 			}
 		}
+		// Remove JS file
+		DeleteDirFiles(
+		    $_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/cleantalk.antispam/install/js", 
+		    $_SERVER["DOCUMENT_ROOT"] . "/bitrix/js/cleantalk.antispam"
+		    );
 		return TRUE;	// always TRUE
     }
 
