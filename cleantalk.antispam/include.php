@@ -316,6 +316,7 @@ class CleantalkAntispam {
     {
         global $APPLICATION, $USER;
         $APPLICATION->AddHeadScript('/bitrix/js/cleantalk.antispam/apbct-public.js');
+        self::ct_cookie();
         if (!is_object($USER)) $USER = new CUser;
         $ct_status               = COption::GetOptionString('cleantalk.antispam', 'status', '0');
         $ct_global               = COption::GetOptionString('cleantalk.antispam', 'form_global_check', 0);
@@ -1081,8 +1082,6 @@ class CleantalkAntispam {
     function OnEndBufferContentHandler(&$content) {
         if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1 && strpos($content,'<head>') !== false)
             {
-            if (!session_id()) session_start();
-                $_SESSION['ct_submit_time'] = time();
 
             $field_name = 'ct_checkjs';
             $ct_check_def = '0';
@@ -1148,9 +1147,7 @@ class CleantalkAntispam {
         $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '0');
         $ct_ws = self::GetWorkServer();
 
-        $ct_submit_time = NULL;
-        if(isset($_SESSION['ct_submit_time']))
-            $ct_submit_time = time() - $_SESSION['ct_submit_time'];
+        $ct_submit_time = isset($_COOKIE['ct_ps_timestamp']) ? time() - intval($_COOKIE['ct_ps_timestamp']) : 0;
 
         if (!isset($_COOKIE['ct_checkjs']))
             $checkjs = NULL;
@@ -1182,7 +1179,9 @@ class CleantalkAntispam {
             'js_timezone' => $js_timezone,
             'mouse_cursor_positions' => $pointer_data,
             'key_press_timestamp' => $first_key_timestamp,
-            'page_set_timestamp' => $page_set_timestamp
+            'page_set_timestamp' => $page_set_timestamp,
+            'REFFERRER_PREVIOUS' => isset($_COOKIE['ct_prev_referer']) ? $_COOKIE['ct_prev_referer'] : null,
+            'cookies_enabled' => self::ct_cookies_test(),
         );
         $sender_info = json_encode($sender_info);
 
@@ -1630,4 +1629,51 @@ class CleantalkAntispam {
             return array(md5(COption::GetOptionString('cleantalk.antispam', 'key', '0') . '+' . COption::GetOptionString('main', 'email_from')));
         }
     }
+    /*
+     * Set Cookies test for cookie test
+     * Sets cookies with pararms timestamp && landing_timestamp && pervious_referer
+     * Sets test cookie with all other cookies
+     */
+    private function ct_cookie(){
+        
+        // Cookie names to validate
+        $cookie_test_value = array(
+            'cookies_names' => array(),
+            'check_value' => COption::GetOptionString('cleantalk.antispam', 'key', '0'),
+        );
+        // Pervious referer
+        if(!empty($_SERVER['HTTP_REFERER'])){
+            setcookie('ct_prev_referer', $_SERVER['HTTP_REFERER'], 0, '/');
+            $cookie_test_value['cookies_names'][] = 'ct_prev_referer';
+            $cookie_test_value['check_value'] .= $_SERVER['HTTP_REFERER'];
+        }           
+        // Cookies test
+        $cookie_test_value['check_value'] = md5($cookie_test_value['check_value']);
+        setcookie('ct_cookies_test', json_encode($cookie_test_value), 0, '/');
+    } 
+    /**
+     * Cookies test for sender 
+     * Also checks for valid timestamp in $_COOKIE['apbct_timestamp'] and other apbct_ COOKIES
+     * @return null|0|1;
+     */
+    private function ct_cookies_test()
+    {       
+        if(isset($_COOKIE['ct_cookies_test'])){
+            
+            $cookie_test = json_decode(stripslashes($_COOKIE['ct_cookies_test']), true);
+            
+            $check_srting = COption::GetOptionString('cleantalk.antispam', 'key', '0');
+            foreach($cookie_test['cookies_names'] as $cookie_name){
+                $check_srting .= isset($_COOKIE[$cookie_name]) ? $_COOKIE[$cookie_name] : '';
+            } unset($cokie_name);
+            
+            if($cookie_test['check_value'] == md5($check_srting)){
+                return 1;
+            }else{
+                return 0;
+            }
+        }else{
+            return null;
+        }
+    }       
 }
