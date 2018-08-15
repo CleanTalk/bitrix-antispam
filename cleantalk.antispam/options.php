@@ -21,7 +21,7 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     //Getting key automatically
     if(isset($_POST['getautokey'])){
         
-        $result = CleantalkHelper::getApiKey(COption::GetOptionString("main", "email_from"), $_SERVER["SERVER_NAME"], 'bitrix');
+        $result = CleantalkHelper::api_method__get_api_key(COption::GetOptionString("main", "email_from"), $_SERVER["SERVER_NAME"], 'bitrix');
         
         if (empty($result['error'])){
         
@@ -40,13 +40,13 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     }
     
     // Send empty feedback for version comparison in Dashboard
-    $result = CleantalkHelper::sendEmptyFeedback($new_key, 'bitrix-3107');
+    $result = CleantalkHelper::api_method_send_empty_feedback($new_key, 'bitrix-3108');
     
     /**
      * Set settings when submit
      */
     //Validating key
-    $result = CleantalkHelper::noticeValidateKey($new_key);
+    $result = CleantalkHelper::api_method__notice_validate_key($new_key);
     if(empty($result['error'])){
         COption::SetOptionString( $sModuleId, 'key_is_ok', strval($result['valid']));
     }

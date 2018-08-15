@@ -144,14 +144,13 @@ class CleantalkAntispam {
      */
     public function OnPageStartHandler()
     {
-        global $APPLICATION, $USER;
-        $APPLICATION->AddHeadScript('/bitrix/js/cleantalk.antispam/apbct-public.js');
+        global $USER;
         self::ct_cookie();
         if (!is_object($USER)) $USER = new CUser;
         $ct_status               = COption::GetOptionString('cleantalk.antispam', 'status', '0');
         $ct_global               = COption::GetOptionString('cleantalk.antispam', 'form_global_check', 0);
         $ct_global_without_email = COption::GetOptionString('cleantalk.antispam', 'form_global_check_without_email', 0);
-        $key                     = COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
+        $ct_key                     = COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
         $last_checked            = COption::GetOptionString( 'cleantalk.antispam', 'last_checked', 0 );
         $last_status             = COption::GetOptionString( 'cleantalk.antispam', 'is_paid', 0 );
         $is_sfw                  = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 );
@@ -159,48 +158,42 @@ class CleantalkAntispam {
         
         if($is_sfw==1 && !$USER->IsAdmin())
         {
-            $is_sfw_check = true;
             $sfw = new CleantalkSFW();
-            $ips = $sfw->get_ip();
-            $sfw_log = COption::GetOptionString( 'cleantalk.antispam', 'sfw_log', '' );
-            foreach($ips as $ip){
-                
-                if(isset($_COOKIE['ct_sfw_pass_key']) && $_COOKIE['ct_sfw_pass_key'] == md5($ip.$key)){
-                    
-                    $is_sfw_check = false;
-                    
-                    if(isset($_COOKIE['ct_sfw_passed'])){
-                        $sfw->sfw_update_logs($ip, 'passed');
-                        if(!headers_sent()){
-                            setcookie ('ct_sfw_passed', '0', 1, "/");
-                        }
+            $is_sfw_check = true;
+            $sfw->ip_array = (array)CleantalkSFW::ip_get(array('real'), true);  
+
+                foreach($sfw->ip_array as $key => $value)
+                {
+                  if(isset($_COOKIE['ct_sfw_pass_key']) && $_COOKIE['ct_sfw_pass_key'] == md5($value . trim($ct_key)))
+                  {
+                    $is_sfw_check=false;
+                    if(isset($_COOKIE['ct_sfw_passed']))
+                    {
+                      @setcookie ('ct_sfw_passed'); //Deleting cookie
+                      $sfw->sfw_update_logs($value, 'passed');
                     }
-                }else{
-                    $is_sfw_check = true;
-                }
-            }
-            
-            if($is_sfw_check){
-                $sfw->check_ip();
-                if($sfw->result){
-                    $sfw->sfw_update_logs($sfw->blocked_ip, 'blocked');
-                    $sfw->sfw_die($key);
-                }else{
-                    if(!headers_sent()){
-                        setcookie ('ct_sfw_pass_key', md5($sfw->passed_ip.$key), 0, "/");
-                    }
-                }
+                  }
+              } unset($key, $value);  
+
+            if($is_sfw_check)
+            {
+              $sfw->check_ip();
+              if($sfw->result)
+              {
+                $sfw->sfw_update_logs($sfw->blocked_ip, 'blocked');
+                $sfw->sfw_die(trim($ct_key));
+              }
             }
         }
         
 
-        if($key!=''&&$key!='enter key'&&$USER->IsAdmin())
+        if($ct_key!='' && $ct_key!='enter key' && $USER->IsAdmin())
         {
             $new_status=$last_status;
             if($new_checked-$last_checked>86400)
             {
                 
-                $result = CleantalkHelper::getAccountStatus($key);
+                $result = CleantalkHelper::api_method__get_account_status($ct_key);
                 
                 if(empty($result['error'])){
                     
@@ -228,7 +221,7 @@ class CleantalkAntispam {
                     }
                 }
                 
-                $result = CleantalkHelper::noticePaidTill($key);
+                $result = CleantalkHelper::api_method__notice_paid_till($ct_key);
                 
                 if(empty($result['error'])){
                     
@@ -909,7 +902,7 @@ class CleantalkAntispam {
      * @param string Content to modify
      */
     function OnEndBufferContentHandler(&$content) {
-        if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1 && strpos($content,'<head>') !== false)
+        if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1 && strpos($content,'</body>') !== false)
             {
 
             $field_name = 'ct_checkjs';
@@ -917,8 +910,94 @@ class CleantalkAntispam {
             if (!isset($_COOKIE[$field_name])) setcookie($field_name, $ct_check_def, 0, '/');
 
             $ct_check_values = self::SetCheckJSValues();
-            $js_template = "<script>var ct_checkjs_val = '".$ct_check_values[0]."';</script>";
-            $content = preg_replace('/(<head[^>]*>)/i', '${1}'."\n".$js_template, $content, 1);
+            $js_template = "<script>var ct_checkjs_val = '".$ct_check_values[0]."', ct_date = new Date(), 
+                ctTimeMs = new Date().getTime(),
+                ctMouseEventTimerFlag = true, //Reading interval flag
+                ctMouseData = [],
+                ctMouseDataCounter = 0;
+
+            function ctSetCookie(c_name, value) {
+                document.cookie = c_name + '=' + encodeURIComponent(value) + '; path=/';
+            }
+
+            ctSetCookie('ct_ps_timestamp', Math.floor(new Date().getTime()/1000));
+            ctSetCookie('ct_fkp_timestamp', '0');
+            ctSetCookie('ct_pointer_data', '0');
+            ctSetCookie('ct_timezone', '0');
+
+            setTimeout(function(){
+                ctSetCookie('ct_timezone', ct_date.getTimezoneOffset()/60*(-1));
+                ctSetCookie('ct_checkjs', ct_checkjs_val);  
+            },1000);
+
+            //Writing first key press timestamp
+            var ctFunctionFirstKey = function output(event){
+                var KeyTimestamp = Math.floor(new Date().getTime()/1000);
+                ctSetCookie('ct_fkp_timestamp', KeyTimestamp);
+                ctKeyStopStopListening();
+            }
+
+            //Reading interval
+            var ctMouseReadInterval = setInterval(function(){
+                ctMouseEventTimerFlag = true;
+            }, 150);
+                
+            //Writting interval
+            var ctMouseWriteDataInterval = setInterval(function(){
+                ctSetCookie('ct_pointer_data', JSON.stringify(ctMouseData));
+            }, 1200);
+
+            //Logging mouse position each 150 ms
+            var ctFunctionMouseMove = function output(event){
+                if(ctMouseEventTimerFlag == true){
+                    
+                    ctMouseData.push([
+                        Math.round(event.pageY),
+                        Math.round(event.pageX),
+                        Math.round(new Date().getTime() - ctTimeMs)
+                    ]);
+                    
+                    ctMouseDataCounter++;
+                    ctMouseEventTimerFlag = false;
+                    if(ctMouseDataCounter >= 100){
+                        ctMouseStopData();
+                    }
+                }
+            }
+
+            //Stop mouse observing function
+            function ctMouseStopData(){
+                if(typeof window.addEventListener == 'function'){
+                    window.removeEventListener('mousemove', ctFunctionMouseMove);
+                }else{
+                    window.detachEvent('onmousemove', ctFunctionMouseMove);
+                }
+                clearInterval(ctMouseReadInterval);
+                clearInterval(ctMouseWriteDataInterval);                
+            }
+
+            //Stop key listening function
+            function ctKeyStopStopListening(){
+                if(typeof window.addEventListener == 'function'){
+                    window.removeEventListener('mousedown', ctFunctionFirstKey);
+                    window.removeEventListener('keydown', ctFunctionFirstKey);
+                }else{
+                    window.detachEvent('mousedown', ctFunctionFirstKey);
+                    window.detachEvent('keydown', ctFunctionFirstKey);
+                }
+            }
+
+            if(typeof window.addEventListener == 'function'){
+                window.addEventListener('mousemove', ctFunctionMouseMove);
+                window.addEventListener('mousedown', ctFunctionFirstKey);
+                window.addEventListener('keydown', ctFunctionFirstKey);
+            }else{
+                window.attachEvent('onmousemove', ctFunctionMouseMove);
+                window.attachEvent('mousedown', ctFunctionFirstKey);
+                window.attachEvent('keydown', ctFunctionFirstKey);
+            }</script>";
+            
+            $content = preg_replace('/(<\/body[^>]*>)/i', '${1}'."\n".$js_template, $content, 1);
         }
     }
 
@@ -1038,8 +1117,10 @@ class CleantalkAntispam {
         $ct_request->auth_key = $ct_key;
         $ct_request->sender_email = isset($arEntity['sender_email']) ? $arEntity['sender_email'] : '';
         $ct_request->sender_nickname = isset($arEntity['sender_nickname']) ? $arEntity['sender_nickname'] : '';
-        $ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
-        $ct_request->agent = 'bitrix-3107';
+        $ct_request->sender_ip = CleantalkHelper::ip_get(array('real'), false);
+        $ct_request->x_forwarded_for = CleantalkHelper::ip_get(array('x_forwarded_for'), false);
+        $ct_request->x_real_ip       = CleantalkHelper::ip_get(array('x_real_ip'), false);
+        $ct_request->agent = 'bitrix-3108';
         $ct_request->response_lang = 'ru';
         $ct_request->js_on = $checkjs;
         $ct_request->sender_info = $sender_info;
@@ -1298,7 +1379,7 @@ class CleantalkAntispam {
      * @param string Feedback type - 'Y' or 'N' only
      */
     static function SendFeedback($module, $id, $feedback) {
-        global $APPLICATION, $DB;
+        global $DB;
         if(empty($module))
             return;
         if(empty($id) || intval($id) < 0)
@@ -1321,7 +1402,7 @@ class CleantalkAntispam {
 
             $ct_request = new CleantalkRequest();
             $ct_request->auth_key = $ct_key;
-            $ct_request->agent = 'bitrix-3107';
+            $ct_request->agent = 'bitrix-3108';
             $ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
             $ct_request->feedback = $request_id . ':' . ($feedback == 'Y' ? '1' : '0');
 
@@ -1337,7 +1418,7 @@ class CleantalkAntispam {
      * @return string|boolean Text of CleanTalk resume if any or FALSE if not
      */
     static function GetCleanTalkResume($module, $id) {
-        global $APPLICATION, $DB;
+        global $DB;
         if(empty($module))
             return;
         if(empty($id) || intval($id) < 0)

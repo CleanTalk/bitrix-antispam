@@ -2,15 +2,15 @@
 
 /*
  * CleanTalk SpamFireWall base class
- * Compatible only with Bitrix.
- * Version 1.5-bitrix
+ * Compatible only with Wordpress.
+ * Version 2.0-wp
  * author Cleantalk team (welcome@cleantalk.org)
  * copyright (C) 2014 CleanTalk team (http://cleantalk.org)
  * license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
  * see https://github.com/CleanTalk/php-antispam
 */
 
-class CleantalkSFW
+class CleantalkSFW extends CleantalkHelper
 {
 	public $ip = 0;
 	public $ip_str = '';
@@ -29,16 +29,20 @@ class CleantalkSFW
 	
 	public function __construct()
 	{
-		$this->table_prefix = '';
+		global $DB;
+		$this->table_prefix = "";
+		$this->db = $DB;
 	}
 	
 	public function unversal_query($query, $straight_query = false)
 	{
-		global $DB;
-		$this->db_result = $DB->Query($query);
+		if($straight_query)
+			$this->db_result = $this->db->Query($query);
+		else
+			$this->query = $query;
 	}
 	
-	public function unversal_fetch_row()
+	public function unversal_fetch()
 	{
 		$this->db_result_data = $this->db_result->Fetch();
 	}
@@ -52,65 +56,43 @@ class CleantalkSFW
 	
 	
 	/*
-	*	Getting arrays of IP (REMOTE_ADDR, X-Forwarded-For, sfw_test_ip)
-	* 
-	*	reutrns array
+	*	Getting arrays of IP (REMOTE_ADDR, X-Forwarded-For, X-Real-Ip, Cf_Connecting_Ip)
+	*	reutrns array('remote_addr' => 'val', ['x_forwarded_for' => 'val', ['x_real_ip' => 'val', ['cloud_flare' => 'val']]])
 	*/
-	public function get_ip(){
+	static public function ip_get($ips_input = array('real', 'remote_addr', 'x_forwarded_for', 'x_real_ip', 'cloud_flare'), $v4_only = true){
 		
-		$result=Array();
+		$result = (array)parent::ip_get($ips_input, $v4_only);
 		
-		// Getting IP
-		$the_ip = filter_var( $_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 );
-		$result[] = $the_ip;
-		$this->ip_str_array[]=$the_ip;
-		$this->ip_array[]=sprintf("%u", ip2long($the_ip));
-
-		// Getting proxy IP
-		$headers = function_exists('apache_request_headers')
-			? apache_request_headers()
-			: self::apache_request_headers();
+		$result = !empty($result) ? $result : array();
 		
-		if( isset($headers['X-Forwarded-For']) ){
-			$the_ip = explode(",", trim($headers['X-Forwarded-For']));
-			$the_ip = trim($the_ip[0]);
-			$result[] = filter_var( $the_ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 );
-			$this->ip_str_array[]=$the_ip;
-			$this->ip_array[]=sprintf("%u", ip2long($the_ip));
+		if(isset($_GET['sfw_test_ip'])){
+			if(self::ip_validate($_GET['sfw_test_ip']) !== false)
+				$result['sfw_test'] = $_GET['sfw_test_ip'];
 		}
 		
-		// Getting test IP
-		$sfw_test_ip = isset($_GET['sfw_test_ip']) ? $_GET['sfw_test_ip'] : null;
-		if($sfw_test_ip){
-			$result[] = filter_var( $sfw_test_ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 );
-			$this->ip_str_array[]=$sfw_test_ip;
-			$this->ip_array[]=sprintf("%u", ip2long($sfw_test_ip));
-		}
+		return $result;
 		
-		return array_unique($result);
 	}
 	
 	/*
 	*	Checks IP via Database
 	*/
-	public function check_ip(){		
+	public function check_ip(){
 		
-		for($i=0, $arr_count = sizeof($this->ip_array); $i < $arr_count; $i++){
-			
+		foreach($this->ip_array as $current_ip){
+		
 			$query = "SELECT 
 				COUNT(network) AS cnt
 				FROM ".$this->table_prefix."cleantalk_sfw
-				WHERE network = ".intval($this->ip_array[$i])." & mask;";
-			$this->unversal_query($query);
-			$this->unversal_fetch_row();
-			
-			$curr_ip = long2ip( (int) $this->ip_array[$i] );
+				WHERE network = ".sprintf("%u", ip2long($current_ip))." & mask";
+			$this->unversal_query($query, true);
+			$this->unversal_fetch();
 			
 			if($this->db_result_data['cnt']){
 				$this->result = true;
-				$this->blocked_ip=$this->ip_str_array[$i];
+				$this->blocked_ip = $current_ip;
 			}else{
-				$this->passed_ip = $this->ip_str_array[$i];
+				$this->passed_ip = $current_ip;
 			}
 		}
 	}
@@ -124,31 +106,22 @@ class CleantalkSFW
 			return;
 		}
 		
-		$blocked = ($result == 'blocked' ? '1' : '0');
+		$blocked = ($result == 'blocked' ? ' + 1' : '');
 		$time = time();
-		
-		$query = "SELECT COUNT(ip) as cnt
-			FROM ".$this->table_prefix."cleantalk_sfw_logs
-			WHERE ip = '$ip';";
-		$this->unversal_query($query, true);
-		$this->unversal_fetch_row();
-		
-		if($this->db_result_data['cnt']){
-			$query = "UPDATE ".$this->table_prefix."cleantalk_sfw_logs
-				SET
-					all_entries = all_entries + 1,
-					blocked_entries = blocked_entries + $blocked,
-					entries_timestamp = $time
-				WHERE ip = '$ip';";
-		}else{	
-			$query = "INSERT INTO ".$this->table_prefix."cleantalk_sfw_logs
-			SET 
-				ip = '$ip',
-				all_entries = 1,
-				blocked_entries = $blocked,
-				entries_timestamp = $time;";
-		}
-		$this->unversal_query($query, true);
+
+		$query = "INSERT INTO ".$this->table_prefix."cleantalk_sfw_logs
+		SET 
+			ip = '$ip',
+			all_entries = 1,
+			blocked_entries = 1,
+			entries_timestamp = '".intval($time)."'
+		ON DUPLICATE KEY 
+		UPDATE 
+			all_entries = all_entries + 1,
+			blocked_entries = blocked_entries".strval($blocked).",
+			entries_timestamp = '".intval($time)."'";
+
+		$this->unversal_query($query,true);
 	}
 	
 	/*
@@ -158,11 +131,11 @@ class CleantalkSFW
 	*/
 	public function sfw_update($ct_key){
 		
-		$result = self::get_2sBlacklistsDb($ct_key);
+		$result = self::api_method__get_2s_blacklists_db($ct_key);
 		
 		if(empty($result['error'])){
 			
-			$this->unversal_query("DELETE FROM ".$this->table_prefix."cleantalk_sfw;", true);
+			$this->unversal_query("TRUNCATE TABLE ".$this->table_prefix."cleantalk_sfw",true);
 						
 			// Cast result to int
 			foreach($result as $value){
@@ -178,12 +151,12 @@ class CleantalkSFW
 					$query.="(".$result[$i][0].",".$result[$i][1]."), ";
 				}
 			}
-			$this->unversal_query($query, true);
+			$this->unversal_query($query,true);
 			
 			return true;
 			
 		}else{
-			return $result['error_string'];
+			return $result;
 		}
 	}
 	
@@ -196,7 +169,7 @@ class CleantalkSFW
 		
 		//Getting logs
 		$query = "SELECT * FROM ".$this->table_prefix."cleantalk_sfw_logs";
-		$this->unversal_query($query);
+		$this->unversal_query($query, true);
 		$this->unversal_fetch_all();
 		
 		if(count($this->db_result_data)){
@@ -209,20 +182,20 @@ class CleantalkSFW
 			unset($key, $value);
 			
 			//Sending the request
-			$result = self::sfwLogs($ct_key, $data);
+			$result = self::api_method__sfw_logs($ct_key, $data);
 			
 			//Checking answer and deleting all lines from the table
 			if(empty($result['error'])){
 				if($result['rows'] == count($data)){
-					$this->unversal_query("DELETE FROM ".$this->table_prefix."cleantalk_sfw_logs", true);
+					$this->unversal_query("TRUNCATE TABLE ".$this->table_prefix."cleantalk_sfw_logs",true);
 					return true;
 				}
 			}else{
-				return $result['error_string'];
+				return $result;
 			}
 				
 		}else{
-			return 'NO_LOGS_TO_SEND';
+			return array('error' => true, 'error_string' => 'NO_LOGS_TO_SEND');
 		}
 	}
 	
@@ -237,30 +210,20 @@ class CleantalkSFW
 		if(file_exists(dirname(__FILE__)."/sfw_die_page.html")){
 			$sfw_die_page = file_get_contents(dirname(__FILE__)."/sfw_die_page.html");
 		}else{
-			die('Your IP looks like spammer\'s IP');
+			die("IP BLACKLISTED");
 		}
-		
-		// Translation
-		$request_uri = $_SERVER['REQUEST_URI'];
-		$sfw_die_page = str_replace('{SFW_DIE_NOTICE_IP}',              'SpamFireWall is activated for your IP ', $sfw_die_page);
-		$sfw_die_page = str_replace('{SFW_DIE_MAKE_SURE_JS_ENABLED}',   'To continue working with web site, please make sure that you have enabled JavaScript.', $sfw_die_page);
-		$sfw_die_page = str_replace('{SFW_DIE_CLICK_TO_PASS}',          'Please click bellow to pass protection,', $sfw_die_page);
-		$sfw_die_page = str_replace('{SFW_DIE_YOU_WILL_BE_REDIRECTED}', 'Or you will be automatically redirected to the requested page after 3 seconds.', $sfw_die_page);
-		$sfw_die_page = str_replace('{CLEANTALK_TITLE}',                'Antispam by CleanTalk', $sfw_die_page);
 		
 		// Service info
 		$sfw_die_page = str_replace('{REMOTE_ADDRESS}', $this->blocked_ip, $sfw_die_page);
-		$sfw_die_page = str_replace('{REQUEST_URI}', $request_uri, $sfw_die_page);
-		$sfw_die_page = str_replace('{COOKIE_PREFIX}', $cookie_prefix, $sfw_die_page);
-		$sfw_die_page = str_replace('{COOKIE_DOMAIN}', $cookie_domain, $sfw_die_page);
+		$sfw_die_page = str_replace('{REQUEST_URI}', $_SERVER['REQUEST_URI'], $sfw_die_page);
 		$sfw_die_page = str_replace('{SFW_COOKIE}', md5($this->blocked_ip.$api_key), $sfw_die_page);
 		
 		// Headers
 		if(headers_sent() === false){
-			header("Cache-Control: no-store, no-cache, must-revalidate");
-			header("Pragma: no-cache");
-			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . "GMT");
-			header("Expires: 0");
+			header('Expires: '.date(DATE_RFC822, mktime(0, 0, 0, 1, 1, 1971)));
+			header('Cache-Control: no-store, no-cache, must-revalidate');
+			header('Cache-Control: post-check=0, pre-check=0', FALSE);
+			header('Pragma: no-cache');
 			header("HTTP/1.0 403 Forbidden");
 			$sfw_die_page = str_replace('{GENERATED}', "", $sfw_die_page);
 		}else{
@@ -269,176 +232,5 @@ class CleantalkSFW
 		
 		die($sfw_die_page);
 		
-	}
-	
-	/*
-	* Wrapper for sfw_logs API method
-	* 
-	* returns mixed STRING || array('error' => true, 'error_string' => STRING)
-	*/
-	static public function sfwLogs($api_key, $data, $do_check = true){
-		$url='https://api.cleantalk.org';
-		$request = array(
-			'auth_key' => $api_key,
-			'method_name' => 'sfw_logs',
-			'data' => json_encode($data),
-			'rows' => count($data),
-			'timestamp' => time()
-		);
-		$result = self::sendRawRequest($url, $request);
-		$result = $do_check ? self::checkRequestResult($result, 'sfw_logs') : $result;
-		
-		return $result;
-	}
-	
-	/*
-	* Wrapper for 2s_blacklists_db API method
-	* 
-	* returns mixed STRING || array('error' => true, 'error_string' => STRING)
-	*/
-	static public function get_2sBlacklistsDb($api_key, $do_check = true){
-		$url='https://api.cleantalk.org';
-		$request = array(
-			'auth_key' => $api_key,
-			'method_name' => '2s_blacklists_db'
-		);
-		
-		$result = self::sendRawRequest($url, $request);
-		$result = $do_check ? self::checkRequestResult($result, '2s_blacklists_db') : $result;
-		
-		return $result;
-	}
-	
-	/**
-	 * Function sends raw request to API server
-	 *
-	 * @param string url of API server
-	 * @param array data to send
-	 * @param boolean is data have to be JSON encoded or not
-	 * @param integer connect timeout
-	 * @return type
-	 */
-	static public function sendRawRequest($url,$data,$isJSON=false,$timeout=3){
-		
-		$result=null;
-		if(!$isJSON){
-			$data=http_build_query($data);
-			$data=str_replace("&amp;", "&", $data);
-		}else{
-			$data= json_encode($data);
-		}
-		
-		$curl_exec=false;
-		if (function_exists('curl_init') && function_exists('json_decode')){
-		
-			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL, $url);
-			curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
-			curl_setopt($ch, CURLOPT_POST, true);
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-			
-			// receive server response ...
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-			// resolve 'Expect: 100-continue' issue
-			curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:'));
-			
-			$result = curl_exec($ch);
-			
-			if($result!==false){
-				$curl_exec=true;
-			}
-			
-			curl_close($ch);
-		}
-		if(!$curl_exec){
-			
-			$opts = array(
-				'http'=>array(
-					'method' => "POST",
-					'timeout'=> $timeout,
-					'content' => $data
-				)
-			);
-			$context = stream_context_create($opts);
-			$result = @file_get_contents($url, 0, $context);
-		}
-		return $result;
-	}
-	
-	/**
-	 * Function checks server response
-	 *
-	 * @param string request_method
-	 * @param string result
-	 * @return mixed (array || array('error' => true, 'error_string' => STRING))
-	 */
-	static public function checkRequestResult($result, $method_name = null)
-	{
-		
-		// Errors handling
-		// Bad connection
-		if(empty($result)){
-			$result = array(
-				'error' => true,
-				'error_string' => 'CONNECTION_ERROR'
-			);
-			return $result;
-		}
-		
-		// JSON decode errors
-		$result = json_decode($result, true);
-		if(empty($result)){
-			$result = array(
-				'error' => true,
-				'error_string' => 'JSON_DECODE_ERROR'
-			);
-			return $result;
-		}
-		
-		// Server errors
-		if($result && (isset($result['error_no']) || isset($result['error_message']))){
-			$result = array(
-				'error' => true,
-				'error_string' => "SERVER_ERROR NO:{$result['error_no']} MSG:{$result['error_message']}",
-				'error_no' => $result['error_no'],
-				'error_message' => $result['error_message']
-			);
-			return $result;
-		}
-		
-		/* mehod_name = notice_validate_key */
-		if($method_name == 'notice_validate_key' && isset($result['valid'])){
-			$result['error'] = false;
-			return $result;
-		}
-		
-		/* Other methods */
-		if(isset($result['data']) && is_array($result['data'])){
-			return $result['data'];
-		}
-	}
-	
-	/* 
-	 * If Apache web server is missing then making
-	 * Patch for apache_request_headers() 
-	 */
-	static function apache_request_headers(){
-		
-		$headers = array();	
-		foreach($_SERVER as $key => $val){
-			if(preg_match('/\AHTTP_/', $key)){
-				$server_key = preg_replace('/\AHTTP_/', '', $key);
-				$key_parts = explode('_', $server_key);
-				if(count($key_parts) > 0 and strlen($server_key) > 2){
-					foreach($key_parts as $part_index => $part){
-						$key_parts[$part_index] = mb_strtolower($part);
-						$key_parts[$part_index][0] = strtoupper($key_parts[$part_index][0]);					
-					}
-					$server_key = implode('-', $key_parts);
-				}
-				$headers[$server_key] = $val;
-			}
-		}
-		return $headers;
 	}
 }
