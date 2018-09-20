@@ -242,7 +242,7 @@ class CleantalkHelper
 		);
 		
 		$result = self::api_send_request($request);
-		// $result = $do_check ? self::api_check_response($result, 'get_api_key') : $result;
+		$result = $do_check ? self::api_check_response($result, 'get_api_key') : $result;
 		
 		return $result;
 	}
