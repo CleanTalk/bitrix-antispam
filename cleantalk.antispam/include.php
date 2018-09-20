@@ -898,110 +898,6 @@ class CleantalkAntispam {
     }
     
     /**
-     * Content modification - adding JavaScript code to final content
-     * @param string Content to modify
-     */
-    function OnEndBufferContentHandler(&$content) {
-        if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1 && strpos($content,'</body>') !== false)
-            {
-
-            $field_name = 'ct_checkjs';
-            $ct_check_def = '0';
-            if (!isset($_COOKIE[$field_name])) setcookie($field_name, $ct_check_def, 0, '/');
-
-            $ct_check_values = self::SetCheckJSValues();
-            $js_template = "<script>var ct_checkjs_val = '".$ct_check_values[0]."', ct_date = new Date(), 
-                ctTimeMs = new Date().getTime(),
-                ctMouseEventTimerFlag = true, //Reading interval flag
-                ctMouseData = [],
-                ctMouseDataCounter = 0;
-
-            function ctSetCookie(c_name, value) {
-                document.cookie = c_name + '=' + encodeURIComponent(value) + '; path=/';
-            }
-
-            ctSetCookie('ct_ps_timestamp', Math.floor(new Date().getTime()/1000));
-            ctSetCookie('ct_fkp_timestamp', '0');
-            ctSetCookie('ct_pointer_data', '0');
-            ctSetCookie('ct_timezone', '0');
-
-            setTimeout(function(){
-                ctSetCookie('ct_timezone', ct_date.getTimezoneOffset()/60*(-1));
-                ctSetCookie('ct_checkjs', ct_checkjs_val);  
-            },1000);
-
-            //Writing first key press timestamp
-            var ctFunctionFirstKey = function output(event){
-                var KeyTimestamp = Math.floor(new Date().getTime()/1000);
-                ctSetCookie('ct_fkp_timestamp', KeyTimestamp);
-                ctKeyStopStopListening();
-            }
-
-            //Reading interval
-            var ctMouseReadInterval = setInterval(function(){
-                ctMouseEventTimerFlag = true;
-            }, 150);
-                
-            //Writting interval
-            var ctMouseWriteDataInterval = setInterval(function(){
-                ctSetCookie('ct_pointer_data', JSON.stringify(ctMouseData));
-            }, 1200);
-
-            //Logging mouse position each 150 ms
-            var ctFunctionMouseMove = function output(event){
-                if(ctMouseEventTimerFlag == true){
-                    
-                    ctMouseData.push([
-                        Math.round(event.pageY),
-                        Math.round(event.pageX),
-                        Math.round(new Date().getTime() - ctTimeMs)
-                    ]);
-                    
-                    ctMouseDataCounter++;
-                    ctMouseEventTimerFlag = false;
-                    if(ctMouseDataCounter >= 100){
-                        ctMouseStopData();
-                    }
-                }
-            }
-
-            //Stop mouse observing function
-            function ctMouseStopData(){
-                if(typeof window.addEventListener == 'function'){
-                    window.removeEventListener('mousemove', ctFunctionMouseMove);
-                }else{
-                    window.detachEvent('onmousemove', ctFunctionMouseMove);
-                }
-                clearInterval(ctMouseReadInterval);
-                clearInterval(ctMouseWriteDataInterval);                
-            }
-
-            //Stop key listening function
-            function ctKeyStopStopListening(){
-                if(typeof window.addEventListener == 'function'){
-                    window.removeEventListener('mousedown', ctFunctionFirstKey);
-                    window.removeEventListener('keydown', ctFunctionFirstKey);
-                }else{
-                    window.detachEvent('mousedown', ctFunctionFirstKey);
-                    window.detachEvent('keydown', ctFunctionFirstKey);
-                }
-            }
-
-            if(typeof window.addEventListener == 'function'){
-                window.addEventListener('mousemove', ctFunctionMouseMove);
-                window.addEventListener('mousedown', ctFunctionFirstKey);
-                window.addEventListener('keydown', ctFunctionFirstKey);
-            }else{
-                window.attachEvent('onmousemove', ctFunctionMouseMove);
-                window.attachEvent('mousedown', ctFunctionFirstKey);
-                window.attachEvent('keydown', ctFunctionFirstKey);
-            }</script>";
-            
-            $content = preg_replace('/(<\/body[^>]*>)/i', '${1}'."\n".$js_template, $content, 1);
-        }
-    }
-
-    /**
      * *** Universal methods section - for using in other modules ***
      */
 
@@ -1009,7 +905,107 @@ class CleantalkAntispam {
      * Deprecated!
      */
     static function FormAddon($sType) {
-        return '';
+
+        if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1 )
+            {
+                $field_name = 'ct_checkjs';
+                $ct_check_def = '0';
+                if (!isset($_COOKIE[$field_name])) setcookie($field_name, $ct_check_def, 0, '/');
+
+                $ct_check_values = self::SetCheckJSValues();  
+                
+                $js_template = "<script>
+                    var ct_checkjs_val = '".$ct_check_values[0]."', ct_date = new Date(), 
+                    ctTimeMs = new Date().getTime(),
+                    ctMouseEventTimerFlag = true, //Reading interval flag
+                    ctMouseData = [],
+                    ctMouseDataCounter = 0;
+
+                    function ctSetCookie(c_name, value) {
+                        document.cookie = c_name + '=' + encodeURIComponent(value) + '; path=/';
+                    }
+
+                    ctSetCookie('ct_ps_timestamp', Math.floor(new Date().getTime()/1000));
+                    ctSetCookie('ct_fkp_timestamp', '0');
+                    ctSetCookie('ct_pointer_data', '0');
+                    ctSetCookie('ct_timezone', '0');
+
+                    setTimeout(function(){
+                        ctSetCookie('ct_timezone', ct_date.getTimezoneOffset()/60*(-1));
+                        ctSetCookie('ct_checkjs', ct_checkjs_val);  
+                    },1000);
+
+                    //Writing first key press timestamp
+                    var ctFunctionFirstKey = function output(event){
+                        var KeyTimestamp = Math.floor(new Date().getTime()/1000);
+                        ctSetCookie('ct_fkp_timestamp', KeyTimestamp);
+                        ctKeyStopStopListening();
+                    }
+
+                    //Reading interval
+                    var ctMouseReadInterval = setInterval(function(){
+                        ctMouseEventTimerFlag = true;
+                    }, 150);
+                        
+                    //Writting interval
+                    var ctMouseWriteDataInterval = setInterval(function(){
+                        ctSetCookie('ct_pointer_data', JSON.stringify(ctMouseData));
+                    }, 1200);
+
+                    //Logging mouse position each 150 ms
+                    var ctFunctionMouseMove = function output(event){
+                        if(ctMouseEventTimerFlag == true){
+                            
+                            ctMouseData.push([
+                                Math.round(event.pageY),
+                                Math.round(event.pageX),
+                                Math.round(new Date().getTime() - ctTimeMs)
+                            ]);
+                            
+                            ctMouseDataCounter++;
+                            ctMouseEventTimerFlag = false;
+                            if(ctMouseDataCounter >= 100){
+                                ctMouseStopData();
+                            }
+                        }
+                    }
+
+                    //Stop mouse observing function
+                    function ctMouseStopData(){
+                        if(typeof window.addEventListener == 'function'){
+                            window.removeEventListener('mousemove', ctFunctionMouseMove);
+                        }else{
+                            window.detachEvent('onmousemove', ctFunctionMouseMove);
+                        }
+                        clearInterval(ctMouseReadInterval);
+                        clearInterval(ctMouseWriteDataInterval);                
+                    }
+
+                    //Stop key listening function
+                    function ctKeyStopStopListening(){
+                        if(typeof window.addEventListener == 'function'){
+                            window.removeEventListener('mousedown', ctFunctionFirstKey);
+                            window.removeEventListener('keydown', ctFunctionFirstKey);
+                        }else{
+                            window.detachEvent('mousedown', ctFunctionFirstKey);
+                            window.detachEvent('keydown', ctFunctionFirstKey);
+                        }
+                    }
+
+                    if(typeof window.addEventListener == 'function'){
+                        window.addEventListener('mousemove', ctFunctionMouseMove);
+                        window.addEventListener('mousedown', ctFunctionFirstKey);
+                        window.addEventListener('keydown', ctFunctionFirstKey);
+                    }else{
+                        window.attachEvent('onmousemove', ctFunctionMouseMove);
+                        window.attachEvent('mousedown', ctFunctionFirstKey);
+                        window.attachEvent('keydown', ctFunctionFirstKey);
+                    }
+                    </script>";
+
+                    return $js_template;                               
+            }
+            else return '';
     }
 
     /**
@@ -1120,7 +1116,7 @@ class CleantalkAntispam {
         $ct_request->sender_ip = CleantalkHelper::ip_get(array('real'), false);
         $ct_request->x_forwarded_for = CleantalkHelper::ip_get(array('x_forwarded_for'), false);
         $ct_request->x_real_ip       = CleantalkHelper::ip_get(array('x_real_ip'), false);
-        $ct_request->agent = 'bitrix-3108';
+        $ct_request->agent = 'bitrix-3109';
         $ct_request->response_lang = 'ru';
         $ct_request->js_on = $checkjs;
         $ct_request->sender_info = $sender_info;
@@ -1402,7 +1398,7 @@ class CleantalkAntispam {
 
             $ct_request = new CleantalkRequest();
             $ct_request->auth_key = $ct_key;
-            $ct_request->agent = 'bitrix-3108';
+            $ct_request->agent = 'bitrix-3109';
             $ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
             $ct_request->feedback = $request_id . ':' . ($feedback == 'Y' ? '1' : '0');
 

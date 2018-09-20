@@ -53,8 +53,8 @@ class cleantalk_antispam extends CModule {
 
 		// Values for all templates
 		$this->ct_template_addon_tag = 'CLEANTALK template addon';
-		$this->ct_template_addon_body_register = "\n" . '<?php if(CModule::IncludeModule("cleantalk.antispam")) echo CleantalkAntispam::FormAddon("register"); ?>' . "\n";
-		$this->ct_template_addon_body_comment = "\n" . '<?php if(CModule::IncludeModule("cleantalk.antispam")) echo CleantalkAntispam::FormAddon("comment"); ?>' . "\n";
+		$this->ct_template_addon_body_register = "\n" . '<?php \Bitrix\Main\Page\Frame::getInstance()->startDynamicWithID("area"); if(CModule::IncludeModule("cleantalk.antispam")) echo CleantalkAntispam::FormAddon(); \Bitrix\Main\Page\Frame::getInstance()->finishDynamicWithID("area", "Загрузка..."); ?>' . "\n";
+		$this->ct_template_addon_body_comment = "\n" . '<?php \Bitrix\Main\Page\Frame::getInstance()->startDynamicWithID("area"); if(CModule::IncludeModule("cleantalk.antispam")) echo CleantalkAntispam::FormAddon(); \Bitrix\Main\Page\Frame::getInstance()->finishDynamicWithID("area", "Загрузка..."); ?>' . "\n";
 
 		// Values for system.auth.registration default template
 		$this->SAR_template_dir  = '.default'; // without ending slash
@@ -111,11 +111,10 @@ class cleantalk_antispam extends CModule {
         global $DOCUMENT_ROOT, $APPLICATION;
 		
 		//Installng DB
-        if($this->InstallDB()){	
+        if($this->InstallDB() && $this->InstallFiles()){	
 			RegisterModule('cleantalk.antispam');
             RegisterModuleDependences('main', 'OnPageStart', 'cleantalk.antispam', 'CleantalkAntispam', 'OnPageStartHandler');
             RegisterModuleDependences('main', 'OnEventLogGetAuditTypes', 'cleantalk.antispam', 'CleantalkAntispam', 'OnEventLogGetAuditTypesHandler');
-            RegisterModuleDependences('main', 'OnEndBufferContent', 'cleantalk.antispam', 'CleantalkAntispam', 'OnEndBufferContentHandler');
 			RegisterModuleDependences('main', 'OnBeforeUserRegister', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeUserRegisterHandler');
             if (IsModuleInstalled('blog')){
               RegisterModuleDependences('blog', 'OnBeforeCommentAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeCommentAddHandler');
@@ -187,7 +186,6 @@ class cleantalk_antispam extends CModule {
           UnRegisterModuleDependences('prmedia.treelikecomments', 'OnBeforePrmediaCommentAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforePrmediaCommentAddHandler');
         }
         UnRegisterModuleDependences('main', 'OnBeforeUserRegister', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeUserRegisterHandler');
-		UnRegisterModuleDependences('main', 'OnEndBufferContent', 'cleantalk.antispam', 'CleantalkAntispam', 'OnEndBufferContentHandler');
         UnRegisterModuleDependences('main', 'OnEventLogGetAuditTypes', 'cleantalk.antispam', 'CleantalkAntispam', 'OnEventLogGetAuditTypesHandler');
 		if (IsModuleInstalled('form')){
 			UnRegisterModuleDependences('form', 'OnBeforeResultAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeResultAddHandler');
@@ -204,6 +202,76 @@ class cleantalk_antispam extends CModule {
         $GLOBALS["errors"] = $this->errors;
         $GLOBALS["messages"] = $this->messages;
         $APPLICATION->IncludeAdminFile(GetMessage('CLEANTALK_UNINSTALL_TITLE'), $DOCUMENT_ROOT.'/bitrix/modules/cleantalk.antispam/install/unstep.php');
+    }
+
+    function InstallFiles() {
+	$ret_val = TRUE;
+	// Copy system.auth.registration default template from system dir to local dir and insert addon into
+	$SAR_res = $this->install_ct_template($this->SAR_template_dir,
+			$this->SAR_template_file,
+			$this->SAR_system_template_dir,
+			$this->SAR_local_template_dir,
+			$this->SAR_local_compo_template_dir,
+			$this->SAR_pattern,
+			$this->ct_template_addon_tag,
+			$this->ct_template_addon_body_register
+	);
+	if($SAR_res != 0){
+	    $this->errors[] = GetMessage('CLEANTALK_ERROR_FILES_'.sprintf('%02d', $SAR_res));
+	    $ret_val = FALSE;
+	}else{
+	    $this->template_messages[] = $this->SAR_message;
+	}
+
+	// Copy blog.post.comment default template from system dir to local dir and insert addon into
+        if (IsModuleInstalled('blog')){
+		$BPC_res = $this->install_ct_template($this->BPC_template_dir,
+			$this->BPC_template_file,
+			$this->BPC_system_template_dir,
+			$this->BPC_local_template_dir,
+			$this->BPC_local_compo_template_dir,
+			$this->BPC_pattern,
+			$this->ct_template_addon_tag,
+			$this->ct_template_addon_body_comment
+	    );
+	    if($BPC_res == 0){
+		$this->template_messages[] = $this->BPC_message;
+	    }
+	}
+
+	// Copy forum.comments default template from system dir to local dir and insert addon into
+        if (IsModuleInstalled('forum')){
+	    $FC_res = $this->install_ct_template($this->FC_template_dir,
+			$this->FC_template_file,
+			$this->FC_system_template_dir,
+			$this->FC_local_template_dir,
+			$this->FC_local_compo_template_dir,
+			$this->FC_pattern,
+			$this->ct_template_addon_tag,
+			$this->ct_template_addon_body_comment
+	    );
+	    if($FC_res == 0){
+		$this->template_messages[] = $this->FC_message;
+	    }
+	}
+
+	// Copy prmedia.treelike_comments default template from system dir to local dir and insert addon into
+        if (IsModuleInstalled('prmedia.treelikecomments')){
+	    $PTLC_res = $this->install_ct_template($this->PTLC_template_dir,
+			$this->PTLC_template_file,
+			$this->PTLC_system_template_dir,
+			$this->PTLC_local_template_dir,
+			$this->PTLC_local_compo_template_dir,
+			$this->PTLC_pattern,
+			$this->ct_template_addon_tag,
+			$this->ct_template_addon_body_comment
+	    );
+	    if($PTLC_res == 0){
+		$this->template_messages[] = $this->PTLC_message;
+	    }
+	}
+	
+		return $ret_val;
     }
 
     function UnInstallFiles() {
@@ -306,7 +374,7 @@ class cleantalk_antispam extends CModule {
 		// Creating CIDS
 		$result = $DB->Query(
 			'CREATE
-			TABLE cleantalk_cids (
+			TABLE IF NOT EXISTS cleantalk_cids (
 				module varchar(255),
 				cid int(11),
 				ct_request_id varchar(255),
@@ -322,7 +390,7 @@ class cleantalk_antispam extends CModule {
 		// Creating SERVER
 		$result = $DB->Query(
 			'CREATE 
-			TABLE cleantalk_server (
+			TABLE IF NOT EXISTS cleantalk_server (
 				work_url varchar(255),
 				server_url varchar(255),
 				server_ttl int(11),
@@ -337,7 +405,7 @@ class cleantalk_antispam extends CModule {
 		// Creating CHECKJS
 		$result = $DB->Query(
 			'CREATE 
-			TABLE cleantalk_checkjs (
+			TABLE IF NOT EXISTS cleantalk_checkjs (
 				time_range varchar(10),
 				js_values varchar(1024),
 				PRIMARY KEY (time_range)
@@ -361,6 +429,113 @@ class cleantalk_antispam extends CModule {
 		return TRUE;
     }
 
+    /**
+     * Copies needed template from system dir to local dir and inserts CleanTalk addon into it
+     *
+     * @param 	&string $template_dir			Name of component's template dir (.default)
+     * @param 	&string $template_file			Name of component's template file (template.php)
+     * @param 	&string $system_template_dir		Full system dir of component templates (.../bitrix/components/bitrix/system.auth.registration/templates/)
+     * @param 	&string $local_template_dir		Full local dir of templates (.../bitrix/templates/.default/)
+     * @param 	&string $local_compo_template_dir	Full local dir of component template (.../bitrix/templates/.default/components/bitrix/system.auth.registration/)
+     * @param 	&string $pattern			PCRE pattern to find place to insert CleanTalk addon before
+     * @param 	&string $ct_template_addon_tag		Tag string to mark CleanTalk addon body
+     * @param 	&string $ct_template_addon_body		HTML text of CleanTalk addon itself
+     * @return 	int Returns error code or 0 when success
+     */
+    function install_ct_template($template_dir,	// without ending slash
+			     $template_file,
+			     $system_template_dir,	// with ending slash
+			     $local_template_dir,	// with ending slash
+			     $local_compo_template_dir,	// with ending slash
+			     $pattern,
+			     $ct_template_addon_tag,
+			     $ct_template_addon_body)
+    {
+	// Check system folders
+	if(!file_exists($system_template_dir) || !file_exists($local_template_dir)){
+		// No required system folders
+		return 1;
+	}
+
+	//Check component templates folder
+	if(!file_exists($local_compo_template_dir)){
+		if(!mkdir($local_compo_template_dir, 0777, TRUE)){
+			// Cannot create component templates folder
+			return 2;
+		}
+	}
+
+	// Check template subfulder in component templates folder - the Bitrix template itself
+	if(!file_exists($local_compo_template_dir.$template_dir)){
+		if(!CopyDirFiles($system_template_dir.$template_dir, $local_compo_template_dir.$template_dir, FALSE, TRUE)){
+			// Cannot copy template of conponent from system folder to local folder
+			return 3;
+		}
+	}
+
+	$template_file_path = $local_compo_template_dir.$template_dir.'/'.$template_file;
+	// Last check - template PHP file
+	if(!file_exists($template_file_path) || !is_file($template_file_path) || !is_writable($template_file_path)){
+		// No template PHP file
+		return 4;
+	}
+
+	// Here we are sure that
+	// bitrix/templates/<template>/components/bitrix/<component>/<template>/<file>.php
+	// exists and writable
+
+	// Try to get template PHP file content
+	$template_content = file_get_contents($template_file_path);
+	if($template_content === FALSE){
+		// Cannot read from template PHP file
+		return 5;
+	}
+
+	// Check is it parsable
+	if(!preg_match($pattern, $template_content) === 1){
+		// Cannot find pattern for addon inserting in template PHP file
+		return 6;
+	}
+
+	// First clean all previous CLEANTALK template addons
+	$ct_template_addon_begin = '<!-- ' . $ct_template_addon_tag . ' -->';	// don't change this!
+	$ct_template_addon_end   = '<!-- /' . $ct_template_addon_tag . ' -->';	// don't change this!
+
+	$pos_begin = strpos($template_content, $ct_template_addon_begin);
+	$pos_end   = strpos($template_content, $ct_template_addon_end);
+
+	if($pos_begin !== FALSE && $pos_end === FALSE){
+		// Cannot parse template PHP file - old CLEANTALK open tag exists only
+		return 7;
+	}elseif($pos_begin === FALSE && $pos_end !== FALSE){
+		// Cannot parse template PHP file - old CLEANTALK close tag exists only
+		return 8;
+	}elseif($pos_begin !== FALSE && $pos_end !== FALSE){
+		if($pos_begin < $pos_end){
+			// Cleaning needed
+			$template_content = substr($template_content, 0, $pos_begin) . substr($template_content, $pos_end + strlen($ct_template_addon_end));
+		}else{
+			// Cannot parse template PHP file - old CLEANTALK close tag before open tag
+			return 9;
+		}
+	//}elseif($pos_begin === FALSE && $pos_end === FALSE){
+	//	// Nothing to clean
+	}
+
+	// Second add current CLEANTALK template addon
+
+	$ct_template_addon = $ct_template_addon_begin . $ct_template_addon_body . $ct_template_addon_end . "\n\n";
+
+	$template_content = preg_replace($pattern, $ct_template_addon . '${1}', $template_content, 1);
+
+	if(!file_put_contents($local_compo_template_dir.$template_dir.'/'.$template_file, $template_content)){
+		// Cannot write new content to template PHP file
+		return 10;
+	}
+
+	// Here all is OK - new template PHP file with CLEANTALK addon inserted is ready
+	return 0;
+    }
     /**
      * Remove addon from needed local component template
      *
