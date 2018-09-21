@@ -168,6 +168,7 @@ class cleantalk_antispam extends CModule {
 				$this->ct_template_addon_tag,
 				$this->ct_template_addon_body
 		);
+
 		if($SAR_res != 0){
 		    $this->errors[] = GetMessage('CLEANTALK_ERROR_FILES_'.sprintf('%02d', $SAR_res));
 		    $ret_val = FALSE;
