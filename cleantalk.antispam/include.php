@@ -904,7 +904,7 @@ class CleantalkAntispam {
     /**
      * Deprecated!
      */
-    static function FormAddon($sType) {
+    static function FormAddon() {
 
         if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1 )
             {
