@@ -906,9 +906,8 @@ class CleantalkAntispam {
      * @param string Content to modify
      */
     function OnEndBufferContentHandler(&$content) {
-        if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1 && strpos($content,'</body>') !== false)
-            {
-        }
+        if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1 && strpos($content,'<!-- CLEANTALK template addon -->') === false && strpos($content,'</body>') !== false)           
+            $content = preg_replace('/(<\/body[^>]*>)/i', '${1}'."\n".self::FormAddon(), $content, 1);
     }
     /**
      * Deprecated!
