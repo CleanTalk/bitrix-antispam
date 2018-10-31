@@ -161,7 +161,6 @@ class cleantalk_antispam extends CModule {
     }
 
     function InstallFiles() {
-		$ret_val = TRUE;
 		// Copy system.auth.registration default template from system dir to local dir and insert addon into
 		$SAR_res = $this->install_ct_template(
 				$this->SAR_template_file,
@@ -171,16 +170,13 @@ class cleantalk_antispam extends CModule {
 				$this->ct_template_addon_body
 		);
 
-		if($SAR_res != 0){
-		    $this->errors[] = GetMessage('CLEANTALK_ERROR_FILES_'.sprintf('%02d', $SAR_res));
-		    $ret_val = FALSE;
-		}
+		if($SAR_res != 0)
+		    $this->errors[] = error_log('CLEANTALK_ERROR_FILES_'.sprintf('%02d', $SAR_res));
 	
-		return $ret_val;
+		return true;
     }
 
     function UnInstallFiles() {
-    	$ret_val = TRUE;
 		// Remove addon from local system.auth.registration default template
 		$SAR_res = $this->uninstall_ct_template(
 				$this->SAR_template_file,
@@ -189,12 +185,10 @@ class cleantalk_antispam extends CModule {
 				$this->ct_template_addon_tag,
 				$this->ct_template_addon_body
 		);
-		if($SAR_res != 0){
-		    $this->errors[] = GetMessage('CLEANTALK_ERROR_FILES_'.sprintf('%02d', $SAR_res));
-		    $ret_val = FALSE;
-		}
+		if($SAR_res != 0)
+		    $this->errors[] = error_log('CLEANTALK_ERROR_FILES_'.sprintf('%02d', $SAR_res));
 
-		return $ret_val;
+		return true;
     }
 
     function InstallDB() {
