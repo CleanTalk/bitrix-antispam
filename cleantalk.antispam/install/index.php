@@ -171,7 +171,7 @@ class cleantalk_antispam extends CModule {
 		);
 
 		if($SAR_res != 0)
-		    $this->errors[] = error_log('CLEANTALK_ERROR_FILES_'.sprintf('%02d', $SAR_res));
+		    error_log('CLEANTALK_ERROR_FILES_'.sprintf('%02d', $SAR_res));
 	
 		return true;
     }
@@ -186,7 +186,7 @@ class cleantalk_antispam extends CModule {
 				$this->ct_template_addon_body
 		);
 		if($SAR_res != 0)
-		    $this->errors[] = error_log('CLEANTALK_ERROR_FILES_'.sprintf('%02d', $SAR_res));
+		    error_log('CLEANTALK_ERROR_FILES_'.sprintf('%02d', $SAR_res));
 
 		return true;
     }
