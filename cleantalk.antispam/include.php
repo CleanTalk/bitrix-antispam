@@ -1227,7 +1227,7 @@ class CleantalkAntispam {
         $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '0');
         $ct_ws = self::GetWorkServer();
 
-        $ct_submit_time = isset($_COOKIE['ct_ps_timestamp']) ? time() - intval($_COOKIE['ct_ps_timestamp']) : 0;
+        $ct_submit_time = self::ct_cookies_test() == 1 ? time() - (int)$_COOKIE['ct_timestamp'] : null;
 
         if (!isset($_COOKIE['ct_checkjs']))
             $checkjs = NULL;
@@ -1292,7 +1292,7 @@ class CleantalkAntispam {
         $ct_request->sender_ip = CleantalkHelper::ip_get(array('real'), false);
         $ct_request->x_forwarded_for = CleantalkHelper::ip_get(array('x_forwarded_for'), false);
         $ct_request->x_real_ip       = CleantalkHelper::ip_get(array('x_real_ip'), false);
-        $ct_request->agent = 'bitrix-3111';
+        $ct_request->agent = 'bitrix-3112';
         $ct_request->response_lang = 'ru';
         $ct_request->js_on = $checkjs;
         $ct_request->sender_info = $sender_info;
@@ -1574,7 +1574,7 @@ class CleantalkAntispam {
 
             $ct_request = new CleantalkRequest();
             $ct_request->auth_key = $ct_key;
-            $ct_request->agent = 'bitrix-3111';
+            $ct_request->agent = 'bitrix-3112';
             $ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
             $ct_request->feedback = $request_id . ':' . ($feedback == 'Y' ? '1' : '0');
 
@@ -1723,6 +1723,13 @@ class CleantalkAntispam {
             'cookies_names' => array(),
             'check_value' => COption::GetOptionString('cleantalk.antispam', 'key', '0'),
         );
+
+        // Submit time
+        $ct_timestamp = time();
+        setcookie('ct_timestamp', $ct_timestamp, 0, '/');
+        $cookie_test_value['cookies_names'][] = 'ct_timestamp';
+        $cookie_test_value['check_value'] .= $ct_timestamp;
+
         // Pervious referer
         if(!empty($_SERVER['HTTP_REFERER'])){
             setcookie('ct_prev_referer', $_SERVER['HTTP_REFERER'], 0, '/');
