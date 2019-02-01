@@ -432,6 +432,15 @@ class CleantalkAntispam {
             if ($ct_temp_msg_data === null)
                 CleantalkAntispam::CleantalkGetFields($_GET);
 
+            $sender_email    = ($ct_temp_msg_data['email']    ? $ct_temp_msg_data['email']    : '');
+            $sender_nickname = ($ct_temp_msg_data['nickname'] ? $ct_temp_msg_data['nickname'] : '');
+            $subject         = ($ct_temp_msg_data['subject']  ? $ct_temp_msg_data['subject']  : '');
+            $contact_form    = ($ct_temp_msg_data['contact']  ? $ct_temp_msg_data['contact']  : true);
+            $message         = ($ct_temp_msg_data['message']  ? $ct_temp_msg_data['message']  : array());  
+
+            if (is_array($message))
+                $message = implode("\n", $message);
+            
             if($sender_email!==null || $ct_global_without_email == 1)
             {
                 $arUser = array();
