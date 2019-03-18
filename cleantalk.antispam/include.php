@@ -1260,6 +1260,21 @@ class CleantalkAntispam {
         else
             $refferrer = NULL;
 
+        $ct_options=Array(
+            'access_key' => COption::GetOptionString('cleantalk.antispam', 'key', '0'),
+            'form_new_user' => COption::GetOptionString('cleantalk.antispam', 'form_new_user', '0'),
+            'form_comment_blog' => COption::GetOptionString('cleantalk.antispam', 'form_comment_blog', '0'),        
+            'form_comment_forum' => COption::GetOptionString('cleantalk.antispam', 'form_comment_forum', '0'),
+            'form_forum_private_messages' => COption::GetOptionString('cleantalk.antispam', 'form_forum_private_messages', '0'),
+            'form_comment_treelike' => COption::GetOptionString('cleantalk.antispam', 'form_comment_treelike', '0'),
+            'form_send_example' => COption::GetOptionString('cleantalk.antispam', 'form_send_example', '0'),
+            'form_order' => COption::GetOptionString('cleantalk.antispam', 'form_order', '0'),
+            'web_form' => COption::GetOptionString('cleantalk.antispam', 'web_form', '0'),        
+            'form_global_check' => COption::GetOptionString('cleantalk.antispam', 'form_global_check', '0'),
+            'form_global_check_without_email' => COption::GetOptionString('cleantalk.antispam', 'form_global_check_without_email', '0'),
+            'form_sfw' => COption::GetOptionString('cleantalk.antispam', 'form_sfw', '0'),
+        );
+
         $sender_info = array(
             'cms_lang' => 'ru',
             'REFFERRER' => $refferrer,
@@ -1271,6 +1286,7 @@ class CleantalkAntispam {
             'page_set_timestamp' => $page_set_timestamp,
             'REFFERRER_PREVIOUS' => isset($_COOKIE['ct_prev_referer']) ? $_COOKIE['ct_prev_referer'] : null,
             'cookies_enabled' => self::ct_cookies_test(),
+            'ct_options' => json_encode($ct_options),
         );
         $sender_info = json_encode($sender_info);
 
@@ -1305,7 +1321,10 @@ class CleantalkAntispam {
         $ct_request->response_lang = 'ru';
         $ct_request->js_on = $checkjs;
         $ct_request->sender_info = $sender_info;
-
+        if (isset($arEntity['message_title']) && is_array($arEntity))
+            $arEntity['message_title'] = implode("\n", $arEntity['message_title']);
+        if (isset($arEntity['message_body']) && is_array($arEntity['message_body']))
+            $arEntity['message_body'] = implode("\n", $arEntity['message_body']);
         switch ($type) {
             case 'comment':
                 $timelabels_key = 'mail_error_comment';
