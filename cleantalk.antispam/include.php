@@ -432,28 +432,19 @@ class CleantalkAntispam {
             if ($ct_temp_msg_data === null)
                 CleantalkAntispam::CleantalkGetFields($_GET);
 
-            $sender_email    = ($ct_temp_msg_data['email']    ? $ct_temp_msg_data['email']    : '');
-            $sender_nickname = ($ct_temp_msg_data['nickname'] ? $ct_temp_msg_data['nickname'] : '');
-            $subject         = ($ct_temp_msg_data['subject']  ? $ct_temp_msg_data['subject']  : '');
-            $contact_form    = ($ct_temp_msg_data['contact']  ? $ct_temp_msg_data['contact']  : true);
-            $message         = ($ct_temp_msg_data['message']  ? $ct_temp_msg_data['message']  : array());  
+            $arUser = array();
+            $arUser["type"]                 = "feedback_general_contact_form";
+            $arUser["sender_ip"]            = $_SERVER['REMOTE_ADDR'];
+            $arUser["sender_email"]         = ($ct_temp_msg_data['email']    ? $ct_temp_msg_data['email']    : '');
+            $arUser["sender_nickname"]      = ($ct_temp_msg_data['nickname'] ? $ct_temp_msg_data['nickname'] : '');
+            $arUser["message_title"]        = ($ct_temp_msg_data['subject']  ? $ct_temp_msg_data['subject']  : '');
+            $arUser["message_body"]         = ($ct_temp_msg_data['message']  ? $ct_temp_msg_data['message']  : array());  
 
-            if (is_array($message))
-                $message = implode("\n", $message);
+            if (is_array($arUser["message_body"]))
+                $arUser["message_body"] = implode("\n", $arUser["message_body"]);
             
-            if($sender_email!==null || $ct_global_without_email == 1)
-            {
-                $arUser = array();
-                $arUser["type"] = "feedback_general_contact_form";
-                $arUser["sender_email"] = ($ct_temp_msg_data['email']    ? $ct_temp_msg_data['email']    : '');
-                $arUser["sender_nickname"] = ($ct_temp_msg_data['nickname'] ? $ct_temp_msg_data['nickname'] : '');
-                $arUser["sender_ip"] = $_SERVER['REMOTE_ADDR'];
-                $arUser["message_title"] = ($ct_temp_msg_data['subject'] ? $ct_temp_msg_data['subject'] : '');
-                $arUser["message_body"] = ($ct_temp_msg_data['message'] ? $ct_temp_msg_data['message'] : '');
-                $arUser["example_title"] = "";
-                $arUser["example_body"] = "";
-                $arUser["example_comments"] = "";
-                
+            if($arUser["sender_email"] !== null || $ct_global_without_email == 1)
+            {                                               
                 $aResult =  CleantalkAntispam::CheckAllBefore($arUser,FALSE);
                 
                 if(isset($aResult) && is_array($aResult))
