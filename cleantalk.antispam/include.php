@@ -1025,28 +1025,32 @@ class CleantalkAntispam {
             $aUser['sender_email'] = isset($arFields['EMAIL']) ? $arFields['EMAIL'] : '';
             $aUser['sender_nickname'] = isset($arFields['LOGIN']) ? $arFields['LOGIN'] : '';
             
-            $aResult = self::CheckAllBefore($aUser, TRUE);
+            if (!self::ExceptionList($aUser))
+            {
+                $aResult = self::CheckAllBefore($aUser, TRUE);
 
-            if(isset($aResult) && is_array($aResult)){
-                if($aResult['errno'] == 0){
-                    if($aResult['allow'] == 1){
-                        // Not spammer - just return;
-                        return;
-                    }else{
-                        // Spammer - return false and throw
-                        // Note: 'stop_queue' is ignored in user checking
-                        if (preg_match('//u', $aResult['ct_result_comment'])){
-                            $err_str = preg_replace('/^[^\*]*?\*\*\*|\*\*\*[^\*]*?$/iu', '', $aResult['ct_result_comment']);
-                            $err_str = preg_replace('/<[^<>]*>/iu', '', $err_str);
+                if(isset($aResult) && is_array($aResult)){
+                    if($aResult['errno'] == 0){
+                        if($aResult['allow'] == 1){
+                            // Not spammer - just return;
+                            return;
                         }else{
-                            $err_str = preg_replace('/^[^\*]*?\*\*\*|\*\*\*[^\*]*?$/i', '', $aResult['ct_result_comment']);
-                            $err_str = preg_replace('/<[^<>]*>/i', '', $err_str);
+                            // Spammer - return false and throw
+                            // Note: 'stop_queue' is ignored in user checking
+                            if (preg_match('//u', $aResult['ct_result_comment'])){
+                                $err_str = preg_replace('/^[^\*]*?\*\*\*|\*\*\*[^\*]*?$/iu', '', $aResult['ct_result_comment']);
+                                $err_str = preg_replace('/<[^<>]*>/iu', '', $err_str);
+                            }else{
+                                $err_str = preg_replace('/^[^\*]*?\*\*\*|\*\*\*[^\*]*?$/i', '', $aResult['ct_result_comment']);
+                                $err_str = preg_replace('/<[^<>]*>/i', '', $err_str);
+                            }
+                            $APPLICATION->ThrowException($err_str);
+                            return false;
                         }
-                        $APPLICATION->ThrowException($err_str);
-                        return false;
                     }
-                }
+                }               
             }
+
         }
     }
 
@@ -1227,8 +1231,6 @@ class CleantalkAntispam {
         $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '0');
         $ct_ws = self::GetWorkServer();
 
-        $ct_submit_time = self::ct_cookies_test() == 1 ? time() - (int)$_COOKIE['ct_timestamp'] : null;
-
         if (!isset($_COOKIE['ct_checkjs']))
             $checkjs = NULL;
         elseif (in_array($_COOKIE['ct_checkjs'], self::GetCheckJSValues()))
@@ -1312,6 +1314,7 @@ class CleantalkAntispam {
         $ct_request->response_lang = 'ru';
         $ct_request->js_on = $checkjs;
         $ct_request->sender_info = $sender_info;
+        $ct_request->submit_time = self::ct_cookies_test() == 1 ? time() - (int)$_COOKIE['ct_timestamp'] : null;
         if (isset($arEntity['message_title']) && is_array($arEntity))
             $arEntity['message_title'] = implode("\n", $arEntity['message_title']);
         if (isset($arEntity['message_body']) && is_array($arEntity['message_body']))
@@ -1319,7 +1322,6 @@ class CleantalkAntispam {
         switch ($type) {
             case 'comment':
                 $timelabels_key = 'mail_error_comment';
-                $ct_request->submit_time = $ct_submit_time;
 
                 $ct_request->message = isset($arEntity['message_title']) ? $arEntity['message_title'] : '';
                 $ct_request->message .= "\n\n";
@@ -1350,7 +1352,6 @@ class CleantalkAntispam {
                 $ct_request->post_info = $post_info;
                 
                 $timelabels_key = 'mail_error_comment';
-                $ct_request->submit_time = $ct_submit_time;
 
                 $ct_request->message = isset($arEntity['message_title']) ? $arEntity['message_title'] : '';
                 $ct_request->message .= "\n\n";
@@ -1366,7 +1367,6 @@ class CleantalkAntispam {
                 $ct_request->post_info = $post_info;
                 
                 $timelabels_key = 'mail_error_comment';
-                $ct_request->submit_time = $ct_submit_time;
 
                 $ct_request->message .= isset($arEntity['message_body']) ? $arEntity['message_body'] : '';
                 
@@ -1380,7 +1380,6 @@ class CleantalkAntispam {
                 $ct_request->post_info = $post_info;
                 
                 $timelabels_key = 'mail_error_comment';
-                $ct_request->submit_time = $ct_submit_time;
 
                 $ct_request->message .= isset($arEntity['message_body']) ? $arEntity['message_body'] : '';
                 
@@ -1390,7 +1389,6 @@ class CleantalkAntispam {
             case 'register':
             
                 $timelabels_key = 'mail_error_reg';
-                $ct_request->submit_time = $ct_submit_time;
                 $ct_request->tz = isset($arEntity['user_timezone']) ? $arEntity['user_timezone'] : NULL;
 
                 $ct_result = $ct->isAllowUser($ct_request);
@@ -1405,7 +1403,6 @@ class CleantalkAntispam {
                 $ct_request->post_info = $post_info;
             
                 $timelabels_key = 'mail_error_comment';
-                $ct_request->submit_time = $ct_submit_time;
                 $ct_request->tz = isset($arEntity['user_timezone']) ? $arEntity['user_timezone'] : NULL;
 
                 $ct_result = $ct->isAllowMessage($ct_request);
@@ -1643,6 +1640,24 @@ class CleantalkAntispam {
                 'server_ttl' => 0,
                 'server_changed' => 0,
             );
+    }
+
+    /**
+     * CleanTalk inner function - check for exceptions.
+     */    
+    private static function ExceptionList($value = null)
+    {
+        if ($value && is_array($value))
+        {
+            if (isset($value['sender_email']))
+            {
+                if (preg_match('^user-\d+@shop\.kalyan-hut\.ru^', $value['sender_email']))
+                    return true;               
+            }
+
+        }
+
+        return false;
     }
 
     /**
