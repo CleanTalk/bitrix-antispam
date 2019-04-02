@@ -1024,10 +1024,18 @@ class CleantalkAntispam {
             $aUser['type'] = 'register';
             $aUser['sender_email'] = isset($arFields['EMAIL']) ? $arFields['EMAIL'] : '';
             $aUser['sender_nickname'] = isset($arFields['LOGIN']) ? $arFields['LOGIN'] : '';
-            
+            if (empty($arFields['LOGIN']))
+                $form_errors[] = 'Логин должен быть не менее 3 символов';
+            if (empty($arFields['PASSWORD']))
+                $form_errors[] = 'Пароль должен быть не менее 6 символов длиной';
+            if (empty($arFields['EMAIL']))
+                $form_errors[] = 'Неверный E-Mail';
+            if ($arFields['PASSWORD'] != $arFields['CONFIRM_PASSWORD'])
+                $form_errors[] = 'Неверное подтверждение пароля';
+
             if (!self::ExceptionList($aUser))
             {
-                $aResult = self::CheckAllBefore($aUser, TRUE);
+                $aResult = self::CheckAllBefore($aUser, TRUE, ($form_errors && count($form_errors)) ? $form_errors : null);
 
                 if(isset($aResult) && is_array($aResult)){
                     if($aResult['errno'] == 0){
@@ -1045,6 +1053,7 @@ class CleantalkAntispam {
                                 $err_str = preg_replace('/<[^<>]*>/i', '', $err_str);
                             }
                             $APPLICATION->ThrowException($err_str);
+
                             return false;
                         }
                     }
@@ -1197,7 +1206,7 @@ class CleantalkAntispam {
      * @param boolean Notify admin about errors by email or not (default FALSE)
      * @return array|null Checking result or NULL when bad params
      */
-    static function CheckAllBefore(&$arEntity, $bSendEmail = FALSE) {
+    static function CheckAllBefore(&$arEntity, $bSendEmail = FALSE, $form_errors = null) {
         global $DB;
         if(!is_array($arEntity) || !array_key_exists('type', $arEntity)){
             CEventLog::Add(array(
@@ -1280,6 +1289,7 @@ class CleantalkAntispam {
             'REFFERRER_PREVIOUS' => isset($_COOKIE['ct_prev_referer']) ? $_COOKIE['ct_prev_referer'] : null,
             'cookies_enabled' => self::ct_cookies_test(),
             'ct_options' => json_encode($ct_options),
+            'form_validation' => ($form_errors && is_array($form_errors)) ? json_encode(array('validation_notice' => json_encode($form_errors), 'page_url' => $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'])) : null,               
         );
         $sender_info = json_encode($sender_info);
 
