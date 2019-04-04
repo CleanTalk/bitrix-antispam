@@ -443,7 +443,7 @@ class CleantalkAntispam {
             if (is_array($arUser["message_body"]))
                 $arUser["message_body"] = implode("\n", $arUser["message_body"]);
             
-            if($arUser["sender_email"] !== null || $ct_global_without_email == 1)
+            if($arUser["sender_email"] != '' || $ct_global_without_email == 1)
             {                                               
                 $aResult =  CleantalkAntispam::CheckAllBefore($arUser,FALSE);
                 
@@ -1320,7 +1320,7 @@ class CleantalkAntispam {
         $ct_request->sender_ip = CleantalkHelper::ip_get(array('real'), false);
         $ct_request->x_forwarded_for = CleantalkHelper::ip_get(array('x_forwarded_for'), false);
         $ct_request->x_real_ip       = CleantalkHelper::ip_get(array('x_real_ip'), false);
-        $ct_request->agent = 'bitrix-3112';
+        $ct_request->agent = 'bitrix-3113';
         $ct_request->response_lang = 'ru';
         $ct_request->js_on = $checkjs;
         $ct_request->sender_info = $sender_info;
@@ -1600,7 +1600,7 @@ class CleantalkAntispam {
 
             $ct_request = new CleantalkRequest();
             $ct_request->auth_key = $ct_key;
-            $ct_request->agent = 'bitrix-3112';
+            $ct_request->agent = 'bitrix-3113';
             $ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
             $ct_request->feedback = $request_id . ':' . ($feedback == 'Y' ? '1' : '0');
 
