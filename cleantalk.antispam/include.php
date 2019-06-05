@@ -325,13 +325,12 @@ class CleantalkAntispam {
         $last_status             = COption::GetOptionString( 'cleantalk.antispam', 'is_paid', 0 );
         $is_sfw                  = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 );
         $new_checked             = time();
-        
+        // Remote calls
+        if(isset($_GET['spbc_remote_call_token'], $_GET['spbc_remote_call_action'], $_GET['plugin_name']) && in_array($_GET['plugin_name'], array('antispam','anti-spam', 'apbct'))){
+            self::apbct_remote_call__perform();
+        }                    
         if($is_sfw==1 && !$USER->IsAdmin())
         {
-            // Remote calls
-            if(isset($_GET['spbc_remote_call_token'], $_GET['spbc_remote_call_action'], $_GET['plugin_name']) && in_array($_GET['plugin_name'], array('antispam','anti-spam', 'apbct'))){
-                self::apbct_remote_call__perform();
-            }            
             $sfw = new CleantalkSFW();
             $is_sfw_check = true;
             $sfw->ip_array = (array)CleantalkSFW::ip_get(array('real'), true);  
