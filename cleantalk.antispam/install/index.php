@@ -113,7 +113,10 @@ class cleantalk_antispam extends CModule {
 			$result = CleantalkHelper::api_method__notice_validate_key($api_key);
 			COption::SetOptionString( 'cleantalk.antispam', 'key_is_ok', isset($result['valid']) && $result['valid'] == '1' ? '1' : '0');
 		}
-		
+		//Remote calls
+		if (!COption::GetOptionString('cleantalk.antispam', 'remote_calls', array())) {
+			COption::SetOptionString('cleantalk.antispam', 'remote_calls', array('close_renew_banner' => array('last_call' => 0), 'sfw_update' => array('last_call' => 0), 'sfw_send_logs' => array('last_call' => 0), 'update_plugin' => array('last_call' => 0)));
+		}
 		if(!empty($this->template_messages)){
 			$this->messages[] = GetMessage("CLEANTALK_TEMPLATES_HEADER");
 			foreach($this->template_messages as $val)

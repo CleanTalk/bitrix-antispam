@@ -26,6 +26,8 @@ RegisterModuleDependences('main', 'OnPageStart', 'cleantalk.antispam', 'Cleantal
 class CleantalkAntispam {
 
     const KEYS_NUM = 12; // 12 last JS keys are valid
+
+    const APBCT_REMOTE_CALL_SLEEP = 10;
     
     /*
      * Updates SFW local database
@@ -326,6 +328,10 @@ class CleantalkAntispam {
         
         if($is_sfw==1 && !$USER->IsAdmin())
         {
+            // Remote calls
+            if(isset($_GET['spbc_remote_call_token'], $_GET['spbc_remote_call_action'], $_GET['plugin_name']) && in_array($_GET['plugin_name'], array('antispam','anti-spam', 'apbct'))){
+                self::apbct_remote_call__perform();
+            }            
             $sfw = new CleantalkSFW();
             $is_sfw_check = true;
             $sfw->ip_array = (array)CleantalkSFW::ip_get(array('real'), true);  
@@ -1325,7 +1331,7 @@ class CleantalkAntispam {
         $ct_request->sender_ip = CleantalkHelper::ip_get(array('real'), false);
         $ct_request->x_forwarded_for = CleantalkHelper::ip_get(array('x_forwarded_for'), false);
         $ct_request->x_real_ip       = CleantalkHelper::ip_get(array('x_real_ip'), false);
-        $ct_request->agent = 'bitrix-3113';
+        $ct_request->agent = 'bitrix-3114';
         $ct_request->response_lang = 'ru';
         $ct_request->js_on = $checkjs;
         $ct_request->sender_info = $sender_info;
@@ -1605,7 +1611,7 @@ class CleantalkAntispam {
 
             $ct_request = new CleantalkRequest();
             $ct_request->auth_key = $ct_key;
-            $ct_request->agent = 'bitrix-3113';
+            $ct_request->agent = 'bitrix-3114';
             $ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
             $ct_request->feedback = $request_id . ':' . ($feedback == 'Y' ? '1' : '0');
 
@@ -1765,7 +1771,7 @@ class CleantalkAntispam {
      * Sets cookies with pararms timestamp && landing_timestamp && pervious_referer
      * Sets test cookie with all other cookies
      */
-    private function ct_cookie(){
+    private static function ct_cookie(){
         
         // Cookie names to validate
         $cookie_test_value = array(
@@ -1794,7 +1800,7 @@ class CleantalkAntispam {
      * Also checks for valid timestamp in $_COOKIE['apbct_timestamp'] and other apbct_ COOKIES
      * @return null|0|1;
      */
-    private function ct_cookies_test()
+    private static function ct_cookies_test()
     {       
         if(isset($_COOKIE['ct_cookies_test'])){
             
@@ -1813,5 +1819,50 @@ class CleantalkAntispam {
         }else{
             return null;
         }
-    }       
+    }
+
+    /**
+     * CleanTalk inner function - check for exceptions.
+     */    
+    private static function apbct_remote_call__perform()
+    {
+        $remote_calls_config = COption::GetOptionString('cleantalk.antispam','remote_calls', array());
+
+        $remote_action = $_GET['spbc_remote_call_action'];
+        $auth_key = trim(COption::GetOptionString('cleantalk.antispam', 'key', ''));
+
+        if(array_key_exists($remote_action, $remote_calls_config)){
+                    
+            if(time() - $remote_calls_config[$remote_action]['last_call'] > self::APBCT_REMOTE_CALL_SLEEP){
+                
+                $remote_calls_config[$remote_action]['last_call'] = time();
+                COption::SetOptionString('cleantalk.antispam', 'remote_calls', $remote_calls_config);
+
+                if(strtolower($_GET['spbc_remote_call_token']) == strtolower(md5($auth_key))){
+
+                    // Close renew banner
+                    if($_GET['spbc_remote_call_action'] == 'close_renew_banner'){
+                        die('OK');
+                    // SFW update
+                    }elseif($_GET['spbc_remote_call_action'] == 'sfw_update'){
+                        $sfw = new CleantalkSFW();                  
+                        $result = $sfw->sfw_update($auth_key);
+                        die(empty($result['error']) ? 'OK' : 'FAIL '.json_encode(array('error' => $result['error_string'])));
+                    // SFW send logs
+                    }elseif($_GET['spbc_remote_call_action'] == 'sfw_send_logs'){
+                        $sfw = new CleantalkSFW();                  
+                        $result = $sfw->send_logs($auth_key);
+                        die(empty($result['error']) ? 'OK' : 'FAIL '.json_encode(array('error' => $result['error_string'])));
+                    // Update plugin
+                    }elseif($_GET['spbc_remote_call_action'] == 'update_plugin'){
+                        //add_action('wp', 'apbct_update', 1);
+                    }else
+                        die('FAIL '.json_encode(array('error' => 'UNKNOWN_ACTION_2')));
+                }else
+                    die('FAIL '.json_encode(array('error' => 'WRONG_TOKEN')));
+            }else
+                die('FAIL '.json_encode(array('error' => 'TOO_MANY_ATTEMPTS')));
+        }else
+            die('FAIL '.json_encode(array('error' => 'UNKNOWN_ACTION')));
+    }           
 }
