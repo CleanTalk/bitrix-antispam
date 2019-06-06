@@ -49,8 +49,15 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     $result = CleantalkHelper::api_method__notice_validate_key($new_key);
     if(empty($result['error'])){
         COption::SetOptionString( $sModuleId, 'key_is_ok', strval($result['valid']));
+        $npd_result = CleantalkHelper::api_method__notice_paid_till($new_key);
+
+        if(empty($npd_result['error'])){
+            COption::SetOptionString($sModuleId, 'user_token', isset($npd_result['user_token']) ? $npd_result['user_token'] : '');           
+            COption::SetOptionString($sModuleId, 'moderate_ip', (isset($npd_result['moderate_ip']) && $npd_result['moderate_ip'] == 1) ? 1 : 0);
+            COption::SetOptionString($sModuleId, 'ip_license', (isset($npd_result['moderate_ip']) && $npd_result['moderate_ip'] == 1) ? $npd_result['ip_license'] : 0);
+        }        
     }
-    
+
     COption::SetOptionString( $sModuleId, 'status',                          $_POST['status'] == '1'                          ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_new_user',                   $_POST['form_new_user'] == '1'                   ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_comment_blog',               $_POST['form_comment_blog'] == '1'               ? '1' : '0' );
@@ -65,8 +72,6 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     COption::SetOptionString( $sModuleId, 'form_global_check',               $_POST['form_global_check'] == '1'               ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_global_check_without_email', $_POST['form_global_check_without_email'] == '1' ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_sfw',                        $_POST['form_sfw'] == '1'                        ? '1' : '0' );  
-    COption::SetOptionString( $sModuleId, 'ip_license',                      $_POST['ip_license'] == '1'                      ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'moderate_ip',                     $_POST['moderate_ip'] == '1'                     ? '1' : '0' );
     
     COption::SetOptionString( $sModuleId, 'key', $new_key );     
     if($_POST['form_sfw'] == 1)

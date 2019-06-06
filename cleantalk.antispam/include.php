@@ -367,7 +367,7 @@ class CleantalkAntispam {
             {
                 
                 $result = CleantalkHelper::api_method__get_account_status($ct_key);
-                
+
                 if(empty($result['error'])){
                     
                     if(isset($result['paid']))
@@ -391,22 +391,6 @@ class CleantalkAntispam {
                                 'MODULE_ID' => 'main',          
                             'ENABLE_CLOSE' => 'Y'));
                         }
-                    }
-                }
-                
-                $result = CleantalkHelper::api_method__notice_paid_till($ct_key);
-                
-                if(empty($result['error'])){
-                    
-                    if (isset($result['moderate_ip']) && $result['moderate_ip'] == 1)
-                    {
-                        COption::SetOptionString( 'cleantalk.antispam', 'moderate_ip', 1 );
-                        COption::SetOptionString( 'cleantalk.antispam', 'ip_license', $result['ip_license'] );
-                    }
-                    else
-                    {
-                        COption::SetOptionString( 'cleantalk.antispam', 'moderate_ip', 0 );
-                        COption::SetOptionString( 'cleantalk.antispam', 'ip_license', 0 );
                     }
                 }
                 
@@ -1825,7 +1809,7 @@ class CleantalkAntispam {
      */    
     private static function apbct_remote_call__perform()
     {
-        $remote_calls_config = COption::GetOptionString('cleantalk.antispam','remote_calls', array());
+        $remote_calls_config = json_decode(COption::GetOptionString('cleantalk.antispam','remote_calls', ''),true);
 
         $remote_action = $_GET['spbc_remote_call_action'];
         $auth_key = trim(COption::GetOptionString('cleantalk.antispam', 'key', ''));
@@ -1835,7 +1819,7 @@ class CleantalkAntispam {
             if(time() - $remote_calls_config[$remote_action]['last_call'] > self::APBCT_REMOTE_CALL_SLEEP){
                 
                 $remote_calls_config[$remote_action]['last_call'] = time();
-                COption::SetOptionString('cleantalk.antispam', 'remote_calls', $remote_calls_config);
+                COption::SetOptionString('cleantalk.antispam', 'remote_calls', json_encode($remote_calls_config));
 
                 if(strtolower($_GET['spbc_remote_call_token']) == strtolower(md5($auth_key))){
 
