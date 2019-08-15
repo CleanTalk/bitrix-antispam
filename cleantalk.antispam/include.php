@@ -400,7 +400,7 @@ class CleantalkAntispam {
         }       
         
         
-        if (!$USER->IsAdmin() && $ct_status == 1 && $ct_global == 1)
+        if ($ct_status == 1 && $ct_global == 1)
         {
             
             // Exclusions
@@ -616,8 +616,7 @@ class CleantalkAntispam {
         $ct_status = COption::GetOptionString('cleantalk.antispam', 'status', '0');
         $ct_comment_treelike = COption::GetOptionString('cleantalk.antispam', 'form_comment_treelike', '0');
         if ($ct_status == 1 && $ct_comment_treelike == 1) {
-            if($USER->IsAdmin())
-                return;
+
             // Skip authorized user with more than 5 approved comments
             if($USER->IsAuthorized()){
                 $approved_comments = CTreelikeComments::GetList(
@@ -715,8 +714,7 @@ class CleantalkAntispam {
         $ct_status = COption::GetOptionString('cleantalk.antispam', 'status', '0');
         $ct_comment_blog = COption::GetOptionString('cleantalk.antispam', 'form_comment_blog', '0');
         if ($ct_status == 1 && $ct_comment_blog == 1) {
-            if($USER->IsAdmin())
-                return;
+
             // Skip authorized user with more than 5 approved comments
             if($USER->IsAuthorized()){
                 $approved_comments = CBlogComment::GetList(
@@ -819,8 +817,7 @@ class CleantalkAntispam {
         $ct_status = COption::GetOptionString('cleantalk.antispam', 'status', '0');
         $ct_comment_forum = COption::GetOptionString('cleantalk.antispam', 'form_comment_forum', '0');
         if ($ct_status == 1 && $ct_comment_forum == 1) {
-            if($USER->IsAdmin())
-                return;
+
             // Skip authorized user with more than 5 approved messages
             if($USER->IsAuthorized()){
                 $approved_messages = CForumMessage::GetList(
@@ -962,9 +959,6 @@ class CleantalkAntispam {
         $ct_status = COption::GetOptionString('cleantalk.antispam', 'status', '0');
         $ct_forum_private_messages = COption::GetOptionString('cleantalk.antispam', 'form_forum_private_messages', '0');
         if ($ct_status == 1 && $ct_forum_private_messages == 1) {
-            
-            if($USER->IsAdmin())
-                return;
             
             $aComment = array();
             $aComment['type'] = 'comment';
@@ -1201,7 +1195,11 @@ class CleantalkAntispam {
      * @return array|null Checking result or NULL when bad params
      */
     static function CheckAllBefore(&$arEntity, $bSendEmail = FALSE, $form_errors = null) {
-        global $DB;
+        global $DB, $USER;
+
+        if ($USER->IsAdmin())
+            return;
+
         if(!is_array($arEntity) || !array_key_exists('type', $arEntity)){
             CEventLog::Add(array(
                 'SEVERITY' => 'SECURITY',
@@ -1213,7 +1211,7 @@ class CleantalkAntispam {
         }
 
         $type = $arEntity['type'];
-        if($type != 'comment' && $type != 'webform' &&$type != 'register' && $type != 'order' && $type != 'feedback_general_contact_form' && $type != 'private_message'){
+        if($type != 'comment' && $type != 'webform' && $type != 'register' && $type != 'order' && $type != 'feedback_general_contact_form' && $type != 'private_message'){
             CEventLog::Add(array(
                 'SEVERITY' => 'SECURITY',
                 'AUDIT_TYPE_ID' => 'CLEANTALK_E_INTERNAL',
