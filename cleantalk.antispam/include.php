@@ -169,6 +169,20 @@ class CleantalkAntispam {
         // Contact Form 7
         '_wpcf7',
         'avatar__file_image_data',
+        'sessid',
+        'soa-action',
+        'location_type',
+        'BUYER_STORE',
+        'PAY_SYSTEM_ID',
+        'PERSON_TYPE',
+        'PERSON_TYPE_OLD',
+        'ORDER_PROP_18',
+        'RECENT_DELIVERY_VALUE',
+        'DELIVERY_ID',
+        'via_ajax',
+        'action',
+        'SITE_ID',
+        'signedParamsString',
       );
         $fields_exclusions = CleantalkCustomConfig::get_fields_exclusions();
         if ($fields_exclusions)
