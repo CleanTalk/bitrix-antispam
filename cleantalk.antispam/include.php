@@ -570,7 +570,9 @@ class CleantalkAntispam {
                 'formresult',
                 'sessid',
                 'captcha_',
-                'web_form_submit'
+                'web_form_submit',
+                'AJAX_CALL',
+                'bxajaxid',
             );
             
             foreach ($arrVALUES as $key => $value){
