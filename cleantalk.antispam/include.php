@@ -1333,7 +1333,7 @@ class CleantalkAntispam {
         $ct_request->js_on = $checkjs;
         $ct_request->sender_info = $sender_info;
         $ct_request->submit_time = self::ct_cookies_test() == 1 ? time() - (int)$_COOKIE['ct_timestamp'] : null;
-        if (isset($arEntity['message_title']) && is_array($arEntity))
+        if (isset($arEntity['message_title']) && is_array($arEntity['message_title']))
             $arEntity['message_title'] = implode("\n", $arEntity['message_title']);
         if (isset($arEntity['message_body']) && is_array($arEntity['message_body']))
             $arEntity['message_body'] = implode("\n", $arEntity['message_body']);
