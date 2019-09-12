@@ -71,8 +71,12 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     COption::SetOptionString( $sModuleId, 'last_checked',                    $_POST['last_checked'] == '1'                    ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_global_check',               $_POST['form_global_check'] == '1'               ? '1' : '0' );
     COption::SetOptionString( $sModuleId, 'form_global_check_without_email', $_POST['form_global_check_without_email'] == '1' ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_sfw',                        $_POST['form_sfw'] == '1'                        ? '1' : '0' );  
-    
+    COption::SetOptionString( $sModuleId, 'form_sfw',                        $_POST['form_sfw'] == '1'                        ? '1' : '0' );
+
+    COption::SetOptionString( $sModuleId, 'form_exclusions_url',             isset($_POST['form_exclusions_url'])     ? $_POST['form_exclusions_url']     : '' );
+    COption::SetOptionString( $sModuleId, 'form_exclusions_fields',          isset($_POST['form_exclusions_fields'])  ? $_POST['form_exclusions_fields']  : '' );
+    COption::SetOptionString( $sModuleId, 'form_exclusions_webform',         isset($_POST['form_exclusions_webform']) ? $_POST['form_exclusions_webform'] : '' );
+
     COption::SetOptionString( $sModuleId, 'key', $new_key );     
     if($_POST['form_sfw'] == 1)
     {
@@ -210,7 +214,34 @@ $oTabControl->Begin();
         <td  valign="top">
             <input type="checkbox" name="form_sfw" id="form_sfw" <? if ( COption::GetOptionString( $sModuleId, 'form_sfw', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
         </td>
-    </tr>   
+    </tr>
+    <tr class="heading">
+        <td colspan="2"><?=GetMessage( 'CLEANTALK_EXCLUSIONS' )?></td>
+    </tr>
+    <tr>
+        <td width="50%" valign="top"><label for="form_exclusions_check"><?echo GetMessage( 'CLEANTALK_EXCLUSIONS_URL' );?>:</td>
+        <td  valign="top">
+            <input type="text" name="form_exclusions_url" id="form_exclusions_url" value="<?php echo COption::GetOptionString( $sModuleId, 'form_exclusions_url', '' ); ?>" />
+            <div><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_URL_DESCRIPTION' ); ?></div>
+        </td>
+    </tr>
+    <tr>
+        <td width="50%" valign="top"><label for="form_exclusions_fields"><?echo GetMessage( 'CLEANTALK_EXCLUSIONS_FIELDS' );?>:</td>
+        <td  valign="top">
+            <input type="text" name="form_exclusions_fields" id="form_exclusions_fields" value="<?php echo COption::GetOptionString( $sModuleId, 'form_exclusions_fields', '' ); ?>" />
+            <div><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_FIELDS_DESCRIPTION' ); ?></div>
+        </td>
+    </tr>
+    <tr>
+        <td width="50%" valign="top"><label for="form_exclusions_webform"><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_WEBFORM' );?>:</td>
+        <td  valign="top">
+            <input type="text" name="form_exclusions_webform" id="form_exclusions_webform" value="<?php echo COption::GetOptionString( $sModuleId, 'form_exclusions_webform', '' ); ?>" />
+            <div><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_WEBFORM_DESCRIPTION' ); ?></div>
+        </td>
+    </tr>
+    <tr class="heading">
+        <td colspan="2"><?=GetMessage( 'CLEANTALK_KEY' )?></td>
+    </tr>
     <tr>
         <?php
             $moderate_ip=COption::GetOptionString( $sModuleId, 'moderate_ip', '0' );

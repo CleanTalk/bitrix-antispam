@@ -330,11 +330,17 @@ class CleantalkAntispam {
     {
         global $USER;
         self::ct_cookie();
+
+        // Set exclusions to the class
+        CleantalkCustomConfig::$cleantalk_url_exclusions      = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_url', '' );
+        CleantalkCustomConfig::$cleantalk_fields_exclusions   = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' );
+        CleantalkCustomConfig::$cleantalk_webforms_checking   = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_webform', '' );
+
         if (!is_object($USER)) $USER = new CUser;
         $ct_status               = COption::GetOptionString('cleantalk.antispam', 'status', '0');
         $ct_global               = COption::GetOptionString('cleantalk.antispam', 'form_global_check', 0);
         $ct_global_without_email = COption::GetOptionString('cleantalk.antispam', 'form_global_check_without_email', 0);
-        $ct_key                     = COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
+        $ct_key                  = COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
         $last_checked            = COption::GetOptionString( 'cleantalk.antispam', 'last_checked', 0 );
         $last_status             = COption::GetOptionString( 'cleantalk.antispam', 'is_paid', 0 );
         $is_sfw                  = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 );
