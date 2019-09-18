@@ -186,7 +186,7 @@ class CleantalkAntispam {
       );
         $fields_exclusions = CleantalkCustomConfig::get_fields_exclusions();
         if ($fields_exclusions)
-            array_merge($skip_fields_with_strings,$fields_exclusions);  
+            $skip_fields_with_strings = array_merge($skip_fields_with_strings,$fields_exclusions);
       // Reset $message if we have a sign-up data
         $skip_message_post = array(
             'edd_action', // Easy Digital Downloads
