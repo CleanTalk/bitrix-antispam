@@ -16,6 +16,9 @@ require_once(dirname(__FILE__) . '/classes/general/CleantalkSFW.php');
 
 // Custom config
 require_once(dirname(__FILE__) . '/custom_config.php');
+
+if ( ! defined( 'CLEANTALK_USER_AGENT' ) )
+    define( 'CLEANTALK_USER_AGENT', 'bitrix-3115' );
 /**
  * CleanTalk module class
  *
@@ -1219,7 +1222,8 @@ class CleantalkAntispam {
     static function CheckAllBefore(&$arEntity, $bSendEmail = FALSE, $form_errors = null) {
         global $DB, $USER;
 
-        if ($USER->IsAdmin())
+        $request = \Bitrix\Main\Context::getCurrent()->getRequest();
+        if ($USER->IsAdmin() || $request->isAdminSection())
             return;
 
         if(!is_array($arEntity) || !array_key_exists('type', $arEntity)){
@@ -1334,7 +1338,7 @@ class CleantalkAntispam {
         $ct_request->sender_ip = CleantalkHelper::ip_get(array('real'), false);
         $ct_request->x_forwarded_for = CleantalkHelper::ip_get(array('x_forwarded_for'), false);
         $ct_request->x_real_ip       = CleantalkHelper::ip_get(array('x_real_ip'), false);
-        $ct_request->agent = 'bitrix-3115';
+        $ct_request->agent = CLEANTALK_USER_AGENT;
         $ct_request->response_lang = 'ru';
         $ct_request->js_on = $checkjs;
         $ct_request->sender_info = $sender_info;
@@ -1614,7 +1618,7 @@ class CleantalkAntispam {
 
             $ct_request = new CleantalkRequest();
             $ct_request->auth_key = $ct_key;
-            $ct_request->agent = 'bitrix-3115';
+            $ct_request->agent = CLEANTALK_USER_AGENT;
             $ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
             $ct_request->feedback = $request_id . ':' . ($feedback == 'Y' ? '1' : '0');
 
