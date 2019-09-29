@@ -59,7 +59,8 @@ class cleantalk_antispam extends CModule {
 		// Values for templates folder
 		$this->SAR_template_file = 'footer.php';
 		//...with ending slash
-		$this->SAR_local_template_dir = $DOCUMENT_ROOT.'/bitrix/templates/';
+        $this->SAR_bitrix_template_dir = $DOCUMENT_ROOT.'/bitrix/templates/';
+		$this->SAR_local_template_dir  = $DOCUMENT_ROOT.'/local/templates/';
 		$this->SAR_pattern = '/(<\/body>)/i';
 
 		$this->errors = array();
@@ -164,32 +165,54 @@ class cleantalk_antispam extends CModule {
     }
 
     function InstallFiles() {
+        // $todo here is overlapping - need to refactor this code!
 		// Copy system.auth.registration default template from system dir to local dir and insert addon into
-		$SAR_res = $this->install_ct_template(
+		$SAR_res_bitrix = $this->install_ct_template(
 				$this->SAR_template_file,
-				$this->SAR_local_template_dir,
+				$this->SAR_bitrix_template_dir,
 				$this->SAR_pattern,
 				$this->ct_template_addon_tag,
 				$this->ct_template_addon_body
 		);
+        $SAR_res_local = $this->install_ct_template(
+            $this->SAR_template_file,
+            $this->SAR_local_template_dir,
+            $this->SAR_pattern,
+            $this->ct_template_addon_tag,
+            $this->ct_template_addon_body
+        );
 
-		if($SAR_res != 0)
-		    error_log('CLEANTALK_ERROR_FILES_'.sprintf('%02d', $SAR_res));
+		if( $SAR_res_bitrix != 0 )
+		    error_log('CLEANTALK_ERROR_BITRIX_FILES_'.sprintf('%02d', $SAR_res_bitrix ));
+
+        if( $SAR_res_local != 0 )
+            error_log('CLEANTALK_ERROR_LOCAL_FILES_'.sprintf('%02d', $SAR_res_local ));
 	
 		return true;
     }
 
     function UnInstallFiles() {
+        // $todo here is overlapping - need to refactor this code!
 		// Remove addon from local system.auth.registration default template
-		$SAR_res = $this->uninstall_ct_template(
+		$SAR_res_bitrix = $this->uninstall_ct_template(
 				$this->SAR_template_file,
-				$this->SAR_local_template_dir,
+				$this->SAR_bitrix_template_dir,
 				$this->SAR_pattern,
 				$this->ct_template_addon_tag,
 				$this->ct_template_addon_body
 		);
-		if($SAR_res != 0)
-		    error_log('CLEANTALK_ERROR_FILES_'.sprintf('%02d', $SAR_res));
+        $SAR_res_local = $this->uninstall_ct_template(
+            $this->SAR_template_file,
+            $this->SAR_local_template_dir,
+            $this->SAR_pattern,
+            $this->ct_template_addon_tag,
+            $this->ct_template_addon_body
+        );
+        if( $SAR_res_bitrix != 0 )
+            error_log('CLEANTALK_ERROR_BITRIX_FILES_'.sprintf('%02d', $SAR_res_bitrix ));
+
+        if( $SAR_res_local != 0 )
+            error_log('CLEANTALK_ERROR_LOCAL_FILES_'.sprintf('%02d', $SAR_res_local ));
 
 		return true;
     }
@@ -325,12 +348,19 @@ class cleantalk_antispam extends CModule {
 		// Check system folders
 		if(!file_exists($local_template_dir)){
 			// No required system folders
-			return 1;
+			return 0;
 		}
 		$all_templates_folder = glob($local_template_dir . '/*' , GLOB_ONLYDIR);
 
 		if (file_exists($local_template_dir .'/.default'))
 			$all_templates_folder[] = $local_template_dir .'/.default';
+
+		if( in_array( $local_template_dir .'/mail_user', $all_templates_folder ) ) {
+            $all_templates_folder = array_flip($all_templates_folder);
+            unset ($all_templates_folder[$local_template_dir .'/mail_user']);
+            $all_templates_folder = array_flip($all_templates_folder);
+        }
+
 
 		foreach ($all_templates_folder as $current_template)
 		{
