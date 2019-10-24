@@ -165,54 +165,47 @@ class cleantalk_antispam extends CModule {
     }
 
     function InstallFiles() {
-        // $todo here is overlapping - need to refactor this code!
-		// Copy system.auth.registration default template from system dir to local dir and insert addon into
-		$SAR_res_bitrix = $this->install_ct_template(
-				$this->SAR_template_file,
-				$this->SAR_bitrix_template_dir,
-				$this->SAR_pattern,
-				$this->ct_template_addon_tag,
-				$this->ct_template_addon_body
-		);
-        $SAR_res_local = $this->install_ct_template(
-            $this->SAR_template_file,
-            $this->SAR_local_template_dir,
-            $this->SAR_pattern,
-            $this->ct_template_addon_tag,
-            $this->ct_template_addon_body
-        );
-
-		if( $SAR_res_bitrix != 0 )
-		    error_log('CLEANTALK_ERROR_BITRIX_FILES_'.sprintf('%02d', $SAR_res_bitrix ));
-
-        if( $SAR_res_local != 0 )
-            error_log('CLEANTALK_ERROR_LOCAL_FILES_'.sprintf('%02d', $SAR_res_local ));
+     
+	    $results = $this->install_ct_template__in_dirs(
+		    $this->SAR_template_file,
+		    array(
+			    $this->SAR_bitrix_template_dir,
+			    $this->SAR_local_template_dir,
+			    /** @todo (.../bitrix/templates/.default/components/bitrix/system.auth.registration/) research it */
+			    // Copy system.auth.registration default template from system dir to local dir and insert addon into
+		    ),
+		    $this->SAR_pattern,
+		    $this->ct_template_addon_tag,
+		    $this->ct_template_addon_body
+	    );
+	    
+	    foreach ($results as $dir => $result){
+	    	if($result != 0){
+			    error_log('CLEANTALK_ERROR: INSTALLING_IN_TEMPLATE_FILES: ' . $dir . sprintf('%02d', $result ));
+		    }
+	    }
 	
 		return true;
     }
 
     function UnInstallFiles() {
-        // $todo here is overlapping - need to refactor this code!
-		// Remove addon from local system.auth.registration default template
-		$SAR_res_bitrix = $this->uninstall_ct_template(
-				$this->SAR_template_file,
-				$this->SAR_bitrix_template_dir,
-				$this->SAR_pattern,
-				$this->ct_template_addon_tag,
-				$this->ct_template_addon_body
-		);
-        $SAR_res_local = $this->uninstall_ct_template(
-            $this->SAR_template_file,
-            $this->SAR_local_template_dir,
-            $this->SAR_pattern,
-            $this->ct_template_addon_tag,
-            $this->ct_template_addon_body
-        );
-        if( $SAR_res_bitrix != 0 )
-            error_log('CLEANTALK_ERROR_BITRIX_FILES_'.sprintf('%02d', $SAR_res_bitrix ));
-
-        if( $SAR_res_local != 0 )
-            error_log('CLEANTALK_ERROR_LOCAL_FILES_'.sprintf('%02d', $SAR_res_local ));
+	
+	    $results = $this->uninstall_ct_template__in_dirs(
+		    $this->SAR_template_file,
+		    array(
+			    $this->SAR_bitrix_template_dir,
+			    $this->SAR_local_template_dir,
+			    /** @todo (.../bitrix/templates/.default/components/bitrix/system.auth.registration/) research it */
+			    // Copy system.auth.registration default template from system dir to local dir and insert addon into
+	        ),
+		    $this->ct_template_addon_tag
+	    );
+	
+	    foreach ($results as $dir => $result){
+		    if($result != 0){
+			    error_log('CLEANTALK_ERROR: UNINSTALLING_IN_TEMPLATE_FILES: ' . $dir . sprintf('%02d', $result ));
+		    }
+	    }
 
 		return true;
     }
@@ -324,190 +317,198 @@ class cleantalk_antispam extends CModule {
 		$DB->Query('DROP TABLE IF EXISTS cleantalk_checkjs');
 		return TRUE;
     }
-
-    /**
-     * Copies needed template from system dir to local dir and inserts CleanTalk addon into it
-     *
-     * @param 	&string $template_dir			Name of component's template dir (.default)
-     * @param 	&string $template_file			Name of component's template file (template.php)
-     * @param 	&string $system_template_dir		Full system dir of component templates (.../bitrix/components/bitrix/system.auth.registration/templates/)
-     * @param 	&string $local_template_dir		Full local dir of templates (.../bitrix/templates/.default/)
-     * @param 	&string $local_compo_template_dir	Full local dir of component template (.../bitrix/templates/.default/components/bitrix/system.auth.registration/)
-     * @param 	&string $pattern			PCRE pattern to find place to insert CleanTalk addon before
-     * @param 	&string $ct_template_addon_tag		Tag string to mark CleanTalk addon body
-     * @param 	&string $ct_template_addon_body		HTML text of CleanTalk addon itself
-     * @return 	int Returns error code or 0 when success
-     */
-    function install_ct_template(
-			     $template_file,
-			     $local_template_dir,	// with ending slash
-			     $pattern,
-			     $ct_template_addon_tag,
-			     $ct_template_addon_body)
-    {
+	
+	/**
+	 * Wrapper for cleantalk_antispam::install_ct_template__in_dir()
+	 * Allows to pass an array into it
+	 *
+	 * @param $template_file
+	 * @param $template_dirs
+	 * @param $pattern
+	 * @param $ct_template_addon_tag
+	 * @param $ct_template_addon_body
+	 *
+	 * @return array with error codes for each directory. 0 on success.
+	 */
+    function install_ct_template__in_dirs($template_file, $template_dirs, $pattern, $ct_template_addon_tag, $ct_template_addon_body){
+    	$out = array();
+	    foreach ( $template_dirs as $template_dir ){
+    	    $out[$template_dir] =  $this->install_ct_template__in_dir($template_file, $template_dir, $pattern, $ct_template_addon_tag, $ct_template_addon_body);
+    	}
+	    return $out;
+    }
+	
+	/**
+	 * Copies needed template from system dir to local dir and inserts CleanTalk addon into it
+	 *
+	 * @param string $template_file            Name of component's template file (template.php)
+	 * @param string $template_dir             Name of component's template dir (.default) with ending slash
+	 * @param string $pattern                  PCRE pattern to find place to insert CleanTalk addon before
+	 * @param string $ct_template_addon_tag    Tag string to mark CleanTalk addon body
+	 * @param string $ct_template_addon_body   HTML text of CleanTalk addon itself
+	 *
+	 * @return    int Returns error code or 0 when success
+	 */
+	function install_ct_template__in_dir( $template_file, $template_dir, $pattern, $ct_template_addon_tag, $ct_template_addon_body ){
+		
 		// Check system folders
-		if(!file_exists($local_template_dir)){
+		if(!file_exists($template_dir)){
 			// No required system folders
 			return 0;
 		}
-		$all_templates_folder = glob($local_template_dir . '/*' , GLOB_ONLYDIR);
-
-		if (file_exists($local_template_dir .'/.default'))
-			$all_templates_folder[] = $local_template_dir .'/.default';
-
-		if( in_array( $local_template_dir .'/mail_user', $all_templates_folder ) ) {
-            $all_templates_folder = array_flip($all_templates_folder);
-            unset ($all_templates_folder[$local_template_dir .'/mail_user']);
-            $all_templates_folder = array_flip($all_templates_folder);
-        }
-
-
-		foreach ($all_templates_folder as $current_template)
-		{
+		$all_templates_folder = glob( $template_dir . '*' , GLOB_ONLYDIR);
+		
+		if (file_exists( $template_dir . '.default'))
+			$all_templates_folder[] = $template_dir . '.default';
+		
+		foreach ($all_templates_folder as $current_template){
+			
+			// Exception for template mail templates
+			// By type
+			$description_file = $current_template . '/description.php';
+			if( file_exists( $description_file ) ){
+				require_once( $description_file );
+				if( isset( $arTemplate, $arTemplate['TYPE'] ) && $arTemplate['TYPE'] == 'mail' )
+					continue;
+			}
+			// By name
+			// Deleting mail template
+			if( in_array( $current_template, array( 'mail_user' ) ) )
+				continue;
+			
 			$template_file_path = $current_template.'/'.$template_file;
-			// Last check - template PHP file
-			if(!file_exists($template_file_path) || !is_file($template_file_path) || !is_writable($template_file_path)){
-				// No template PHP file
-				return 4;
-			}
-
-			// Here we are sure that
-			// bitrix/templates/<template>/components/bitrix/<component>/<template>/<file>.php
-			// exists and writable
-
-			// Try to get template PHP file content
-			$template_content = file_get_contents($template_file_path);
-			if($template_content === FALSE){
-				// Cannot read from template PHP file
-				return 5;
-			}
-
-			// Check is it parsable
-			if(!preg_match($pattern, $template_content) === 1){
-				// Cannot find pattern for addon inserting in template PHP file
-				return 6;
-			}			
-			// First clean all previous CLEANTALK template addons
-			$ct_template_addon_begin = '<!-- ' . $ct_template_addon_tag . ' -->';	// don't change this!
-			$ct_template_addon_end   = '<!-- /' . $ct_template_addon_tag . ' -->';	// don't change this!
-
-			$pos_begin = strpos($template_content, $ct_template_addon_begin);
-			$pos_end   = strpos($template_content, $ct_template_addon_end);
-
-			if($pos_begin !== FALSE && $pos_end === FALSE){
-				// Cannot parse template PHP file - old CLEANTALK open tag exists only
-				return 7;
-			}elseif($pos_begin === FALSE && $pos_end !== FALSE){
-				// Cannot parse template PHP file - old CLEANTALK close tag exists only
-				return 8;
-			}elseif($pos_begin !== FALSE && $pos_end !== FALSE){
-				if($pos_begin < $pos_end){
-					// Cleaning needed
-					$template_content = substr($template_content, 0, $pos_begin) . substr($template_content, $pos_end + strlen($ct_template_addon_end));
-				}else{
-					// Cannot parse template PHP file - old CLEANTALK close tag before open tag
-					return 9;
-				}
-			//}elseif($pos_begin === FALSE && $pos_end === FALSE){
-			//	// Nothing to clean
-			}
-			// Second add current CLEANTALK template addon
-
-			$ct_template_addon = $ct_template_addon_begin . $ct_template_addon_body . $ct_template_addon_end . "\n\n";
-
-			$template_content = preg_replace($pattern, $ct_template_addon . '${1}', $template_content, 1);
-
-			if(!file_put_contents($template_file_path, $template_content)){
-				// Cannot write new content to template PHP file
-				return 10;
-			}
-
+			
+			$start_pattern = '<!-- ' . $ct_template_addon_tag . ' -->'; // don't change this!
+			$end_pattern   = '<!-- /' . $ct_template_addon_tag . ' -->'; // don't change this!
+			
+			$result = $this->ct_file__clean_up( $template_file_path, $start_pattern, $end_pattern );
+			if( $result === true ){
+				
+				// Check is it parsable
+				$template_content = file_get_contents( $template_file_path );
+				if( $template_content ){
+					
+					if( preg_match( $pattern, $template_content ) === 1 ){
+						
+						$ct_template_addon = $start_pattern . $ct_template_addon_body . $end_pattern . "\n";
+						$template_content = preg_replace($pattern, $ct_template_addon . '${1}', $template_content, 1);
+						
+						if( file_put_contents( $template_file_path, $template_content ) ){
+						
+						}else
+							return 9; // Cannot write new content to template PHP file
+					}else
+						return 10;
+				}else
+					return 5;
+			}else
+				return $result;
 		}
 		// Here all is OK - new template PHP file with CLEANTALK addon inserted is ready
 		return 0;
     }
-    /**
-     * Remove addon from needed local component template
-     *
-     * @param 	&string $template_dir			Name of component's template dir (.default)
-     * @param 	&string $template_file			Name of component's template file (template.php)
-     * @param 	&string $local_compo_template_dir	Full local dir of component template (.../bitrix/templates/.default/components/bitrix/system.auth.registration/)
-     * @param 	&string $ct_template_addon_tag		Tag string to mark CleanTalk addon body
-     * @return 	int Returns error code or 0 when success
-     */
-    function uninstall_ct_template(
-    			 $template_file,
-			     $local_template_dir,
-			     $pattern, 
-			     $ct_template_addon_tag,
-			     $ct_template_addon_body)
-    {
+	
+	/**
+	 * Wrapper for cleantalk_antispam::install_ct_template__in_dir()
+	 * Allows to pass an array into it
+	 *
+	 * @param $template_file
+	 * @param $template_dirs
+	 * @param $ct_template_addon_tag
+	 *
+	 * @return array with error codes for each directory. 0 on success.
+	 */
+	function uninstall_ct_template__in_dirs( $template_file, $template_dirs, $ct_template_addon_tag ){
+		$out = array();
+		foreach ( $template_dirs as $template_dir ){
+			$out[$template_dir] =  $this->uninstall_ct_template__in_dir( $template_file, $template_dir, $ct_template_addon_tag );
+		}
+		return $out;
+	}
+	
+	/**
+	 * Remove addon from needed local component template
+	 *
+	 * @param string $template_file         Name of component's template file (template.php)
+	 * @param string $template_dir          Name of component's template dir (.default)
+	 * @param string $ct_template_addon_tag Tag string to mark CleanTalk addon body
+	 *
+	 * @return    int Returns error code or 0 when success
+	 */
+	function uninstall_ct_template__in_dir( $template_file, $template_dir, $ct_template_addon_tag ){
+		
 		// Check system folders
-		if(!file_exists($local_template_dir)){
+		if(!file_exists($template_dir)){
 			// No required system folders
 			return 1;
 		}
-		$all_templates_folder = glob($local_template_dir . '/*' , GLOB_ONLYDIR);
+		$all_templates_folder = glob( $template_dir . '*' , GLOB_ONLYDIR);
 
-		if (file_exists($local_template_dir .'/.default'))
-			$all_templates_folder[] = $local_template_dir .'/.default';
-		foreach ($all_templates_folder as $current_template)
-		{
+		if (file_exists( $template_dir . '.default'))
+			$all_templates_folder[] = $template_dir . '.default';
+		foreach ($all_templates_folder as $current_template){
+			
 			$template_file_path = $current_template.'/'.$template_file;
-			// Last check - template PHP file
-			if(!file_exists($template_file_path) || !is_file($template_file_path) || !is_writable($template_file_path)){
-				// No template PHP file
-				return 4;
-			}
-
-			// Here we are sure that
-			// bitrix/templates/<template>/components/bitrix/<component>/<template>/<file>.php
-			// exists and writable
-
-			// Try to get template PHP file content
-			$template_content = file_get_contents($template_file_path);
-			if($template_content === FALSE){
-				// Cannot read from template PHP file
-				return 5;
-			}
-
-			// Check is it parsable
-			if(!preg_match($pattern, $template_content) === 1){
-				// Cannot find pattern for addon inserting in template PHP file
-				return 6;
-			}			
-			// Clean all CLEANTALK template addons
-			$ct_template_addon_begin = '<!-- ' . $ct_template_addon_tag . ' -->';	// don't change this!
-			$ct_template_addon_end   = '<!-- /' . $ct_template_addon_tag . ' -->';	// don't change this!
-
-			$pos_begin = strpos($template_content, $ct_template_addon_begin);
-			$pos_end   = strpos($template_content, $ct_template_addon_end);
-
-			if($pos_begin !== FALSE && $pos_end === FALSE){
-				// Cannot parse template PHP file
-				return 7;
-			}elseif($pos_begin === FALSE && $pos_end !== FALSE){
-				// Cannot parse template PHP file
-				return 8;
-			}elseif($pos_begin !== FALSE && $pos_end !== FALSE){
-				if($pos_begin < $pos_end){
-					// Cleaning needed
-					$template_content = substr($template_content, 0, $pos_begin) . substr($template_content, $pos_end + strlen($ct_template_addon_end));
-				}else{
-					// Cannot parse template PHP file
-					return 9;
-				}
-			//}elseif($pos_begin === FALSE && $pos_end === FALSE){
-			//	// Nothing to clean
-			}
-			if(!file_put_contents($template_file_path, $template_content)){
-				// Cannot write new content to template PHP file
-				return 10;
-			}
+			
+			$start_pattern = '<!-- ' . $ct_template_addon_tag . ' -->'; // don't change this!
+			$end_pattern   = '<!-- /' . $ct_template_addon_tag . ' -->'; // don't change this!
+			
+			$result = $this->ct_file__clean_up( $template_file_path, $start_pattern, $end_pattern );
+			if($result !== true )
+				return $result;
 
 		}
 		// Here all is OK - new template PHP file with CLEANTALK addon inserted is ready
 		return 0;
+	}
+	
+	/**
+	 * @param $file_path
+	 * @param $start_pattern
+	 * @param $end_pattern
+	 *
+	 * @return bool|int
+	 */
+	function ct_file__clean_up( $file_path, $start_pattern, $end_pattern ){
+		
+		// Last check - template PHP file
+		if( is_file( $file_path ) || is_writable( $file_path ) ){
+			
+			// Try to get template PHP file content
+			$file_content = file_get_contents( $file_path );
+			
+			if( $file_content ){
+					
+				// Clean all CLEANTALK template addons
+				$pos_begin = strpos( $file_content, $start_pattern );
+				$pos_end   = strpos( $file_content, $end_pattern   );
+				
+				// Nothing to clean
+				if($pos_begin === false && $pos_end === false)
+					return true;
+				
+				if( $pos_begin !== false ){
+					if( $pos_end !== false ){
+						if( $pos_begin < $pos_end ){
+							
+							// Cleaning up
+							$file_content = substr( $file_content, 0, $pos_begin ) . substr( $file_content, $pos_end + strlen( $end_pattern ) );
+							// $file_content = substr( $file_content, 0, $pos_begin ) . substr( $file_content, $pos_end + strlen( '<!-- /' . $tag . ' -->' ) );
+							
+							if( file_put_contents( $file_path, $file_content ) ){
+								return true;
+							}else
+								return 9; // Cannot write new content to template PHP file
+						}else
+							return 8; // Can't parse template PHP file
+					}else
+						return 7; // Can't find end
+				}else
+					return 6; // Can't find start
+			}else
+				return 5; // Can't read from template PHP file
+		}else
+			return 4; // No template PHP file
 	}
 	
 }
