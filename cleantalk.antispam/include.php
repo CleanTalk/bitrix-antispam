@@ -1036,7 +1036,8 @@ class CleantalkAntispam {
             $aUser = array();
             $aUser['type'] = 'register';
             $aUser['sender_email'] = isset($arFields['EMAIL']) ? $arFields['EMAIL'] : '';
-            $aUser['sender_nickname'] = isset($arFields['LOGIN']) ? $arFields['LOGIN'] : '';
+            $aUser['sender_nickname'] = (isset($arFields['NAME']) ? $arFields['NAME'] : '') . ' ' . (isset($arFields['LAST_NAME']) ? $arFields['LAST_NAME'] : '');
+
             if (empty($arFields['LOGIN']))
                 $form_errors[] = 'Логин должен быть не менее 3 символов';
             if (empty($arFields['PASSWORD']))
