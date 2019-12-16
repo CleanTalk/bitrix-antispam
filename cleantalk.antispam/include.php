@@ -18,7 +18,7 @@ require_once(dirname(__FILE__) . '/classes/general/CleantalkSFW.php');
 require_once(dirname(__FILE__) . '/custom_config.php');
 
 if ( ! defined( 'CLEANTALK_USER_AGENT' ) )
-    define( 'CLEANTALK_USER_AGENT', 'bitrix-3115' );
+    define( 'CLEANTALK_USER_AGENT', 'bitrix-3116' );
 /**
  * CleanTalk module class
  *
