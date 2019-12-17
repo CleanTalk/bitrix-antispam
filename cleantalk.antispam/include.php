@@ -558,7 +558,7 @@ class CleantalkAntispam {
 
         $webforms_id_checking = CleantalkCustomConfig::get_webforms_ids();
         if ($webforms_id_checking && is_array($webforms_id_checking) && count($webforms_id_checking) > 0)
-            if (!in_array($WEB_FORM_ID, $webforms_id_checking))
+            if (in_array($WEB_FORM_ID, $webforms_id_checking))
                 return;      
 
         if ($ct_status == 1 && $ct_webform == 1){
