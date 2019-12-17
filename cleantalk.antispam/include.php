@@ -635,6 +635,8 @@ class CleantalkAntispam {
         $ct_comment_treelike = COption::GetOptionString('cleantalk.antispam', 'form_comment_treelike', '0');
         if ($ct_status == 1 && $ct_comment_treelike == 1) {
 
+            $aComment = array();
+
             // Skip authorized user with more than 5 approved comments
             if($USER->IsAuthorized()){
                 $approved_comments = CTreelikeComments::GetList(
@@ -643,12 +645,15 @@ class CleantalkAntispam {
                     '',
                     TRUE    // return count(*)
                 );
-                if(intval($approved_comments) > 5)
+                if(intval($approved_comments) > 5) {
                     return;
+                }
+                $aComment['sender_email'] = $USER->GetEmail();
+            } else {
+                $aComment['sender_email'] = isset($arFields['EMAIL']) ? $arFields['EMAIL'] : '';
             }
-            $aComment = array();
+
             $aComment['type'] = 'comment';
-            $aComment['sender_email'] = isset($arFields['EMAIL']) ? $arFields['EMAIL'] : '';
             $aComment['sender_nickname'] = isset($arFields['AUTHOR_NAME']) ? $arFields['AUTHOR_NAME'] : '';
             $aComment['message_title'] = '';
             $aComment['message_body'] = isset($arFields['COMMENT']) ? $arFields['COMMENT'] : '';
@@ -733,6 +738,8 @@ class CleantalkAntispam {
         $ct_comment_blog = COption::GetOptionString('cleantalk.antispam', 'form_comment_blog', '0');
         if ($ct_status == 1 && $ct_comment_blog == 1) {
 
+            $aComment = array();
+
             // Skip authorized user with more than 5 approved comments
             if($USER->IsAuthorized()){
                 $approved_comments = CBlogComment::GetList(
@@ -740,12 +747,16 @@ class CleantalkAntispam {
                     array('AUTHOR_ID'=>$arFields['AUTHOR_ID'], 'PUBLISH_STATUS' => BLOG_PUBLISH_STATUS_PUBLISH),
                     array()    // return count(*)
                 );
-                if(intval($approved_comments) > 5)
+                if(intval($approved_comments) > 5) {
                     return;
+                }
+                $aComment['sender_email'] = $USER->GetEmail();
+            } else {
+                $aComment['sender_email'] = isset($arFields['EMAIL']) ? $arFields['EMAIL'] : '';
             }
-            $aComment = array();
+
+
             $aComment['type'] = 'comment';
-            $aComment['sender_email'] = isset($arFields['AUTHOR_EMAIL']) ? $arFields['AUTHOR_EMAIL'] : '';
             $aComment['sender_nickname'] = isset($arFields['AUTHOR_NAME']) ? $arFields['AUTHOR_NAME'] : '';
             $aComment['message_title'] = '';
             $aComment['message_body'] = isset($arFields['POST_TEXT']) ? $arFields['POST_TEXT'] : '';
@@ -836,6 +847,8 @@ class CleantalkAntispam {
         $ct_comment_forum = COption::GetOptionString('cleantalk.antispam', 'form_comment_forum', '0');
         if ($ct_status == 1 && $ct_comment_forum == 1) {
 
+            $aComment = array();
+
             // Skip authorized user with more than 5 approved messages
             if($USER->IsAuthorized()){
                 $approved_messages = CForumMessage::GetList(
@@ -843,12 +856,15 @@ class CleantalkAntispam {
                     array('AUTHOR_ID'=>$arFields['AUTHOR_ID'], 'APPROVED'=>'Y'),
                     TRUE
                 );
-                if(intval($approved_messages) > 5)
+                if(intval($approved_messages) > 5) {
                     return;
+                }
+                $aComment['sender_email'] = $USER->GetEmail();
+            } else {
+                $aComment['sender_email'] = isset($arFields['EMAIL']) ? $arFields['EMAIL'] : '';
             }
-            $aComment = array();
+
             $aComment['type'] = 'comment';
-            $aComment['sender_email'] = isset($arFields['AUTHOR_EMAIL']) ? $arFields['AUTHOR_EMAIL'] : '';
             $aComment['sender_nickname'] = isset($arFields['AUTHOR_NAME']) ? $arFields['AUTHOR_NAME'] : '';
             $aComment['message_title'] = '';
             $aComment['message_body'] = isset($arFields['POST_MESSAGE']) ? $arFields['POST_MESSAGE'] : '';
@@ -977,7 +993,7 @@ class CleantalkAntispam {
         $ct_status = COption::GetOptionString('cleantalk.antispam', 'status', '0');
         $ct_forum_private_messages = COption::GetOptionString('cleantalk.antispam', 'form_forum_private_messages', '0');
         if ($ct_status == 1 && $ct_forum_private_messages == 1) {
-            
+
             $aComment = array();
             $aComment['type'] = 'comment';
             $aComment['sender_email'] = $USER->GetEmail();
