@@ -25,7 +25,6 @@ if ( ! defined( 'CLEANTALK_USER_AGENT' ) )
  * @author  CleanTalk team <http://cleantalk.org>
  */
 
-RegisterModuleDependences('main', 'OnPageStart', 'cleantalk.antispam', 'CleantalkAntispam', 'OnPageStartHandler',1); 
 class CleantalkAntispam {
 
     const KEYS_NUM = 12; // 12 last JS keys are valid
