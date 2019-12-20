@@ -331,7 +331,6 @@ class CleantalkAntispam {
     public function OnPageStartHandler()
     {
         global $USER;
-        self::ct_cookie();
 
         // Set exclusions to the class
         CleantalkCustomConfig::$cleantalk_url_exclusions      = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_url', '' );
@@ -351,7 +350,8 @@ class CleantalkAntispam {
             // Remote calls
             if(isset($_GET['spbc_remote_call_token'], $_GET['spbc_remote_call_action'], $_GET['plugin_name']) && in_array($_GET['plugin_name'], array('antispam','anti-spam', 'apbct'))){
                 self::apbct_remote_call__perform();
-            }              
+            }   
+            self::ct_cookie();           
             if ($is_sfw == 1) {
                 $sfw = new CleantalkSFW();
                 $is_sfw_check = true;
