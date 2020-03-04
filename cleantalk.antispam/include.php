@@ -388,7 +388,8 @@ class CleantalkAntispam {
                     (isset($_POST['order']['action']) && $_POST['order']['action'] == 'saveOrderAjax') ||
                     (isset($_POST['action']) && $_POST['action'] == 'refreshOrderAjax') ||
                     (isset($_POST['action']) && $_POST['action'] == 'saveOrderAjax') ||
-                    strpos($_SERVER['REQUEST_URI'],'/user-profile.php?update=Y')!==false
+                    strpos($_SERVER['REQUEST_URI'],'/user-profile.php?update=Y')!==false ||
+                    (isset($_SERVER['USER_AGENT']) && strpos($_SERVER['USER_AGENT'],'.NET Framework')!==false)
                 )
                 {
                     return;
