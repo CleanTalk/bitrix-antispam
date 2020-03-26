@@ -394,7 +394,14 @@ class CleantalkAntispam {
                 {
                     return;
                 }
-                
+
+                // Exclusion for web-forms ID
+                $ct_webform= COption::GetOptionString('cleantalk.antispam', 'web_form', '0');
+                $webforms_id_checking = CleantalkCustomConfig::get_webforms_ids();
+                if ($ct_webform == 1 && $webforms_id_checking && is_array($webforms_id_checking) && count($webforms_id_checking) > 0 && isset($_POST['WEB_FORM_ID']))
+                    if (in_array($_POST['WEB_FORM_ID'], $webforms_id_checking))
+                        return;
+
                 $ct_temp_msg_data = CleantalkAntispam::CleantalkGetFields($_POST); //Works via links need to be fixed
               
                 if ($ct_temp_msg_data === null)
