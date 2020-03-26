@@ -1232,8 +1232,13 @@ class CleantalkAntispam {
     static function CheckAllBefore(&$arEntity, $bSendEmail = FALSE, $form_errors = null) {
         global $DB, $USER;
 
-        $request = \Bitrix\Main\Context::getCurrent()->getRequest();
-        if ($USER->IsAdmin() || $request->isAdminSection())
+        if (class_exists('Bitrix\Main\Context')) {
+          $isAdminSection = \Bitrix\Main\Context::getCurrent()->getRequest()->isAdminSection();
+        } else {
+            $isAdminSection = (strpos($_SERVER['REQUEST_URI'], 'bitrix/admin') !== false) ? true : false;
+        }
+        
+        if ($USER->IsAdmin() || $isAdminSection)
             return;
 
         if(!is_array($arEntity) || !array_key_exists('type', $arEntity)){
