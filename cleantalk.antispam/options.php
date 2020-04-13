@@ -196,7 +196,14 @@ $oTabControl->Begin();
         </td>
     </tr>
     <tr>
-        <td width="50%" valign="top"><label id="form_global_check_without_email_label" for="form_global_check_without_email" <?if( COption::GetOptionString( $sModuleId, 'form_global_check', '0' ) == '0'){ echo "style='color: gray;'"; } ?>><?echo GetMessage( 'CLEANTALK_LABEL_GLOBAL_CHECK_WITHOUT_EMAIL' );?>:</td>
+        <td width="50%" valign="top">
+            <label
+                    id="form_global_check_without_email_label"
+                    for="form_global_check_without_email"
+                    <?if( COption::GetOptionString( $sModuleId, 'form_global_check', '0' ) == '0'){  "style='color: gray;'"; } ?>
+            >
+            <?echo GetMessage( 'CLEANTALK_LABEL_GLOBAL_CHECK_WITHOUT_EMAIL' );?>:
+        </td>
         <td  valign="top">
             <input type="checkbox" name="form_global_check_without_email" id="form_global_check_without_email"
             <? 

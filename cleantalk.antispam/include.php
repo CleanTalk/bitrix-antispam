@@ -402,7 +402,7 @@ class CleantalkAntispam {
                     if (in_array($_POST['WEB_FORM_ID'], $webforms_id_checking))
                         return;
 
-                $ct_temp_msg_data = CleantalkAntispam::CleantalkGetFields($_POST); //Works via links need to be fixed
+                $ct_temp_msg_data = CleantalkAntispam::CleantalkGetFields($_POST); // @todo Works via links need to be fixed
               
                 if ($ct_temp_msg_data === null)
                     CleantalkAntispam::CleantalkGetFields($_GET);
