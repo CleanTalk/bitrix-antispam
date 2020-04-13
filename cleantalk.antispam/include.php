@@ -418,7 +418,8 @@ class CleantalkAntispam {
                 if (is_array($arUser["message_body"]))
                     $arUser["message_body"] = implode("\n", $arUser["message_body"]);
                 
-                if($arUser["sender_email"] != '' || $ct_global_without_email == 1) {                                               
+                if( ! empty( $arUser["sender_email"] ) || $ct_global_without_email == 1 ) {
+                	
                     $aResult =  CleantalkAntispam::CheckAllBefore($arUser,FALSE);
                     
                     if(isset($aResult) && is_array($aResult))
