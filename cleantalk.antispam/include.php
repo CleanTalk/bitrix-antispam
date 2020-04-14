@@ -389,7 +389,8 @@ class CleantalkAntispam {
                     (isset($_POST['action']) && $_POST['action'] == 'refreshOrderAjax') ||
                     (isset($_POST['action']) && $_POST['action'] == 'saveOrderAjax') ||
                     strpos($_SERVER['REQUEST_URI'],'/user-profile.php?update=Y')!==false ||
-                    (isset($_SERVER['USER_AGENT']) && strpos($_SERVER['USER_AGENT'],'.NET Framework')!==false)
+                    ( isset( $_SERVER['USER_AGENT'] ) && strpos( $_SERVER['USER_AGENT'], '.NET Framework' )              !== false ) ||
+                    ( isset( $_SERVER['USER_AGENT'] ) && strpos( $_SERVER['USER_AGENT'], 'Bitrix Telephony Controller' ) !== false )
                 )
                 {
                     return;
