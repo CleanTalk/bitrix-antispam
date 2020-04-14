@@ -18,7 +18,7 @@ require_once(dirname(__FILE__) . '/classes/general/CleantalkSFW.php');
 require_once(dirname(__FILE__) . '/custom_config.php');
 
 if ( ! defined( 'CLEANTALK_USER_AGENT' ) )
-    define( 'CLEANTALK_USER_AGENT', 'bitrix-3118' );
+    define( 'CLEANTALK_USER_AGENT', 'bitrix-3119' );
 /**
  * CleanTalk module class
  *
@@ -419,7 +419,7 @@ class CleantalkAntispam {
                 if (is_array($arUser["message_body"]))
                     $arUser["message_body"] = implode("\n", $arUser["message_body"]);
                 
-                if( ! empty( $arUser["sender_email"] ) || $ct_global_without_email == 1 ) {
+                if( ! empty( $arUser["sender_email"] ) || $ct_global_without_email === '1' ) {
                 	
                     $aResult =  CleantalkAntispam::CheckAllBefore($arUser,FALSE);
                     
