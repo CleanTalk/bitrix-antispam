@@ -3,7 +3,9 @@
 global $MESS;
 IncludeModuleLangFile(__FILE__);
 
-require_once(dirname(__FILE__) . '/../lib/Cleantalk/Common/Helper.php');
+require_once(dirname(__FILE__) . '/../lib/Cleantalk/Common/API.php');
+
+use Cleantalk\Common\API as CleantalkAPI;
 
 /**
  * Installer for CleanTalk module
@@ -113,7 +115,7 @@ class cleantalk_antispam extends CModule {
 		$form_sfw = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 );
 		
 		if($api_key && $api_key != ''){
-			$result = CleantalkHelper::api_method__notice_validate_key($api_key);
+			$result = CleantalkAPI::method__notice_paid_till($api_key, preg_replace('/http[s]?:\/\//', '', $_SERVER['HTTP_HOST'], 1));
 			COption::SetOptionString( 'cleantalk.antispam', 'key_is_ok', isset($result['valid']) && $result['valid'] == '1' ? '1' : '0');
 		}
 		//Remote calls
