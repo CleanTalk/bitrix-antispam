@@ -1,17 +1,10 @@
 <?php
-/**
- * Cleantalk Request class
- *
- * @version 2.3
- * @package Cleantalk
- * @subpackage Response
- * @author Cleantalk team (welcome@cleantalk.org)
- * @copyright (C) 2014 CleanTalk team (http://cleantalk.org)
- * @license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
- * @see https://github.com/CleanTalk/php-antispam 
- *
- */
 
+namespace Cleantalk\Antispam;
+
+/**
+ * Request class
+ */
 class CleantalkRequest {
 
      /**

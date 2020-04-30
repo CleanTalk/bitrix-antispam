@@ -13,6 +13,11 @@ CModule::IncludeModule( $sModuleId );
 global $MESS;
 IncludeModuleLangFile( __FILE__ );
 
+use Cleantalk\Common\API as CleantalkAPI;
+use Cleantalk\Common\Helper as CleantalkHelper;
+
+use Cleantalk\ApbctBitrix\SFW as CleantalkSFW;
+
 if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     
     $old_key = COption::GetOptionString( $sModuleId, 'key', '' );
@@ -21,7 +26,7 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     //Getting key automatically
     if(isset($_POST['getautokey'])){
         
-        $result = CleantalkHelper::api_method__get_api_key(COption::GetOptionString("main", "email_from"), $_SERVER["SERVER_NAME"], 'bitrix');
+        $result = CleantalkAPI::method__get_api_key('antispam', COption::GetOptionString("main", "email_from"), $_SERVER["HTTP_HOST"], 'bitrix');
         
         if (empty($result['error'])){
         
@@ -40,22 +45,20 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     }
     
     // Send empty feedback for version comparison in Dashboard
-    $result = CleantalkHelper::api_method_send_empty_feedback($new_key, 'bitrix-3119');
+    $result = CleantalkAPI::method__send_empty_feedback($new_key, 'bitrix-3119');
     
     /**
      * Set settings when submit
      */
     //Validating key
-    $result = CleantalkHelper::api_method__notice_validate_key($new_key);
+    $result = CleantalkAPI::method__notice_paid_till($new_key, preg_replace('/http[s]?:\/\//', '', $_SERVER['HTTP_HOST'], 1));
     if(empty($result['error'])){
-        COption::SetOptionString( $sModuleId, 'key_is_ok', strval($result['valid']));
-        $npd_result = CleantalkHelper::api_method__notice_paid_till($new_key);
-
-        if(empty($npd_result['error'])){
-            COption::SetOptionString($sModuleId, 'user_token', isset($npd_result['user_token']) ? $npd_result['user_token'] : '');           
-            COption::SetOptionString($sModuleId, 'moderate_ip', (isset($npd_result['moderate_ip']) && $npd_result['moderate_ip'] == 1) ? 1 : 0);
-            COption::SetOptionString($sModuleId, 'ip_license', (isset($npd_result['moderate_ip']) && $npd_result['moderate_ip'] == 1) ? $npd_result['ip_license'] : 0);
-        }        
+        if (isset($result['valid'])) {
+            COption::SetOptionString( $sModuleId, 'key_is_ok', strval($result['valid']));
+            COption::SetOptionString($sModuleId, 'user_token', isset($result['user_token']) ? $result['user_token'] : '');           
+            COption::SetOptionString($sModuleId, 'moderate_ip', (isset($result['moderate_ip']) && $result['moderate_ip'] == 1) ? 1 : 0);
+            COption::SetOptionString($sModuleId, 'ip_license', (isset($result['moderate_ip']) && $result['moderate_ip'] == 1) ? $npd_result['ip_license'] : 0);            
+        }      
     }
 
     COption::SetOptionString( $sModuleId, 'status',                          $_POST['status'] == '1'                          ? '1' : '0' );

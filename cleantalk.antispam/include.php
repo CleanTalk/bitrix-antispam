@@ -3,19 +3,36 @@ global $MESS;
 IncludeModuleLangFile(__FILE__);
 
 // Fixes for unexisting functions
-require_once(dirname(__FILE__) . '/classes/general/phpFix.php');
+require_once(dirname(__FILE__) . '/lib/phpFix.php');
 
 // Base classes
-require_once(dirname(__FILE__) . '/classes/general/Cleantalk.php');
-require_once(dirname(__FILE__) . '/classes/general/CleantalkRequest.php');
-require_once(dirname(__FILE__) . '/classes/general/CleantalkResponse.php');
-require_once(dirname(__FILE__) . '/classes/general/CleantalkHelper.php');
+require_once(dirname(__FILE__) . '/lib/Cleantalk/Antispam/Cleantalk.php');
+require_once(dirname(__FILE__) . '/lib/Cleantalk/Antispam/CleantalkRequest.php');
+require_once(dirname(__FILE__) . '/lib/Cleantalk/Antispam/CleantalkResponse.php');
+
+// Common classes
+require_once(dirname(__FILE__) . '/lib/Cleantalk/Common/Helper.php');
+require_once(dirname(__FILE__) . '/lib/Cleantalk/Common/API.php');
 
 // SFW class
-require_once(dirname(__FILE__) . '/classes/general/CleantalkSFW.php');
+require_once(dirname(__FILE__) . '/lib/Cleantalk/ApbctBitrix/SFW.php');
 
 // Custom config
 require_once(dirname(__FILE__) . '/custom_config.php');
+
+
+//Antispam classes
+use Cleantalk\Antispam\Cleantalk as Cleantalk;
+use Cleantalk\Antispam\CleantalkRequest as CleantalkRequest;
+use Cleantalk\Antispam\CleantalkRequest as CleantalkResponse;
+
+//Bitrix classes
+use Cleantalk\ApbctBitrix\SFW as CleantalkSFW;
+
+//Common classes
+use Cleantalk\Common\API as CleantalkAPI;
+use Cleantalk\Common\Helper as CleantalkHelper;
+
 
 if ( ! defined( 'CLEANTALK_USER_AGENT' ) )
     define( 'CLEANTALK_USER_AGENT', 'bitrix-3119' );
@@ -343,7 +360,7 @@ class CleantalkAntispam {
         $ct_global_without_email = COption::GetOptionString('cleantalk.antispam', 'form_global_check_without_email', 0);
         $ct_key                  = COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
         $last_checked            = COption::GetOptionString( 'cleantalk.antispam', 'last_checked', 0 );
-        $last_status             = COption::GetOptionString( 'cleantalk.antispam', 'is_paid', 0 );
+        $show_review             = COption::GetOptionString( 'cleantalk.antispam', 'show_review', 0 );
         $is_sfw                  = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 );
         $new_checked             = time();
         if (!$USER->IsAdmin()) {
@@ -444,20 +461,21 @@ class CleantalkAntispam {
         }
         else {
             if($ct_key!='' && $ct_key!='enter key') {
-                $new_status=$last_status;
+                $new_status=$show_review;
+
                 if($new_checked-$last_checked>86400)
                 {
                     
-                    $result = CleantalkHelper::api_method__get_account_status($ct_key);
+                    $result = CleantalkAPI::method__notice_paid_till($ct_key, preg_replace('/http[s]?:\/\//', '', $_SERVER['HTTP_HOST'], 1));
 
                     if(empty($result['error'])){
                         
-                        if(isset($result['paid']))
+                        if(isset($result['show_review']) && $result['show_review'] == 1)
                         {
-                            $new_status = intval($result['paid']);
-                            if($last_status !=1 && $new_status == 1)
+                            $new_status = intval($result['show_review']);
+                            if($show_review !=1 && $new_status == 1)
                             {
-                                COption::SetOptionString( 'cleantalk.antispam', 'is_paid', 1 );
+                                COption::SetOptionString( 'cleantalk.antispam', 'show_review', 1 );
                                 $show_notice=1;
                                 if(LANGUAGE_ID=='ru')
                                 {

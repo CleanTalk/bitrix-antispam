@@ -3,7 +3,7 @@
 global $MESS;
 IncludeModuleLangFile(__FILE__);
 
-require_once(dirname(__FILE__) . '/../classes/general/CleantalkHelper.php');
+require_once(dirname(__FILE__) . '/../lib/Cleantalk/Common/Helper.php');
 
 /**
  * Installer for CleanTalk module

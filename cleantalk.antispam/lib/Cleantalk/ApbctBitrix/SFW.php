@@ -1,5 +1,10 @@
 <?php
 
+namespace Cleantalk\ApbctBitrix;
+
+use Cleantalk\Common\Helper as CleantalkHelper;
+use Cleantalk\Common\API as CleantalkAPI;
+
 /*
  * CleanTalk SpamFireWall base class
  * Compatible only with Wordpress.
@@ -10,7 +15,7 @@
  * see https://github.com/CleanTalk/php-antispam
 */
 
-class CleantalkSFW extends CleantalkHelper
+class SFW 
 {
 	public $ip = 0;
 	public $ip_str = '';
@@ -61,12 +66,12 @@ class CleantalkSFW extends CleantalkHelper
 	*/
 	static public function ip_get($ips_input = array('real', 'remote_addr', 'x_forwarded_for', 'x_real_ip', 'cloud_flare'), $v4_only = true){
 		
-		$result = (array)parent::ip_get($ips_input, $v4_only);
+		$result = (array)CleantalkHelper::ip_get($ips_input, $v4_only);
 		
 		$result = !empty($result) ? $result : array();
 		
 		if(isset($_GET['sfw_test_ip'])){
-			if(self::ip_validate($_GET['sfw_test_ip']) !== false)
+			if(CleantalkHelper::ip_validate($_GET['sfw_test_ip']) !== false)
 				$result['sfw_test'] = $_GET['sfw_test_ip'];
 		}
 		
@@ -131,7 +136,7 @@ class CleantalkSFW extends CleantalkHelper
 	*/
 	public function sfw_update($ct_key){
 		
-		$result = self::api_method__get_2s_blacklists_db($ct_key);
+		$result = CleantalkAPI::method__get_2s_blacklists_db($ct_key);
 		
 		if(empty($result['error'])){
 			
@@ -182,7 +187,7 @@ class CleantalkSFW extends CleantalkHelper
 			unset($key, $value);
 			
 			//Sending the request
-			$result = self::api_method__sfw_logs($ct_key, $data);
+			$result = CleantalkAPI::method__sfw_logs($ct_key, $data);
 			
 			//Checking answer and deleting all lines from the table
 			if(empty($result['error'])){
