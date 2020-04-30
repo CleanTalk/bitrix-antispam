@@ -112,7 +112,7 @@ class CleantalkAntispam {
         }
         else
         {
-            $error_tpl=file_get_contents(dirname(__FILE__)."/error.html");
+            $error_tpl=file_get_contents(dirname(__FILE__)."/lib/error.html");
             print str_replace('%ERROR_TEXT%',$message,$error_tpl);          
         }       
         die();
