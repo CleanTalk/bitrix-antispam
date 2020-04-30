@@ -81,18 +81,10 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     COption::SetOptionString( $sModuleId, 'form_exclusions_webform',         isset($_POST['form_exclusions_webform']) ? $_POST['form_exclusions_webform'] : '' );
 
     COption::SetOptionString( $sModuleId, 'key', $new_key );     
-    if($_POST['form_sfw'] == 1)
-    {
-        CAgent::RemoveModuleAgents("cleantalk.antispam");
-        CAgent::AddAgent("CleantalkAntispam::sfw_send_logs();", "cleantalk.antispam", "N", 3600);
-        CAgent::AddAgent("CleantalkAntispam::sfw_update();",    "cleantalk.antispam", "N", 86400);
-        $sfw = new CleantalkSFW();
-        $sfw->sfw_update($new_key);
-        $sfw->send_logs($new_key);
-    }else{
-        CAgent::RemoveModuleAgents("cleantalk.antispam");
-    }
-    
+    if($_POST['form_sfw'] == 1) {
+        CleantalkAntispam::sfw_update($new_key);
+        CleantalkAntispam::sfw_send_logs($new_key);
+    }   
 }
 
 /**

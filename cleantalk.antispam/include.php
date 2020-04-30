@@ -36,6 +36,9 @@ use Cleantalk\Common\Helper as CleantalkHelper;
 
 if ( ! defined( 'CLEANTALK_USER_AGENT' ) )
     define( 'CLEANTALK_USER_AGENT', 'bitrix-3117' );
+
+if (! defined ( 'CLEANTALK_BASE_HOME_URL' ) )
+    define ( 'CLEANTALK_BASE_HOME_URL', (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://".$_SERVER['HTTP_HOST']);
 /**
  * CleanTalk module class
  *
@@ -51,51 +54,53 @@ class CleantalkAntispam {
     /*
      * Updates SFW local database
      */
-    static public function sfw_update()
-    {
-        
-        $is_sfw    = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw',  0 );
-        $key       = COption::GetOptionString( 'cleantalk.antispam', 'key',       '' );
-        $key_is_ok = COption::GetOptionString( 'cleantalk.antispam', 'key_is_ok', '0');
-        
-        if(!empty($is_sfw) && !empty($key) && !empty($key_is_ok)){
-            
-            $sfw = new CleantalkSFW();
-            $result = $sfw->sfw_update($key);
-            unset($sfw);
-            
-            COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode($result === true ? true : $result) );
-            
-        }else{
-            COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode(array('error'=>true, 'error_string'=>'SFW_DISABLED')));            
-        }
-        
-        return "CleantalkAntispam::sfw_update();";
+    static public function sfw_update($access_key)
+    {               
+      $sfw = new CleantalkSFW();
+
+      $file_urls = isset($_GET['file_urls']) ? urldecode( $_GET['file_urls'] ) : null;
+      $file_urls = isset($file_urls) ? explode(',', $file_urls) : null;
+
+      if (!$file_urls) {
+        $result = $sfw->sfw_update($access_key, null);
+      } else {
+        if (is_array($file_urls) && count($file_urls)) {
+
+          $result = $sfw->sfw_update($access_key, $file_urls[0]);
+
+          if(empty($result['error'])){
+
+            array_shift($file_urls);  
+
+            if (count($file_urls)) {
+              CleantalkHelper::http__request(
+                CLEANTALK_BASE_HOME_URL, 
+                array(
+                  'spbc_remote_call_token'  => md5($access_key),
+                  'spbc_remote_call_action' => 'sfw_update',
+                  'plugin_name'             => 'apbct',
+                  'file_urls'               => implode(',', $file_urls),
+                ),
+                array('get', 'async')
+              );              
+            } else {
+                COption::SetOptionString( 'cleantalk.antispam', 'sfw_last_update', time());
+            }
+          } else 
+            return array('error' => 'ERROR_WHILE_INSERTING_SFW_DATA');
+        }       
+      }
+      return $result;
     }
 
     /*
      * Sends and clean local logs storage
      */
-    static public function sfw_send_logs()
-    {
-        
-        $is_sfw    = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw',  0 );
-        $key       = COption::GetOptionString( 'cleantalk.antispam', 'key',       '' );
-        $key_is_ok = COption::GetOptionString( 'cleantalk.antispam', 'key_is_ok', '0');
-        
-        if(!empty($is_sfw) && !empty($key) && !empty($key_is_ok)){
-            
-            $sfw = new CleantalkSFW();
-            $result = $sfw->send_logs($key);
-            unset($sfw);
-            
-            COption::SetOptionString( 'cleantalk.antispam', 'send_logs_result', json_encode($result === true ? true : $result) );
-            
-        }else{
-            COption::SetOptionString( 'cleantalk.antispam', 'send_logs_result', json_encode(array('error'=>true, 'error_string'=>'SFW_DISABLED' )));
-        }
-        
-        return "CleantalkAntispam::sfw_send_logs();";
+    static public function sfw_send_logs($access_key)
+    {            
+      $sfw = new CleantalkSFW();
+      $result = $sfw->send_logs($access_key);
+      COption::SetOptionString( 'cleantalk.antispam', 'sfw_last_send_log', time());
     }
     
     /**
@@ -362,6 +367,8 @@ class CleantalkAntispam {
         $last_checked            = COption::GetOptionString( 'cleantalk.antispam', 'last_checked', 0 );
         $show_review             = COption::GetOptionString( 'cleantalk.antispam', 'show_review', 0 );
         $is_sfw                  = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 );
+        $sfw_last_update         = COption::GetOptionString( 'cleantalk.antispam',  'sfw_last_update', 0);
+        $sfw_last_send_log       = COption::GetOptionString( 'cleantalk.antispam',  'sfw_last_send_log', 0);
         $new_checked             = time();
         if (!$USER->IsAdmin()) {
             // Remote calls
@@ -372,6 +379,7 @@ class CleantalkAntispam {
             if ($is_sfw == 1) {
                 $sfw = new CleantalkSFW();
                 $is_sfw_check = true;
+
                 $sfw->ip_array = (array)CleantalkSFW::ip_get(array('real'), true);  
 
                     foreach($sfw->ip_array as $key => $value)
@@ -395,7 +403,12 @@ class CleantalkAntispam {
                     $sfw->sfw_update_logs($sfw->blocked_ip, 'blocked');
                     $sfw->sfw_die(trim($ct_key));
                   }
-                }                
+                }
+                if (time() - $sfw_last_update > 86400)
+                  CleantalkAntispam::sfw_update($ct_key);
+
+                if (time() - $sfw_last_send_log > 3600)
+                  CleantalkAntispam::sfw_send_logs($ct_key);                              
             }
             if ($ct_status == 1 && $ct_global == 1) {         
                 // Exclusions
@@ -437,7 +450,7 @@ class CleantalkAntispam {
                     $arUser["message_body"] = implode("\n", $arUser["message_body"]);
                 
                 if( ! empty( $arUser["sender_email"] ) || $ct_global_without_email === '1' ) {
-                	
+                  
                     $aResult =  CleantalkAntispam::CheckAllBefore($arUser,FALSE);
                     
                     if(isset($aResult) && is_array($aResult))
@@ -1882,28 +1895,25 @@ class CleantalkAntispam {
 
         if(array_key_exists($remote_action, $remote_calls_config)){
                     
-            if(time() - $remote_calls_config[$remote_action]['last_call'] > self::APBCT_REMOTE_CALL_SLEEP){
+            if(time() - $remote_calls_config[$remote_action]['last_call'] > self::APBCT_REMOTE_CALL_SLEEP || ($remote_action == 'sfw_update' && isset($_GET['file_urls']))) {
                 
                 $remote_calls_config[$remote_action]['last_call'] = time();
                 COption::SetOptionString('cleantalk.antispam', 'remote_calls', json_encode($remote_calls_config));
 
                 if(strtolower($_GET['spbc_remote_call_token']) == strtolower(md5($auth_key))){
-
                     // Close renew banner
-                    if($_GET['spbc_remote_call_action'] == 'close_renew_banner'){
+                    if($remote_action == 'close_renew_banner'){
                         die('OK');
                     // SFW update
-                    }elseif($_GET['spbc_remote_call_action'] == 'sfw_update'){
-                        $sfw = new CleantalkSFW();                  
-                        $result = $sfw->sfw_update($auth_key);
-                        die(empty($result['error']) ? 'OK' : 'FAIL '.json_encode(array('error' => $result['error_string'])));
+                    }elseif($remote_action == 'sfw_update'){
+                        $result = CleantalkAntispam::sfw_update($auth_key);                
+                        die(($result) ? 'OK' : 'FAIL ');
                     // SFW send logs
-                    }elseif($_GET['spbc_remote_call_action'] == 'sfw_send_logs'){
-                        $sfw = new CleantalkSFW();                  
-                        $result = $sfw->send_logs($auth_key);
-                        die(empty($result['error']) ? 'OK' : 'FAIL '.json_encode(array('error' => $result['error_string'])));
+                    }elseif($remote_action == 'sfw_send_logs'){
+                        $result = CleantalkAntispam::sfw_send_logs($auth_key);                
+                        die(($result) ? 'OK' : 'FAIL ');
                     // Update plugin
-                    }elseif($_GET['spbc_remote_call_action'] == 'update_plugin'){
+                    }elseif($remote_action == 'update_plugin'){
                         //add_action('wp', 'apbct_update', 1);
                     }else
                         die('FAIL '.json_encode(array('error' => 'UNKNOWN_ACTION_2')));

@@ -105,11 +105,6 @@ class cleantalk_antispam extends CModule {
 			} 
 		}
 		
-		//Adding agents
-		if(COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 )){
-			CAgent::AddAgent("CleantalkAntispam::sfw_send_logs();", "cleantalk.antispam", "N", 3600);
-			CAgent::AddAgent("CleantalkAntispam::sfw_update();",    "cleantalk.antispam", "N", 86400);
-		}
 		//Checking API key if already set
 		$api_key = COption::GetOptionString( 'cleantalk.antispam', 'key', '');
 		$form_sfw = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 );
@@ -135,7 +130,7 @@ class cleantalk_antispam extends CModule {
 
     function DoUninstall() {
         global $DOCUMENT_ROOT, $APPLICATION;
-		CAgent::RemoveModuleAgents("cleantalk.antispam");
+
         if (IsModuleInstalled('blog')){
           UnRegisterModuleDependences('blog', 'OnBeforeCommentAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeCommentAddHandler');
         }
