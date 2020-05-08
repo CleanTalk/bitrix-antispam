@@ -448,8 +448,11 @@ class CleantalkAntispam {
 
                 if (is_array($arUser["message_body"]))
                     $arUser["message_body"] = implode("\n", $arUser["message_body"]);
-                
-                if( ! empty( $arUser["sender_email"] ) || $ct_global_without_email === '1' ) {
+                foreach ($_POST as $key => $value) {
+                  if (strpos(strtolower($key), 'smt') !== false)
+                    $arUser['type'] = 'contact_form_bitrix_smt';
+                }                
+                if(($arUser["sender_email"] != '' && $arUser['type'] == 'feedback_general_contact_form') || $ct_global_without_email == 1 || $arUser['type'] != 'feedback_general_contact_form') { 
                   
                     $aResult =  CleantalkAntispam::CheckAllBefore($arUser,FALSE);
                     
@@ -464,8 +467,15 @@ class CleantalkAntispam {
                             }
                             else
                             {
+                              if ($arUser['type'] == 'contact_form_bitrix_smt') {
+                                echo '<div class="smt-form smt-form_bordered">
+                                  <div class="smt-alert smt-alert_warning">'.$aResult['ct_result_comment'].'</div>
+                                </div>';
+                                die();
+                              } else {
                                 CleantalkAntispam::CleantalkDie($aResult['ct_result_comment']);
-                                return false;
+                                return false;                                
+                              } 
                             }
                         }
                     }
@@ -1292,7 +1302,7 @@ class CleantalkAntispam {
         }
 
         $type = $arEntity['type'];
-        if($type != 'comment' && $type != 'webform' && $type != 'register' && $type != 'order' && $type != 'feedback_general_contact_form' && $type != 'private_message'){
+        if($type != 'comment' && $type != 'webform' && $type != 'register' && $type != 'order' && $type != 'feedback_general_contact_form' && $type != 'private_message' && strpos($type, 'contact_form_bitrix') === false){
             CEventLog::Add(array(
                 'SEVERITY' => 'SECURITY',
                 'AUDIT_TYPE_ID' => 'CLEANTALK_E_INTERNAL',
@@ -1455,7 +1465,19 @@ class CleantalkAntispam {
                 
                 $ct_result = $ct->isAllowMessage($ct_request);
                 break;
+
+            case strpos($type, 'contact_form_bitrix') !== false:
+                $a_post_info['comment_type'] = $type;
+                $post_info = json_encode($a_post_info);
+                $ct_request->post_info = $post_info;
                 
+                $timelabels_key = 'mail_error_comment';
+
+                $ct_request->message .= isset($arEntity['message_body']) ? $arEntity['message_body'] : '';
+                
+                $ct_result = $ct->isAllowMessage($ct_request);
+                break;   
+                              
             case 'webform':
                 
                 $a_post_info['comment_type'] = 'webform';
