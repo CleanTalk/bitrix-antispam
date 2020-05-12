@@ -451,6 +451,8 @@ class CleantalkAntispam {
                 foreach ($_POST as $key => $value) {
                   if (strpos(strtolower($key), 'smt') !== false)
                     $arUser['type'] = 'contact_form_bitrix_smt';
+                  if (strpos(strtolower($key), 'iblock') !== false)
+                    $arUser['type'] = 'contact_form_bitrix_iblock_ajax';
                 }                
                 if(($arUser["sender_email"] != '' && $arUser['type'] == 'feedback_general_contact_form') || $ct_global_without_email == 1 || $arUser['type'] != 'feedback_general_contact_form') { 
                   
@@ -471,6 +473,10 @@ class CleantalkAntispam {
                                 echo '<div class="smt-form smt-form_bordered">
                                   <div class="smt-alert smt-alert_warning">'.$aResult['ct_result_comment'].'</div>
                                 </div>';
+                                die();
+                              }
+                              elseif ($arUser['type'] == 'contact_form_bitrix_iblock_ajax') {
+                                echo json_encode(array('STATUS' => 'success', 'MSG' => $aResult['ct_result_comment'], 'CAPTCHA' => ''));
                                 die();
                               } else {
                                 CleantalkAntispam::CleantalkDie($aResult['ct_result_comment']);
