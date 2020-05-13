@@ -221,6 +221,7 @@ class cleantalk_antispam extends CModule {
 			TABLE IF NOT EXISTS `cleantalk_sfw` (
 				`network` int(11) unsigned NOT NULL,
 				`mask` int(11) unsigned NOT NULL,
+				`status` tinyint(1) NOT NULL DEFAULT 0,
 				INDEX (  `network` ,  `mask` )
 			)
 			ENGINE = MYISAM ;"

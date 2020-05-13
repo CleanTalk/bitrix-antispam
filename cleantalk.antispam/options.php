@@ -14,9 +14,6 @@ global $MESS;
 IncludeModuleLangFile( __FILE__ );
 
 use Cleantalk\Common\API as CleantalkAPI;
-use Cleantalk\Common\Helper as CleantalkHelper;
-
-use Cleantalk\ApbctBitrix\SFW as CleantalkSFW;
 
 if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     

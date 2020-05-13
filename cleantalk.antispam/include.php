@@ -9,6 +9,7 @@ require_once(dirname(__FILE__) . '/lib/phpFix.php');
 require_once(dirname(__FILE__) . '/lib/Cleantalk/Antispam/Cleantalk.php');
 require_once(dirname(__FILE__) . '/lib/Cleantalk/Antispam/CleantalkRequest.php');
 require_once(dirname(__FILE__) . '/lib/Cleantalk/Antispam/CleantalkResponse.php');
+require_once(dirname(__FILE__) . '/lib/Cleantalk/Antispam/SFW.php');
 
 // Common classes
 require_once(dirname(__FILE__) . '/lib/Cleantalk/Common/Helper.php');
@@ -37,8 +38,6 @@ use Cleantalk\Common\Helper as CleantalkHelper;
 if ( ! defined( 'CLEANTALK_USER_AGENT' ) )
     define( 'CLEANTALK_USER_AGENT', 'bitrix-3117' );
 
-if (! defined ( 'CLEANTALK_BASE_HOME_URL' ) )
-    define ( 'CLEANTALK_BASE_HOME_URL', (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://".$_SERVER['HTTP_HOST']);
 /**
  * CleanTalk module class
  *
@@ -56,17 +55,17 @@ class CleantalkAntispam {
      */
     static public function sfw_update($access_key)
     {               
-      $sfw = new CleantalkSFW();
+      $sfw = new CleantalkSFW($access_key);
 
       $file_urls = isset($_GET['file_urls']) ? urldecode( $_GET['file_urls'] ) : null;
       $file_urls = isset($file_urls) ? explode(',', $file_urls) : null;
 
       if (!$file_urls) {
-        $result = $sfw->sfw_update($access_key, null);
+        $result = $sfw->sfw_update(null);
       } else {
         if (is_array($file_urls) && count($file_urls)) {
 
-          $result = $sfw->sfw_update($access_key, $file_urls[0]);
+          $result = $sfw->sfw_update($file_urls[0]);
 
           if(empty($result['error'])){
 
@@ -74,7 +73,7 @@ class CleantalkAntispam {
 
             if (count($file_urls)) {
               CleantalkHelper::http__request(
-                CLEANTALK_BASE_HOME_URL, 
+                (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://".$_SERVER['HTTP_HOST'], 
                 array(
                   'spbc_remote_call_token'  => md5($access_key),
                   'spbc_remote_call_action' => 'sfw_update',
@@ -98,8 +97,8 @@ class CleantalkAntispam {
      */
     static public function sfw_send_logs($access_key)
     {            
-      $sfw = new CleantalkSFW();
-      $result = $sfw->send_logs($access_key);
+      $sfw = new CleantalkSFW($access_key);
+      $result = $sfw->send_logs();
       COption::SetOptionString( 'cleantalk.antispam', 'sfw_last_send_log', time());
     }
     
@@ -377,33 +376,9 @@ class CleantalkAntispam {
             }   
             self::ct_cookie();           
             if ($is_sfw == 1) {
-                $sfw = new CleantalkSFW();
-                $is_sfw_check = true;
+                $sfw = new CleantalkSFW($ct_key);
+                $sfw->check_ip();
 
-                $sfw->ip_array = (array)CleantalkSFW::ip_get(array('real'), true);  
-
-                    foreach($sfw->ip_array as $key => $value)
-                    {
-                      if(isset($_COOKIE['ct_sfw_pass_key']) && $_COOKIE['ct_sfw_pass_key'] == md5($value . trim($ct_key)))
-                      {
-                        $is_sfw_check=false;
-                        if(isset($_COOKIE['ct_sfw_passed']))
-                        {
-                          @setcookie ('ct_sfw_passed'); //Deleting cookie
-                          $sfw->sfw_update_logs($value, 'passed');
-                        }
-                      }
-                  } unset($key, $value);  
-
-                if($is_sfw_check)
-                {
-                  $sfw->check_ip();
-                  if($sfw->result)
-                  {
-                    $sfw->sfw_update_logs($sfw->blocked_ip, 'blocked');
-                    $sfw->sfw_die(trim($ct_key));
-                  }
-                }
                 if (time() - $sfw_last_update > 86400)
                   CleantalkAntispam::sfw_update($ct_key);
 
