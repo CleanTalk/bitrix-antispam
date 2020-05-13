@@ -61,7 +61,7 @@ class CleantalkAntispam {
       $file_urls = isset($file_urls) ? explode(',', $file_urls) : null;
 
       if (!$file_urls) {
-        $result = $sfw->sfw_update(null);
+        $result = $sfw->sfw_update();
       } else {
         if (is_array($file_urls) && count($file_urls)) {
 
