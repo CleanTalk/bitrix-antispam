@@ -54,7 +54,7 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
             COption::SetOptionString( $sModuleId, 'key_is_ok', strval($result['valid']));
             COption::SetOptionString($sModuleId, 'user_token', isset($result['user_token']) ? $result['user_token'] : '');           
             COption::SetOptionString($sModuleId, 'moderate_ip', (isset($result['moderate_ip']) && $result['moderate_ip'] == 1) ? 1 : 0);
-            COption::SetOptionString($sModuleId, 'ip_license', (isset($result['moderate_ip']) && $result['moderate_ip'] == 1) ? $npd_result['ip_license'] : 0);            
+            COption::SetOptionString($sModuleId, 'ip_license', (isset($result['moderate_ip']) && $result['moderate_ip'] == 1) ? $result['ip_license'] : 0);            
         }      
     }
 
