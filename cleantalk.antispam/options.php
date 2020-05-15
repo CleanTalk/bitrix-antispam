@@ -49,29 +49,26 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
      */
     //Validating key
     $result = CleantalkAPI::method__notice_paid_till($new_key, preg_replace('/http[s]?:\/\//', '', $_SERVER['HTTP_HOST'], 1));
-    if(empty($result['error'])){
-        if (isset($result['valid'])) {
-            COption::SetOptionString( $sModuleId, 'key_is_ok', strval($result['valid']));
-            COption::SetOptionString($sModuleId, 'user_token', isset($result['user_token']) ? $result['user_token'] : '');           
-            COption::SetOptionString($sModuleId, 'moderate_ip', (isset($result['moderate_ip']) && $result['moderate_ip'] == 1) ? 1 : 0);
-            COption::SetOptionString($sModuleId, 'ip_license', (isset($result['moderate_ip']) && $result['moderate_ip'] == 1) ? $result['ip_license'] : 0);            
-        }      
-    }
 
-    COption::SetOptionString( $sModuleId, 'status',                          $_POST['status'] == '1'                          ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_new_user',                   $_POST['form_new_user'] == '1'                   ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_comment_blog',               $_POST['form_comment_blog'] == '1'               ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_comment_forum',              $_POST['form_comment_forum'] == '1'              ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_forum_private_messages',     $_POST['form_forum_private_messages'] == '1'     ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_comment_treelike',           $_POST['form_comment_treelike'] == '1'           ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_send_example',               $_POST['form_send_example'] == '1'               ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_order',                      $_POST['form_order'] == '1'                      ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'web_form',                        $_POST['web_form'] == '1'                        ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'is_paid',                         $_POST['is_paid'] == '1'                         ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'last_checked',                    $_POST['last_checked'] == '1'                    ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_global_check',               $_POST['form_global_check'] == '1'               ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_global_check_without_email', $_POST['form_global_check_without_email'] == '1' ? '1' : '0' );
-    COption::SetOptionString( $sModuleId, 'form_sfw',                        $_POST['form_sfw'] == '1'                        ? '1' : '0' );
+    COption::SetOptionInt($sModuleId, 'key_is_ok', (empty($result['error']) && isset($result['valid']) && $result['valid'] == 1) ? 1 : 0);
+    COption::SetOptionString($sModuleId, 'user_token', (empty($result['error']) && isset($result['user_token'])) ? $result['user_token'] : '');           
+    COption::SetOptionInt($sModuleId, 'moderate_ip', (empty($result['error']) && isset($result['moderate_ip']) && $result['moderate_ip'] == 1) ? 1 : 0);
+    COption::SetOptionInt($sModuleId, 'ip_license', (empty($result['error']) && isset($result['moderate_ip'], $result['ip_license']) && $result['moderate_ip'] == 1) ? $result['ip_license'] : 0); 
+
+    COption::SetOptionInt( $sModuleId, 'status',                          $_POST['status'] == '1'                          ? 1 : 0 );
+    COption::SetOptionInt( $sModuleId, 'form_new_user',                   $_POST['form_new_user'] == '1'                   ? 1 : 0 );
+    COption::SetOptionInt( $sModuleId, 'form_comment_blog',               $_POST['form_comment_blog'] == '1'               ? 1 : 0 );
+    COption::SetOptionInt( $sModuleId, 'form_comment_forum',              $_POST['form_comment_forum'] == '1'              ? 1 : 0 );
+    COption::SetOptionInt( $sModuleId, 'form_forum_private_messages',     $_POST['form_forum_private_messages'] == '1'     ? 1 : 0 );
+    COption::SetOptionInt( $sModuleId, 'form_comment_treelike',           $_POST['form_comment_treelike'] == '1'           ? 1 : 0 );
+    COption::SetOptionInt( $sModuleId, 'form_send_example',               $_POST['form_send_example'] == '1'               ? 1 : 0 );
+    COption::SetOptionInt( $sModuleId, 'form_order',                      $_POST['form_order'] == '1'                      ? 1 : 0 );
+    COption::SetOptionInt( $sModuleId, 'web_form',                        $_POST['web_form'] == '1'                        ? 1 : 0 );
+    COption::SetOptionInt( $sModuleId, 'is_paid',                         $_POST['is_paid'] == '1'                         ? 1 : 0 );
+    COption::SetOptionInt( $sModuleId, 'last_checked',                    $_POST['last_checked'] == '1'                    ? 1 : 0 );
+    COption::SetOptionInt( $sModuleId, 'form_global_check',               $_POST['form_global_check'] == '1'               ? 1 : 0 );
+    COption::SetOptionInt( $sModuleId, 'form_global_check_without_email', $_POST['form_global_check_without_email'] == '1' ? 1 : 0 );
+    COption::SetOptionInt( $sModuleId, 'form_sfw',                        $_POST['form_sfw'] == '1'                        ? 1 : 0 );
 
     COption::SetOptionString( $sModuleId, 'form_exclusions_url',             isset($_POST['form_exclusions_url'])     ? $_POST['form_exclusions_url']     : '' );
     COption::SetOptionString( $sModuleId, 'form_exclusions_fields',          isset($_POST['form_exclusions_fields'])  ? $_POST['form_exclusions_fields']  : '' );
@@ -130,61 +127,61 @@ $oTabControl->Begin();
     <tr>
         <td width="50%" valign="top"><label for="status"><?echo GetMessage( 'CLEANTALK_LABEL_STATUS' );?>:</td>
         <td  valign="top">
-            <input type="checkbox" name="status" id="status"<? if ( COption::GetOptionString( $sModuleId, 'status', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
+            <input type="checkbox" name="status" id="status"<? if ( COption::GetOptionInt( $sModuleId, 'status', 0 ) == 1):?> checked="checked"<? endif; ?> value="1" />
         </td>
     </tr>
     <tr>
         <td width="50%" valign="top"><label for="form_new_user"><?echo GetMessage( 'CLEANTALK_LABEL_NEW_USER' );?>:</td>
         <td  valign="top">
-            <input type="checkbox" name="form_new_user" id="form_new_user"<? if ( COption::GetOptionString( $sModuleId, 'form_new_user', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
+            <input type="checkbox" name="form_new_user" id="form_new_user"<? if ( COption::GetOptionInt( $sModuleId, 'form_new_user', 0 ) == 1):?> checked="checked"<? endif; ?> value="1" />
         </td>
     </tr>
     <tr>
         <td width="50%" valign="top"><label for="form_comment_blog"><?echo GetMessage( 'CLEANTALK_LABEL_COMMENT_BLOG' );?>:</td>
         <td  valign="top">
-            <input type="checkbox" name="form_comment_blog" id="form_comment_blog"<? if ( COption::GetOptionString( $sModuleId, 'form_comment_blog', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
+            <input type="checkbox" name="form_comment_blog" id="form_comment_blog"<? if ( COption::GetOptionInt( $sModuleId, 'form_comment_blog', 0 ) == 1):?> checked="checked"<? endif; ?> value="1" />
         </td>
     </tr>
     <tr>
         <td width="50%" valign="top"><label for="form_comment_forum"><?echo GetMessage( 'CLEANTALK_LABEL_COMMENT_FORUM' );?>:</td>
         <td  valign="top">
-            <input type="checkbox" name="form_comment_forum" id="form_comment_forum"<? if ( COption::GetOptionString( $sModuleId, 'form_comment_forum', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
+            <input type="checkbox" name="form_comment_forum" id="form_comment_forum"<? if ( COption::GetOptionInt( $sModuleId, 'form_comment_forum', 0 ) == 1):?> checked="checked"<? endif; ?> value="1" />
         </td>
     </tr>
     <tr>
         <td width="50%" valign="top"><label for="form_forum_private_messages"><?echo GetMessage( 'CLEANTALK_LABEL_FORUM_PRIVATE_MESSAGES' );?>:</td>
         <td  valign="top">
-            <input type="checkbox" name="form_forum_private_messages" id="form_forum_private_messages"<? if ( COption::GetOptionString( $sModuleId, 'form_forum_private_messages', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
+            <input type="checkbox" name="form_forum_private_messages" id="form_forum_private_messages"<? if ( COption::GetOptionInt( $sModuleId, 'form_forum_private_messages', 0 ) == 1):?> checked="checked"<? endif; ?> value="1" />
         </td>
     </tr>
     <tr>
         <td width="50%" valign="top"><label for="form_comment_treelike"><?echo GetMessage( 'CLEANTALK_LABEL_COMMENT_TREELIKE' );?>:</td>
         <td  valign="top">
-            <input type="checkbox" name="form_comment_treelike" id="form_comment_treelike"<? if ( COption::GetOptionString( $sModuleId, 'form_comment_treelike', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
+            <input type="checkbox" name="form_comment_treelike" id="form_comment_treelike"<? if ( COption::GetOptionInt( $sModuleId, 'form_comment_treelike', 0 ) == 1):?> checked="checked"<? endif; ?> value="1" />
         </td>
     </tr>
     <tr>
         <td width="50%" valign="top"><label for="form_send_example"><?echo GetMessage( 'CLEANTALK_LABEL_SEND_EXAMPLE' );?>:</td>
         <td  valign="top">
-            <input type="checkbox" name="form_send_example" id="form_send_example"<? if ( COption::GetOptionString( $sModuleId, 'form_send_example', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
+            <input type="checkbox" name="form_send_example" id="form_send_example"<? if ( COption::GetOptionInt( $sModuleId, 'form_send_example', 0 ) == 1):?> checked="checked"<? endif; ?> value="1" />
         </td>
     </tr>
     <tr>
         <td width="50%" valign="top"><label for="form_order"><?echo GetMessage( 'CLEANTALK_LABEL_ORDER' );?>:</td>
         <td  valign="top">
-            <input type="checkbox" name="form_order" id="form_order" <? if ( COption::GetOptionString( $sModuleId, 'form_order', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
+            <input type="checkbox" name="form_order" id="form_order" <? if ( COption::GetOptionInt( $sModuleId, 'form_order', 0 ) == 1):?> checked="checked"<? endif; ?> value="1" />
         </td>
     </tr>
      <tr>
         <td width="50%" valign="top"><label for="web_form"><?echo GetMessage( 'CLEANTALK_LABEL_WEB_FORMS' );?>:</td>
         <td  valign="top">
-            <input type="checkbox" name="web_form" id="web_form" <? if ( COption::GetOptionString( $sModuleId, 'web_form', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
+            <input type="checkbox" name="web_form" id="web_form" <? if ( COption::GetOptionInt( $sModuleId, 'web_form', 0 ) == 1):?> checked="checked"<? endif; ?> value="1" />
         </td>
     </tr>
     <tr>
         <td width="50%" valign="top"><label for="form_global_check"><?echo GetMessage( 'CLEANTALK_LABEL_GLOBAL_CHECK' );?>:</td>
         <td  valign="top">
-            <input type="checkbox" name="form_global_check" id="form_global_check"  onclick="ctDdisableInputLine('form_global_check_without_email');" <? if ( COption::GetOptionString( $sModuleId, 'form_global_check', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
+            <input type="checkbox" name="form_global_check" id="form_global_check"  onclick="ctDdisableInputLine('form_global_check_without_email');" <? if ( COption::GetOptionInt( $sModuleId, 'form_global_check', 0 ) == 1):?> checked="checked"<? endif; ?> value="1" />
         </td>
     </tr>
     <tr>
@@ -192,15 +189,15 @@ $oTabControl->Begin();
             <label
                     id="form_global_check_without_email_label"
                     for="form_global_check_without_email"
-                    <?if( COption::GetOptionString( $sModuleId, 'form_global_check', '0' ) == '0'){  "style='color: gray;'"; } ?>
+                    <?if( COption::GetOptionInt( $sModuleId, 'form_global_check', 0 ) == 0){  "style='color: gray;'"; } ?>
             >
             <?echo GetMessage( 'CLEANTALK_LABEL_GLOBAL_CHECK_WITHOUT_EMAIL' );?>:
         </td>
         <td  valign="top">
             <input type="checkbox" name="form_global_check_without_email" id="form_global_check_without_email"
             <? 
-                if( COption::GetOptionString( $sModuleId, 'form_global_check', '0' ) == '1'){
-                    if( COption::GetOptionString( $sModuleId, 'form_global_check_without_email', '0' ) == '1')
+                if( COption::GetOptionInt( $sModuleId, 'form_global_check', 0 ) == 1){
+                    if( COption::GetOptionInt( $sModuleId, 'form_global_check_without_email', 0 ) == 1)
                         echo 'checked="checked"';
                 }else{
                     echo "disabled";
@@ -211,7 +208,7 @@ $oTabControl->Begin();
     <tr>
         <td width="50%" valign="top"><label for="form_global_check"><?echo GetMessage( 'CLEANTALK_LABEL_SFW' );?>:</td>
         <td  valign="top">
-            <input type="checkbox" name="form_sfw" id="form_sfw" <? if ( COption::GetOptionString( $sModuleId, 'form_sfw', '0' ) == '1'):?> checked="checked"<? endif; ?> value="1" />
+            <input type="checkbox" name="form_sfw" id="form_sfw" <? if ( COption::GetOptionInt( $sModuleId, 'form_sfw', 0 ) == 1):?> checked="checked"<? endif; ?> value="1" />
         </td>
     </tr>
     <tr class="heading">
@@ -243,29 +240,30 @@ $oTabControl->Begin();
     </tr>
     <tr>
         <?php
-            $moderate_ip=COption::GetOptionString( $sModuleId, 'moderate_ip', '0' );
+            $moderate_ip=COption::GetOptionInt( $sModuleId, 'moderate_ip', 0 );
+
             if($moderate_ip == 1){
                 print '<td width="100%" valign="top" colspan="2">';
-                print "The anti-spam service is paid by your hosting provider. License #".COption::GetOptionString( $sModuleId, 'ip_license', '0' ).".";
+                print "The anti-spam service is paid by your hosting provider. License #".COption::GetOptionInt( $sModuleId, 'ip_license', 0 ).".";
                 print '</td>';
             }else{
-                $key_is_ok = COption::GetOptionString( $sModuleId, 'key_is_ok', '0');
+                $key_is_ok = COption::GetOptionInt( $sModuleId, 'key_is_ok', 0);
         ?>
         <td width="50%" valign="top"><label for="key"><?echo GetMessage( 'CLEANTALK_LABEL_KEY' );?>:</td>
         <td  valign="top">
             <input type="text" name="key" id="key" value="<?php echo COption::GetOptionString( $sModuleId, 'key', '' ) ?>" /> <span><?php 
-                echo COption::GetOptionString( $sModuleId, 'key', '') == '' ? GetMessage( 'CLEANTALK_ENTER_KEY' ) : ($key_is_ok == '1' ? "<span style='color: green'>".GetMessage( 'CLEANTALK_KEY_VALID' )."</span>" : "<span style='color: red'>".GetMessage( 'CLEANTALK_KEY_NOT_VALID' )."</span>" );
+                echo $key_is_ok == 1 ? "<span style='color: green'>".GetMessage( 'CLEANTALK_KEY_VALID' )."</span>" : "<span style='color: red'>".GetMessage( 'CLEANTALK_KEY_NOT_VALID' )."</span>";
                 ?></span>
-            <input type="hidden" name="is_paid" value="<?php echo COption::GetOptionString( $sModuleId, 'is_paid', '0' ) ?>" />
+            <input type="hidden" name="is_paid" value="<?php echo COption::GetOptionInt( $sModuleId, 'is_paid', 0 ) ?>" />
             <input type="hidden" name="last_checked" value="0" />
-            <input type="hidden" name="moderate_ip" value="<?php echo COption::GetOptionString( $sModuleId, 'moderate_ip', '0' ) ?>" />
-            <input type="hidden" name="ip_license" value="<?php echo COption::GetOptionString( $sModuleId, 'ip_license', '0' ) ?>" />
+            <input type="hidden" name="moderate_ip" value="<?php echo COption::GetOptionInt( $sModuleId, 'moderate_ip', 0 ) ?>" />
+            <input type="hidden" name="ip_license" value="<?php echo COption::GetOptionInt( $sModuleId, 'ip_license', 0 ) ?>" />
         </td>
         <?php
             }
         ?>
     </tr>
-    <?php if($key_is_ok == '0'){ ?>
+    <?php if($key_is_ok == 0){ ?>
     <tr>
         <td width="50%" valign="top">
             <a target="_blank" href="https://cleantalk.org/register?platform=bitrix&email=<?php echo COption::GetOptionString("main", "email_from"); ?>&website=<?php echo $_SERVER["SERVER_NAME"]; ?>">

@@ -107,12 +107,11 @@ class cleantalk_antispam extends CModule {
 		
 		//Checking API key if already set
 		$api_key = COption::GetOptionString( 'cleantalk.antispam', 'key', '');
-		$form_sfw = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 );
+		$form_sfw = COption::GetOptionInt( 'cleantalk.antispam', 'form_sfw', 0 );
 		
-		if($api_key && $api_key != ''){
-			$result = CleantalkAPI::method__notice_paid_till($api_key, preg_replace('/http[s]?:\/\//', '', $_SERVER['HTTP_HOST'], 1));
-			COption::SetOptionString( 'cleantalk.antispam', 'key_is_ok', isset($result['valid']) && $result['valid'] == '1' ? '1' : '0');
-		}
+		$result = CleantalkAPI::method__notice_paid_till($api_key, preg_replace('/http[s]?:\/\//', '', $_SERVER['HTTP_HOST'], 1));
+		COption::SetOptionInt( 'cleantalk.antispam', 'key_is_ok', isset($result['valid']) && $result['valid'] == '1' ? 1 : 0);
+
 		//Remote calls
 		if (!COption::GetOptionString('cleantalk.antispam', 'remote_calls', '')) {
 			COption::SetOptionString('cleantalk.antispam', 'remote_calls', json_encode(array('close_renew_banner' => array('last_call' => 0), 'sfw_update' => array('last_call' => 0), 'sfw_send_logs' => array('last_call' => 0), 'update_plugin' => array('last_call' => 0))));

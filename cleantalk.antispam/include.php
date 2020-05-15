@@ -83,7 +83,7 @@ class CleantalkAntispam {
                 array('get', 'async')
               );              
             } else {
-                COption::SetOptionString( 'cleantalk.antispam', 'sfw_last_update', time());
+                COption::SetOptionInt( 'cleantalk.antispam', 'sfw_last_update', time());
             }
           } else 
             return array('error' => 'ERROR_WHILE_INSERTING_SFW_DATA');
@@ -99,7 +99,7 @@ class CleantalkAntispam {
     {            
       $sfw = new CleantalkSFW($access_key);
       $result = $sfw->send_logs();
-      COption::SetOptionString( 'cleantalk.antispam', 'sfw_last_send_log', time());
+      COption::SetOptionInt( 'cleantalk.antispam', 'sfw_last_send_log', time());
     }
     
     /**
@@ -359,15 +359,15 @@ class CleantalkAntispam {
         CleantalkCustomConfig::$cleantalk_webforms_checking   = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_webform', '' );
 
         if (!is_object($USER)) $USER = new CUser;
-        $ct_status               = COption::GetOptionString('cleantalk.antispam', 'status', '0');
-        $ct_global               = COption::GetOptionString('cleantalk.antispam', 'form_global_check', 0);
-        $ct_global_without_email = COption::GetOptionString('cleantalk.antispam', 'form_global_check_without_email', 0);
-        $ct_key                  = COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
-        $last_checked            = COption::GetOptionString( 'cleantalk.antispam', 'last_checked', 0 );
-        $show_review             = COption::GetOptionString( 'cleantalk.antispam', 'show_review', 0 );
-        $is_sfw                  = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw', 0 );
-        $sfw_last_update         = COption::GetOptionString( 'cleantalk.antispam',  'sfw_last_update', 0);
-        $sfw_last_send_log       = COption::GetOptionString( 'cleantalk.antispam',  'sfw_last_send_log', 0);
+        $ct_status               = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
+        $ct_global               = COption::GetOptionInt('cleantalk.antispam', 'form_global_check', 0);
+        $ct_global_without_email = COption::GetOptionInt('cleantalk.antispam', 'form_global_check_without_email', 0);
+        $ct_key                  = COption::GetOptionInt( 'cleantalk.antispam', 'key', '' );
+        $last_checked            = COption::GetOptionInt( 'cleantalk.antispam', 'last_checked', 0 );
+        $show_review             = COption::GetOptionInt( 'cleantalk.antispam', 'show_review', 0 );
+        $is_sfw                  = COption::GetOptionInt( 'cleantalk.antispam', 'form_sfw', 0 );
+        $sfw_last_update         = COption::GetOptionInt( 'cleantalk.antispam',  'sfw_last_update', 0);
+        $sfw_last_send_log       = COption::GetOptionInt( 'cleantalk.antispam',  'sfw_last_send_log', 0);
         $new_checked             = time();
         if (!$USER->IsAdmin()) {
             // Remote calls
@@ -402,7 +402,7 @@ class CleantalkAntispam {
                 }
 
                 // Exclusion for web-forms ID
-                $ct_webform= COption::GetOptionString('cleantalk.antispam', 'web_form', '0');
+                $ct_webform= COption::GetOptionInt('cleantalk.antispam', 'web_form', 0);
                 $webforms_id_checking = CleantalkCustomConfig::get_webforms_ids();
                 if ($ct_webform == 1 && $webforms_id_checking && is_array($webforms_id_checking) && count($webforms_id_checking) > 0 && isset($_POST['WEB_FORM_ID']))
                     if (in_array($_POST['WEB_FORM_ID'], $webforms_id_checking))
@@ -479,7 +479,7 @@ class CleantalkAntispam {
                             $new_status = intval($result['show_review']);
                             if($show_review !=1 && $new_status == 1)
                             {
-                                COption::SetOptionString( 'cleantalk.antispam', 'show_review', 1 );
+                                COption::SetOptionInt( 'cleantalk.antispam', 'show_review', 1 );
                                 $show_notice=1;
                                 if(LANGUAGE_ID=='ru')
                                 {
@@ -498,7 +498,7 @@ class CleantalkAntispam {
                         }
                     }
                     
-                    COption::SetOptionString( 'cleantalk.antispam', 'last_checked', $new_checked );
+                    COption::SetOptionInt( 'cleantalk.antispam', 'last_checked', $new_checked );
                 }                
             }
         }                                
@@ -517,8 +517,8 @@ class CleantalkAntispam {
     function OnBeforeOrderAddHandler(&$arFields)
     {
         global $APPLICATION, $USER;
-        $ct_status = COption::GetOptionString('cleantalk.antispam', 'status', '0');
-        $ct_order= COption::GetOptionString('cleantalk.antispam', 'form_order', '0');
+        $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
+        $ct_order= COption::GetOptionInt('cleantalk.antispam', 'form_order', 0);
         if ($ct_status == 1 && $ct_order == 1)
         {
             $sender_email = null;
@@ -584,8 +584,8 @@ class CleantalkAntispam {
     {
         global $APPLICATION;
         
-        $ct_status = COption::GetOptionString('cleantalk.antispam', 'status', '0');
-        $ct_webform= COption::GetOptionString('cleantalk.antispam', 'web_form', '0');
+        $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
+        $ct_webform= COption::GetOptionInt('cleantalk.antispam', 'web_form', 0);
 
         $webforms_id_checking = CleantalkCustomConfig::get_webforms_ids();
         if ($webforms_id_checking && is_array($webforms_id_checking) && count($webforms_id_checking) > 0)
@@ -662,8 +662,8 @@ class CleantalkAntispam {
     function OnBeforePrmediaCommentAddHandler(&$arFields) {
         global $APPLICATION, $USER;
         
-        $ct_status = COption::GetOptionString('cleantalk.antispam', 'status', '0');
-        $ct_comment_treelike = COption::GetOptionString('cleantalk.antispam', 'form_comment_treelike', '0');
+        $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
+        $ct_comment_treelike = COption::GetOptionInt('cleantalk.antispam', 'form_comment_treelike', 0);
         if ($ct_status == 1 && $ct_comment_treelike == 1) {
 
             $aComment = array();
@@ -692,7 +692,7 @@ class CleantalkAntispam {
             $aComment['example_body'] = '';
             $aComment['example_comments'] = '';
 
-            if(COption::GetOptionString('cleantalk.antispam', 'form_send_example', '0') == 1){
+            if(COption::GetOptionInt('cleantalk.antispam', 'form_send_example', 0) == 1){
                 // Find last 10 approved comments
                 $db_res = CTreelikeComments::GetList(
                     array('DATE' => 'DESC'),
@@ -765,8 +765,8 @@ class CleantalkAntispam {
      */
     function OnBeforeCommentAddHandler(&$arFields) {
         global $APPLICATION, $USER;
-        $ct_status = COption::GetOptionString('cleantalk.antispam', 'status', '0');
-        $ct_comment_blog = COption::GetOptionString('cleantalk.antispam', 'form_comment_blog', '0');
+        $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
+        $ct_comment_blog = COption::GetOptionInt('cleantalk.antispam', 'form_comment_blog', 0);
         if ($ct_status == 1 && $ct_comment_blog == 1) {
 
             $aComment = array();
@@ -795,7 +795,7 @@ class CleantalkAntispam {
             $aComment['example_body'] = '';
             $aComment['example_comments'] = '';
             
-        if(COption::GetOptionString('cleantalk.antispam', 'form_send_example', '0') == 1){
+        if(COption::GetOptionInt('cleantalk.antispam', 'form_send_example', 0) == 1){
             $arPost = CBlogPost::GetByID($arFields['POST_ID']);
             if(is_array($arPost)){
                     $aComment['example_title'] = $arPost['TITLE'];
@@ -874,8 +874,8 @@ class CleantalkAntispam {
     function OnBeforeMessageAddHandler(&$arFields) {
         // works
         global $APPLICATION, $USER;
-        $ct_status = COption::GetOptionString('cleantalk.antispam', 'status', '0');
-        $ct_comment_forum = COption::GetOptionString('cleantalk.antispam', 'form_comment_forum', '0');
+        $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
+        $ct_comment_forum = COption::GetOptionInt('cleantalk.antispam', 'form_comment_forum', 0);
         if ($ct_status == 1 && $ct_comment_forum == 1) {
 
             $aComment = array();
@@ -903,7 +903,7 @@ class CleantalkAntispam {
             $aComment['example_body'] = '';
             $aComment['example_comments'] = '';
             
-        if(COption::GetOptionString('cleantalk.antispam', 'form_send_example', '0') == 1){
+        if(COption::GetOptionInt('cleantalk.antispam', 'form_send_example', 0) == 1){
             $arTopic = CForumTopic::GetByID($arFields['TOPIC_ID']);
             if(is_array($arTopic)){
                     $aComment['example_title'] = $arTopic['TITLE'];
@@ -971,8 +971,8 @@ class CleantalkAntispam {
      */
     function OnAfterMessageAddHandler($id, $arFields) {
         // works
-        $ct_status = COption::GetOptionString('cleantalk.antispam', 'status', '0');
-        $ct_comment_forum = COption::GetOptionString('cleantalk.antispam', 'form_comment_forum', '0');
+        $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
+        $ct_comment_forum = COption::GetOptionInt('cleantalk.antispam', 'form_comment_forum', 0);
         if ($ct_status == 1 && $ct_comment_forum == 1) {
             self::CheckCommentAfter('forum', $id, GetMessage('CLEANTALK_MESSAGE') . ' ID=' . $id);
         }
@@ -986,8 +986,8 @@ class CleantalkAntispam {
      */
     function OnMessageModerateHandler( $id, $type, $arFields){
         // works
-        $ct_status = COption::GetOptionString('cleantalk.antispam', 'status', '0');
-        $ct_comment_forum = COption::GetOptionString('cleantalk.antispam', 'form_comment_forum', '0');
+        $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
+        $ct_comment_forum = COption::GetOptionInt('cleantalk.antispam', 'form_comment_forum', 0);
         if ($ct_status == 1 && $ct_comment_forum == 1) {
             if ($type == 'SHOW') {
                 //send positive feedback
@@ -1006,8 +1006,8 @@ class CleantalkAntispam {
      */
     function OnBeforeMessageDeleteHandler($id, $arFields) {
         // works
-        $ct_status = COption::GetOptionString('cleantalk.antispam', 'status', '0');
-        $ct_comment_forum = COption::GetOptionString('cleantalk.antispam', 'form_comment_forum', '0');
+        $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
+        $ct_comment_forum = COption::GetOptionInt('cleantalk.antispam', 'form_comment_forum', 0);
         if ($ct_status == 1 && $ct_comment_forum == 1) {
             // send negative feedback
             self::SendFeedback('forum', $id, 'N');
@@ -1021,8 +1021,8 @@ class CleantalkAntispam {
     function onBeforePMSendHandler($arFields) {
         
         global $APPLICATION, $USER;
-        $ct_status = COption::GetOptionString('cleantalk.antispam', 'status', '0');
-        $ct_forum_private_messages = COption::GetOptionString('cleantalk.antispam', 'form_forum_private_messages', '0');
+        $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
+        $ct_forum_private_messages = COption::GetOptionInt('cleantalk.antispam', 'form_forum_private_messages', 0);
         if ($ct_status == 1 && $ct_forum_private_messages == 1) {
 
             $aComment = array();
@@ -1069,8 +1069,8 @@ class CleantalkAntispam {
     function OnBeforeUserRegisterHandler(&$arFields) {
         global $APPLICATION;
         
-        $ct_status = COption::GetOptionString('cleantalk.antispam', 'status', '0');
-        $ct_new_user = COption::GetOptionString('cleantalk.antispam', 'form_new_user', '0');
+        $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
+        $ct_new_user = COption::GetOptionInt('cleantalk.antispam', 'form_new_user', 0);
 
         if ($ct_status == 1 && $ct_new_user == 1) {
             $aUser = array();
@@ -1141,7 +1141,7 @@ class CleantalkAntispam {
      * @param string Content to modify
      */
     function OnEndBufferContentHandler(&$content) {
-        if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1 && strpos($content,'<!-- CLEANTALK template addon -->') === false && strpos($content,'</body>') !== false)           
+        if(!defined("ADMIN_SECTION") && COption::GetOptionInt( 'cleantalk.antispam', 'status', 0 ) == 1 && strpos($content,'<!-- CLEANTALK template addon -->') === false && strpos($content,'</body>') !== false)           
             $content = preg_replace('/(<\/body[^>]*>(?!.*<\/body[^>]*>))/i', '${1}'."\n".self::FormAddon(), $content, 1);
     }
     /**
@@ -1149,7 +1149,7 @@ class CleantalkAntispam {
      */
     static function FormAddon() {
 
-        if(!defined("ADMIN_SECTION") && COption::GetOptionString( 'cleantalk.antispam', 'status', 0 ) == 1 )
+        if(!defined("ADMIN_SECTION") && COption::GetOptionInt( 'cleantalk.antispam', 'status', 0 ) == 1 )
             {
                 $field_name = 'ct_checkjs';
                 $ct_check_def = '0';
@@ -1301,7 +1301,7 @@ class CleantalkAntispam {
                     return;         
         }
 
-        $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '0');
+        $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '');
         $ct_ws = self::GetWorkServer();
 
         if (!isset($_COOKIE['ct_checkjs']))
@@ -1327,18 +1327,18 @@ class CleantalkAntispam {
             $refferrer = NULL;
 
         $ct_options=Array(
-            'access_key' => COption::GetOptionString('cleantalk.antispam', 'key', '0'),
-            'form_new_user' => COption::GetOptionString('cleantalk.antispam', 'form_new_user', '0'),
-            'form_comment_blog' => COption::GetOptionString('cleantalk.antispam', 'form_comment_blog', '0'),        
-            'form_comment_forum' => COption::GetOptionString('cleantalk.antispam', 'form_comment_forum', '0'),
-            'form_forum_private_messages' => COption::GetOptionString('cleantalk.antispam', 'form_forum_private_messages', '0'),
-            'form_comment_treelike' => COption::GetOptionString('cleantalk.antispam', 'form_comment_treelike', '0'),
-            'form_send_example' => COption::GetOptionString('cleantalk.antispam', 'form_send_example', '0'),
-            'form_order' => COption::GetOptionString('cleantalk.antispam', 'form_order', '0'),
-            'web_form' => COption::GetOptionString('cleantalk.antispam', 'web_form', '0'),        
-            'form_global_check' => COption::GetOptionString('cleantalk.antispam', 'form_global_check', '0'),
-            'form_global_check_without_email' => COption::GetOptionString('cleantalk.antispam', 'form_global_check_without_email', '0'),
-            'form_sfw' => COption::GetOptionString('cleantalk.antispam', 'form_sfw', '0'),
+            'access_key' => COption::GetOptionString('cleantalk.antispam', 'key', ''),
+            'form_new_user' => COption::GetOptionInt('cleantalk.antispam', 'form_new_user', 0),
+            'form_comment_blog' => COption::GetOptionInt('cleantalk.antispam', 'form_comment_blog', 0),        
+            'form_comment_forum' => COption::GetOptionInt('cleantalk.antispam', 'form_comment_forum', 0),
+            'form_forum_private_messages' => COption::GetOptionInt('cleantalk.antispam', 'form_forum_private_messages', 0),
+            'form_comment_treelike' => COption::GetOptionInt('cleantalk.antispam', 'form_comment_treelike', 0),
+            'form_send_example' => COption::GetOptionInt('cleantalk.antispam', 'form_send_example', 0),
+            'form_order' => COption::GetOptionInt('cleantalk.antispam', 'form_order', 0),
+            'web_form' => COption::GetOptionInt('cleantalk.antispam', 'web_form', 0),        
+            'form_global_check' => COption::GetOptionInt('cleantalk.antispam', 'form_global_check', 0),
+            'form_global_check_without_email' => COption::GetOptionInt('cleantalk.antispam', 'form_global_check_without_email', 0),
+            'form_sfw' => COption::GetOptionInt('cleantalk.antispam', 'form_sfw', 0),
         );
 
         $sender_info = array(
@@ -1510,7 +1510,7 @@ class CleantalkAntispam {
             $err_title = 'CleanTalk module error';
             
             if(isset($ct_result->inactive) && intval($ct_result->inactive) == 1)
-                COption::SetOptionString( 'cleantalk.antispam', 'key_is_ok', '0');
+                COption::SetOptionInt( 'cleantalk.antispam', 'key_is_ok', 0);
             
             if(!empty($ct_result->errstr)){
                 
@@ -1665,7 +1665,7 @@ class CleantalkAntispam {
         if($request_id !== FALSE){
             $DB->Query('DELETE FROM cleantalk_cids WHERE module=\''. $module .'\' AND cid=' . $id);
 
-            $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '0');
+            $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '');
             $ct_ws = self::GetWorkServer();
 
             $ct = new Cleantalk();
@@ -1828,7 +1828,7 @@ class CleantalkAntispam {
         if($db_result !== FALSE){
             return array_slice(explode(' ', $db_result['js_values'], self::KEYS_NUM+1), 0, self::KEYS_NUM);
         }else{
-            return array(md5(COption::GetOptionString('cleantalk.antispam', 'key', '0') . '+' . COption::GetOptionString('main', 'email_from')));
+            return array(md5(COption::GetOptionString('cleantalk.antispam', 'key', '') . '+' . COption::GetOptionString('main', 'email_from')));
         }
     }
     /*
@@ -1841,7 +1841,7 @@ class CleantalkAntispam {
         // Cookie names to validate
         $cookie_test_value = array(
             'cookies_names' => array(),
-            'check_value' => COption::GetOptionString('cleantalk.antispam', 'key', '0'),
+            'check_value' => COption::GetOptionString('cleantalk.antispam', 'key', ''),
         );
 
         // Submit time
@@ -1871,7 +1871,7 @@ class CleantalkAntispam {
             
             $cookie_test = json_decode(stripslashes($_COOKIE['ct_cookies_test']), true);
             
-            $check_srting = COption::GetOptionString('cleantalk.antispam', 'key', '0');
+            $check_srting = COption::GetOptionString('cleantalk.antispam', 'key', '');
             foreach($cookie_test['cookies_names'] as $cookie_name){
                 $check_srting .= isset($_COOKIE[$cookie_name]) ? $_COOKIE[$cookie_name] : '';
             } unset($cokie_name);
