@@ -14,6 +14,7 @@ global $MESS;
 IncludeModuleLangFile( __FILE__ );
 
 use Cleantalk\Common\API as CleantalkAPI;
+use Cleantalk\Common\Helper as CleantalkHelper;
 
 if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     
@@ -48,12 +49,41 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
      * Set settings when submit
      */
     //Validating key
-    $result = CleantalkAPI::method__notice_paid_till($new_key, preg_replace('/http[s]?:\/\//', '', $_SERVER['HTTP_HOST'], 1));
+    if (CleantalkHelper::api_key__is_correct($new_key)) {
+        $result = CleantalkAPI::method__notice_paid_till($new_key, preg_replace('/http[s]?:\/\//', '', $_SERVER['HTTP_HOST'], 1));
 
-    COption::SetOptionInt($sModuleId, 'key_is_ok', (empty($result['error']) && isset($result['valid']) && $result['valid'] == 1) ? 1 : 0);
-    COption::SetOptionString($sModuleId, 'user_token', (empty($result['error']) && isset($result['user_token'])) ? $result['user_token'] : '');           
-    COption::SetOptionInt($sModuleId, 'moderate_ip', (empty($result['error']) && isset($result['moderate_ip']) && $result['moderate_ip'] == 1) ? 1 : 0);
-    COption::SetOptionInt($sModuleId, 'ip_license', (empty($result['error']) && isset($result['moderate_ip'], $result['ip_license']) && $result['moderate_ip'] == 1) ? $result['ip_license'] : 0); 
+        COption::SetOptionInt($sModuleId, 'key_is_ok', (empty($result['error']) && isset($result['valid']) && $result['valid'] == 1) ? 1 : 0);
+        COption::SetOptionString($sModuleId, 'user_token', (empty($result['error']) && isset($result['user_token'])) ? $result['user_token'] : '');           
+        COption::SetOptionInt($sModuleId, 'moderate_ip', (empty($result['error']) && isset($result['moderate_ip']) && $result['moderate_ip'] == 1) ? 1 : 0);
+        COption::SetOptionInt($sModuleId, 'ip_license', (empty($result['error']) && isset($result['moderate_ip'], $result['ip_license']) && $result['moderate_ip'] == 1) ? $result['ip_license'] : 0);  
+
+        if (empty($result['error'])) {
+            if (isset($result['show_notice'], $result['trial']) && $result['show_notice'] == 1 && $result['trial'] == 1) {
+                CAdminNotify::Add(array(          
+                    'MESSAGE' => GetMessage( 'CLEANTALK_TRIAL_NOTIFY' ),          
+                    'TAG' => 'trial_notify',          
+                    'MODULE_ID' => 'main',          
+                'ENABLE_CLOSE' => 'Y'));         
+            } else {
+                CAdminNotify::DeleteByTag('trial_notify'); 
+            }
+            if (isset($result['show_notice'], $result['renew']) && $result['show_notice'] == 1 && $result['renew'] == 1) {
+                CAdminNotify::Add(array(          
+                    'MESSAGE' => GetMessage( 'CLEANTALK_RENEW_NOTIFY' ),          
+                    'TAG' => 'renew_notify',          
+                    'MODULE_ID' => 'main',          
+                'ENABLE_CLOSE' => 'Y'));         
+            } else {
+                CAdminNotify::DeleteByTag('renew_notify'); 
+            }
+        }                
+    } else {
+        COption::SetOptionInt($sModuleId, 'key_is_ok', 0);
+        COption::SetOptionString($sModuleId, 'user_token','');           
+        COption::SetOptionInt($sModuleId, 'moderate_ip', 0);
+        COption::SetOptionInt($sModuleId, 'ip_license', 0);        
+    }
+
 
     COption::SetOptionInt( $sModuleId, 'status',                          $_POST['status'] == '1'                          ? 1 : 0 );
     COption::SetOptionInt( $sModuleId, 'form_new_user',                   $_POST['form_new_user'] == '1'                   ? 1 : 0 );
@@ -78,27 +108,7 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     if($_POST['form_sfw'] == 1) {
         CleantalkAntispam::sfw_update($new_key);
         CleantalkAntispam::sfw_send_logs($new_key);
-    }  
-    if (empty($result['error'])) {
-        if (isset($result['show_notice'], $result['trial']) && $result['show_notice'] == 1 && $result['trial'] == 1) {
-            CAdminNotify::Add(array(          
-                'MESSAGE' => GetMessage( 'CLEANTALK_TRIAL_NOTIFY' ),          
-                'TAG' => 'trial_notify',          
-                'MODULE_ID' => 'main',          
-            'ENABLE_CLOSE' => 'Y'));         
-        } else {
-            CAdminNotify::DeleteByTag('trial_notify'); 
-        }
-        if (isset($result['show_notice'], $result['renew']) && $result['show_notice'] == 1 && $result['renew'] == 1) {
-            CAdminNotify::Add(array(          
-                'MESSAGE' => GetMessage( 'CLEANTALK_RENEW_NOTIFY' ),          
-                'TAG' => 'renew_notify',          
-                'MODULE_ID' => 'main',          
-            'ENABLE_CLOSE' => 'Y'));         
-        } else {
-            CAdminNotify::DeleteByTag('renew_notify'); 
-        }
-    }     
+    }      
 }
 
 /**
@@ -272,7 +282,9 @@ $oTabControl->Begin();
         <td width="50%" valign="top"><label for="key"><?echo GetMessage( 'CLEANTALK_LABEL_KEY' );?>:</td>
         <td  valign="top">
             <input type="text" name="key" id="key" value="<?php echo COption::GetOptionString( $sModuleId, 'key', '' ) ?>" /> <span><?php 
-                echo $key_is_ok == 1 ? "<span style='color: green'>".GetMessage( 'CLEANTALK_KEY_VALID' )."</span>" : "<span style='color: red'>".GetMessage( 'CLEANTALK_KEY_NOT_VALID' )."</span>";
+                if ($key_is_ok == 0) {
+                    echo "<span style='color: red'>".GetMessage( 'CLEANTALK_KEY_NOT_VALID' )."</span>";
+                }
                 ?></span>
             <input type="hidden" name="is_paid" value="<?php echo COption::GetOptionInt( $sModuleId, 'is_paid', 0 ) ?>" />
             <input type="hidden" name="last_checked" value="0" />

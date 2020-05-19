@@ -659,5 +659,13 @@ class Helper
 			}
 		}
 		return $headers;
+	}
+	
+	/* 
+	 * Check if api key is correct
+	 * @return bool 
+	 */
+	static function api_key__is_correct($api_key) {
+	    return $api_key && preg_match('/^[a-z\d]{3,15}$/', $api_key) ? true : false;
 	}	
 }
