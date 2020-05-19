@@ -78,7 +78,27 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     if($_POST['form_sfw'] == 1) {
         CleantalkAntispam::sfw_update($new_key);
         CleantalkAntispam::sfw_send_logs($new_key);
-    }   
+    }  
+    if (empty($result['error'])) {
+        if (isset($result['show_notice'], $result['trial']) && $result['show_notice'] == 1 && $result['trial'] == 1) {
+            CAdminNotify::Add(array(          
+                'MESSAGE' => GetMessage( 'CLEANTALK_TRIAL_NOTIFY' ),          
+                'TAG' => 'trial_notify',          
+                'MODULE_ID' => 'main',          
+            'ENABLE_CLOSE' => 'Y'));         
+        } else {
+            CAdminNotify::DeleteByTag('trial_notify'); 
+        }
+        if (isset($result['show_notice'], $result['renew']) && $result['show_notice'] == 1 && $result['renew'] == 1) {
+            CAdminNotify::Add(array(          
+                'MESSAGE' => GetMessage( 'CLEANTALK_RENEW_NOTIFY' ),          
+                'TAG' => 'renew_notify',          
+                'MODULE_ID' => 'main',          
+            'ENABLE_CLOSE' => 'Y'));         
+        } else {
+            CAdminNotify::DeleteByTag('renew_notify'); 
+        }
+    }     
 }
 
 /**

@@ -473,7 +473,26 @@ class CleantalkAntispam {
                     $result = CleantalkAPI::method__notice_paid_till($ct_key, preg_replace('/http[s]?:\/\//', '', $_SERVER['HTTP_HOST'], 1));
 
                     if(empty($result['error'])){
-                        
+                        if (empty($result['error'])) {
+                            if (isset($result['show_notice'], $result['trial']) && $result['show_notice'] == 1 && $result['trial'] == 1) {
+                                CAdminNotify::Add(array(          
+                                    'MESSAGE' => GetMessage( 'CLEANTALK_TRIAL_NOTIFY' ),          
+                                    'TAG' => 'trial_notify',          
+                                    'MODULE_ID' => 'main',          
+                                'ENABLE_CLOSE' => 'Y'));         
+                            } else {
+                                CAdminNotify::DeleteByTag('trial_notify'); 
+                            }
+                            if (isset($result['show_notice'], $result['renew']) && $result['show_notice'] == 1 && $result['renew'] == 1) {
+                                CAdminNotify::Add(array(          
+                                    'MESSAGE' => GetMessage( 'CLEANTALK_RENEW_NOTIFY' ),          
+                                    'TAG' => 'renew_notify',          
+                                    'MODULE_ID' => 'main',          
+                                'ENABLE_CLOSE' => 'Y'));         
+                            } else {
+                                CAdminNotify::DeleteByTag('renew_notify'); 
+                            }
+                        }                         
                         if(isset($result['show_review']) && $result['show_review'] == 1)
                         {
                             $new_status = intval($result['show_review']);
