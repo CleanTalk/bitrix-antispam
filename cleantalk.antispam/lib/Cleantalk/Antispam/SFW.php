@@ -5,14 +5,18 @@ namespace Cleantalk\Antispam;
 use Cleantalk\Common\Helper as CleantalkHelper;
 use Cleantalk\Common\API as CleantalkAPI;
 
-/*
- * CleanTalk SpamFireWall base class
- * author Cleantalk team (welcome@cleantalk.org)
- * copyright (C) 2014 CleanTalk team (http://cleantalk.org)
- * license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
- * see https://github.com/CleanTalk/php-antispam
-*/
-
+/**
+ * CleanTalk SpamFireWall base class.
+ * Compatible with any CMS.
+ *
+ * @package       CleanTalk SFW functions
+ * @subpackage    SFW
+ * @version       1.0
+ * @author        Cleantalk team (welcome@cleantalk.org)
+ * @copyright (C) 2014 CleanTalk team (https://cleantalk.org)
+ * @license       GNU/GPL: http://www.gnu.org/copyleft/gpl.html
+ * @see           https://github.com/CleanTalk/php-antispam
+ */
 abstract class SFW
 {
 	private $api_key = '';

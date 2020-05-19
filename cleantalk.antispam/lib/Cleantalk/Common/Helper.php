@@ -661,11 +661,37 @@ class Helper
 		return $headers;
 	}
 	
-	/* 
+	/** 
 	 * Check if api key is correct
 	 * @return bool 
 	 */
 	static function api_key__is_correct($api_key) {
 	    return $api_key && preg_match('/^[a-z\d]{3,15}$/', $api_key) ? true : false;
-	}	
+	}
+
+	/** 
+	 * Setting cookie
+	 */
+	static function cookie__set($name, $value = '', $expires = 0, $path = '', $domain = null, $secure = false, $httponly = false, $samesite = null ){
+		
+		// For PHP 7.3+ and above
+		if( version_compare( phpversion(), '7.3.0', '>=' ) ){
+			
+			$params = array(
+				'expires'  => $expires,
+				'path'     => $path,
+				'domain'   => $domain,
+				'secure'   => $secure,
+				'httponly' => $httponly,
+			);
+			
+			if($samesite)
+				$params['samesite'] = $samesite;
+			
+			setcookie( $name, $value, $params );
+			
+		// For PHP 5.6 - 7.2
+		}else
+			setcookie( $name, $value, $expires, $path, $domain, $secure, $httponly );
+	}		
 }
