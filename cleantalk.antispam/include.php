@@ -375,7 +375,7 @@ class CleantalkAntispam {
                 self::apbct_remote_call__perform();
             }   
             self::ct_cookie();           
-            if ($is_sfw == 1) {
+            if ($_SERVER['REQUEST_METHOD'] === 'GET' && $is_sfw == 1) {
                 $sfw = new CleantalkSFW($ct_key);
                 $sfw->check_ip();
 
