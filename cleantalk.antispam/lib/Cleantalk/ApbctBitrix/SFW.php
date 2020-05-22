@@ -21,11 +21,12 @@ class SFW extends \Cleantalk\Antispam\SFW
 		$this->db_query = $this->db->Query($query);
 	}
 
-	protected function universal_fetch()	{
+	protected function universal_fetch() {
 		return $this->db_query->Fetch();
 	}
 	
-	protected function universal_fetch_all()	{
+	protected function universal_fetch_all() {
+		$result = array();
 		while ($row = $this->db_query->Fetch()){
 			$result[] = $row;
 		}
