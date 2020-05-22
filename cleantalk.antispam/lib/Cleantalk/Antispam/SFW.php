@@ -264,7 +264,7 @@ abstract class SFW
 		$this->universal_query($query);
 		$result = $this->universal_fetch_all();
 		
-		if(count($result)) {
+		if($result && is_array($result) && count($result)) {
 			
 			//Compile logs
 			$data = array();
