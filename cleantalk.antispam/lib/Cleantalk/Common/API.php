@@ -29,12 +29,13 @@ class API
 	 *
 	 * @return mixed|string|array('error' => STRING)
 	 */
-	static public function method__get_2s_blacklists_db($api_key, $out = null, $do_check = true)
+	static public function method__get_2s_blacklists_db($api_key, $out = null, $version = '1_0', $do_check = true)
 	{
 		$request = array(
 			'method_name' => '2s_blacklists_db',
 			'auth_key'    => $api_key,
 			'out'         => $out,
+			'version'	  => $version,
 		);
 		
 		$result = static::send_request($request);
@@ -639,9 +640,6 @@ class API
 		
 		// Possibility to switch API url
 		$url = defined('CLEANTALK_API_URL') ? CLEANTALK_API_URL : $url;
-
-		//Modify URL for new SFW whitelists feature
-		$url = $data['method_name'] == '2s_blacklists_db' ? $url . '/2.0' : $url;
 		
 		if(function_exists('curl_init')){
 			
