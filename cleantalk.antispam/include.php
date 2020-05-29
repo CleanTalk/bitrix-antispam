@@ -54,7 +54,7 @@ class CleantalkAntispam {
      * Updates SFW local database
      */
     static public function sfw_update($access_key)
-    {               
+    {
       $sfw = new CleantalkSFW($access_key);
 
       $file_urls = isset($_GET['file_urls']) ? urldecode( $_GET['file_urls'] ) : null;
@@ -69,11 +69,11 @@ class CleantalkAntispam {
 
           if(empty($result['error'])){
 
-            array_shift($file_urls);  
+            array_shift($file_urls);
 
             if (count($file_urls)) {
               CleantalkHelper::http__request(
-                (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://".$_SERVER['HTTP_HOST'], 
+                (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://".$_SERVER['HTTP_HOST'],
                 array(
                   'spbc_remote_call_token'  => md5($access_key),
                   'spbc_remote_call_action' => 'sfw_update',
@@ -81,13 +81,13 @@ class CleantalkAntispam {
                   'file_urls'               => implode(',', $file_urls),
                 ),
                 array('get', 'async')
-              );              
+              );
             } else {
                 COption::SetOptionInt( 'cleantalk.antispam', 'sfw_last_update', time());
             }
-          } else 
+          } else
             return array('error' => 'ERROR_WHILE_INSERTING_SFW_DATA');
-        }       
+        }
       }
       return $result;
     }
@@ -96,7 +96,7 @@ class CleantalkAntispam {
      * Sends and clean local logs storage
      */
     static public function sfw_send_logs($access_key)
-    {            
+    {
       $sfw = new CleantalkSFW($access_key);
       $result = $sfw->send_logs();
       COption::SetOptionInt( 'cleantalk.antispam', 'sfw_last_send_log', time());
@@ -109,16 +109,31 @@ class CleantalkAntispam {
     
     static function CleantalkDie($message)
     {
-        if (isset($_POST['feedback_type']) && $_POST['feedback_type'] == 'buyoneclick')
-        {
-            $result=Array('error'=>true,'msg'=>'js_kr_error_send');
-            print json_encode($result);
+        if( isset( $_POST['feedback_type'] ) && $_POST['feedback_type'] == 'buyoneclick' ) {
+	
+	        $result = Array( 'error' => true, 'msg' => 'js_kr_error_send' );
+	        print json_encode( $result );
+	        
+        // AJAX response
+        }elseif( isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) && strtolower( $_SERVER['HTTP_X_REQUESTED_WITH'] ) == 'xmlhttprequest'){
+	
+	        die(json_encode(array(
+	        	'apbct' => array(
+			        'blocked' => true,
+			        'comment' => $message,
+	            ),
+		        'error' => array(
+		        	'msg' => $message,
+		        )
+	        )));
+        
+        }else{
+	
+	        $error_tpl = file_get_contents( dirname( __FILE__ ) . "/error.html" );
+	        print str_replace( '%ERROR_TEXT%', $message, $error_tpl );
+         
         }
-        else
-        {
-            $error_tpl=file_get_contents(dirname(__FILE__)."/lib/error.html");
-            print str_replace('%ERROR_TEXT%',$message,$error_tpl);          
-        }       
+        
         die();
     }
     /*
@@ -383,7 +398,7 @@ class CleantalkAntispam {
                   CleantalkAntispam::sfw_update($ct_key);
 
                 if (time() - $sfw_last_send_log > 3600)
-                  CleantalkAntispam::sfw_send_logs($ct_key);                              
+                  CleantalkAntispam::sfw_send_logs($ct_key);
             }
             if ($ct_status == 1 && $ct_global == 1) {         
                 // Exclusions
@@ -428,8 +443,8 @@ class CleantalkAntispam {
                     $arUser['type'] = 'contact_form_bitrix_smt';
                   if (strpos(strtolower($key), 'iblock') !== false)
                     $arUser['type'] = 'contact_form_bitrix_iblock_ajax';
-                }                
-                if(($arUser["sender_email"] != '' && $arUser['type'] == 'feedback_general_contact_form') || $ct_global_without_email == 1 || $arUser['type'] != 'feedback_general_contact_form') { 
+                }
+                if(($arUser["sender_email"] != '' && $arUser['type'] == 'feedback_general_contact_form') || $ct_global_without_email == 1 || $arUser['type'] != 'feedback_general_contact_form') {
                   
                     $aResult =  CleantalkAntispam::CheckAllBefore($arUser,FALSE);
                     
@@ -455,8 +470,8 @@ class CleantalkAntispam {
                                 die();
                               } else {
                                 CleantalkAntispam::CleantalkDie($aResult['ct_result_comment']);
-                                return false;                                
-                              } 
+                                return false;
+                              }
                             }
                         }
                     }
@@ -475,24 +490,24 @@ class CleantalkAntispam {
                     if(empty($result['error'])){
                         if (empty($result['error'])) {
                             if (isset($result['show_notice'], $result['trial']) && $result['show_notice'] == 1 && $result['trial'] == 1) {
-                                CAdminNotify::Add(array(          
-                                    'MESSAGE' => GetMessage( 'CLEANTALK_TRIAL_NOTIFY' ),          
-                                    'TAG' => 'trial_notify',          
-                                    'MODULE_ID' => 'main',          
-                                'ENABLE_CLOSE' => 'Y'));         
+                                CAdminNotify::Add(array(
+                                    'MESSAGE' => GetMessage( 'CLEANTALK_TRIAL_NOTIFY' ),
+                                    'TAG' => 'trial_notify',
+                                    'MODULE_ID' => 'main',
+                                'ENABLE_CLOSE' => 'Y'));
                             } else {
-                                CAdminNotify::DeleteByTag('trial_notify'); 
+                                CAdminNotify::DeleteByTag('trial_notify');
                             }
                             if (isset($result['show_notice'], $result['renew']) && $result['show_notice'] == 1 && $result['renew'] == 1) {
-                                CAdminNotify::Add(array(          
-                                    'MESSAGE' => GetMessage( 'CLEANTALK_RENEW_NOTIFY' ),          
-                                    'TAG' => 'renew_notify',          
-                                    'MODULE_ID' => 'main',          
-                                'ENABLE_CLOSE' => 'Y'));         
+                                CAdminNotify::Add(array(
+                                    'MESSAGE' => GetMessage( 'CLEANTALK_RENEW_NOTIFY' ),
+                                    'TAG' => 'renew_notify',
+                                    'MODULE_ID' => 'main',
+                                'ENABLE_CLOSE' => 'Y'));
                             } else {
-                                CAdminNotify::DeleteByTag('renew_notify'); 
+                                CAdminNotify::DeleteByTag('renew_notify');
                             }
-                        }                         
+                        }
                         if(isset($result['show_review']) && $result['show_review'] == 1)
                         {
                             $new_status = intval($result['show_review']);
@@ -1160,7 +1175,7 @@ class CleantalkAntispam {
      * @param string Content to modify
      */
     function OnEndBufferContentHandler(&$content) {
-        if(!defined("ADMIN_SECTION") && COption::GetOptionInt( 'cleantalk.antispam', 'status', 0 ) == 1 && strpos($content,'<!-- CLEANTALK template addon -->') === false && strpos($content,'</body>') !== false)           
+        if(!defined("ADMIN_SECTION") && COption::GetOptionInt( 'cleantalk.antispam', 'status', 0 ) == 1 && strpos($content,'<!-- CLEANTALK template addon -->') === false && strpos($content,'</body>') !== false)
             $content = preg_replace('/(<\/body[^>]*>(?!.*<\/body[^>]*>))/i', '${1}'."\n".self::FormAddon(), $content, 1);
     }
     /**
@@ -1429,13 +1444,13 @@ class CleantalkAntispam {
         $ct_options=Array(
             'access_key' => COption::GetOptionString('cleantalk.antispam', 'key', ''),
             'form_new_user' => COption::GetOptionInt('cleantalk.antispam', 'form_new_user', 0),
-            'form_comment_blog' => COption::GetOptionInt('cleantalk.antispam', 'form_comment_blog', 0),        
+            'form_comment_blog' => COption::GetOptionInt('cleantalk.antispam', 'form_comment_blog', 0),
             'form_comment_forum' => COption::GetOptionInt('cleantalk.antispam', 'form_comment_forum', 0),
             'form_forum_private_messages' => COption::GetOptionInt('cleantalk.antispam', 'form_forum_private_messages', 0),
             'form_comment_treelike' => COption::GetOptionInt('cleantalk.antispam', 'form_comment_treelike', 0),
             'form_send_example' => COption::GetOptionInt('cleantalk.antispam', 'form_send_example', 0),
             'form_order' => COption::GetOptionInt('cleantalk.antispam', 'form_order', 0),
-            'web_form' => COption::GetOptionInt('cleantalk.antispam', 'web_form', 0),        
+            'web_form' => COption::GetOptionInt('cleantalk.antispam', 'web_form', 0),
             'form_global_check' => COption::GetOptionInt('cleantalk.antispam', 'form_global_check', 0),
             'form_global_check_without_email' => COption::GetOptionInt('cleantalk.antispam', 'form_global_check_without_email', 0),
             'form_sfw' => COption::GetOptionInt('cleantalk.antispam', 'form_sfw', 0),
@@ -1454,7 +1469,7 @@ class CleantalkAntispam {
             'cookies_enabled' => self::ct_cookies_test(),
             'ct_options' => json_encode($ct_options),
             'form_validation' => ($form_errors && is_array($form_errors)) ? json_encode(array('validation_notice' => json_encode($form_errors), 'page_url' => $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'])) : null,
-            'apbct_visible_fields'   => !empty($_COOKIE['ct_visible_fields']) ? self::ct_visibile_fields__process($_COOKIE['ct_visible_fields'])  : null,               
+            'apbct_visible_fields'   => !empty($_COOKIE['ct_visible_fields']) ? self::ct_visibile_fields__process($_COOKIE['ct_visible_fields'])  : null,
         );
         $sender_info = json_encode($sender_info);
 
@@ -1558,8 +1573,8 @@ class CleantalkAntispam {
                 $ct_request->message .= isset($arEntity['message_body']) ? $arEntity['message_body'] : '';
                 
                 $ct_result = $ct->isAllowMessage($ct_request);
-                break;   
-                              
+                break;
+                
             case 'webform':
                 
                 $a_post_info['comment_type'] = 'webform';
@@ -1746,9 +1761,9 @@ class CleantalkAntispam {
     }
     /**
      * Process visible fields for specific form to match the fields from request
-     * 
+     *
      * @param string $visible_fields
-     * 
+     *
      * @return string
      */
     private static function ct_visibile_fields__process($visible_fields) {
@@ -1767,7 +1782,7 @@ class CleantalkAntispam {
           )
         );
       }
-        
+      
       return $visible_fields;
     }
     /**
@@ -2035,11 +2050,11 @@ class CleantalkAntispam {
                         die('OK');
                     // SFW update
                     }elseif($remote_action == 'sfw_update'){
-                        $result = CleantalkAntispam::sfw_update($auth_key);                
+                        $result = CleantalkAntispam::sfw_update($auth_key);
                         die(($result) ? 'OK' : 'FAIL ');
                     // SFW send logs
                     }elseif($remote_action == 'sfw_send_logs'){
-                        $result = CleantalkAntispam::sfw_send_logs($auth_key);                
+                        $result = CleantalkAntispam::sfw_send_logs($auth_key);
                         die(($result) ? 'OK' : 'FAIL ');
                     // Update plugin
                     }elseif($remote_action == 'update_plugin'){
