@@ -1332,7 +1332,7 @@ class CleantalkAntispam {
                             // Visible fields
                             var visible_fields = '';
                             elements.forEach(function(elem, i, elements){
-                              visible_fields += " " + elem.getAttribute('name');
+                              visible_fields += '' + elem.getAttribute('name');
                             });
                             visible_fields = visible_fields.trim();
 
