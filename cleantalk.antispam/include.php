@@ -1207,6 +1207,8 @@ class CleantalkAntispam {
                     ctSetCookie('ct_pointer_data', '0');
                     ctSetCookie('ct_timezone', '0');
 
+                    ct_attach_event_handler(window, 'DOMContentLoaded', ct_ready);
+
                     setTimeout(function(){
                         ctSetCookie('ct_timezone', ct_date.getTimezoneOffset()/60*(-1));
                         ctSetCookie('ct_checkjs', ct_checkjs_val);  
