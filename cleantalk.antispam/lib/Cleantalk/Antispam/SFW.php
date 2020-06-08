@@ -45,7 +45,7 @@ abstract class SFW
 	*/
 	private function ip_get($v4_only = true) {
 
-		$real_ip = (array)CleantalkHelper::ip_get(array('real'), $v4_only);
+		$real_ip = (array)CleantalkHelper::ip__get(array('real'), $v4_only);
 		$real_ip = !empty($real_ip) ? $real_ip[0] : ''; 
 
 		$this->ips_array['real'] = array('ip' => $real_ip, 'in_list' => false);

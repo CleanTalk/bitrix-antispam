@@ -1287,9 +1287,9 @@ class CleantalkAntispam {
           'auth_key' => $ct_key,
           'sender_email' => isset($arEntity['sender_email']) ? $arEntity['sender_email'] : '',
           'sender_nickname' => isset($arEntity['sender_nickname']) ? $arEntity['sender_nickname'] : '',
-          'sender_ip' => CleantalkHelper::ip_get(array('real'), false),
-          'x_forwarded_for' => CleantalkHelper::ip_get(array('x_forwarded_for'), false),
-          'x_real_ip' => CleantalkHelper::ip_get(array('x_real_ip'), false),
+          'sender_ip' => CleantalkHelper::ip__get(array('real'), false),
+          'x_forwarded_for' => CleantalkHelper::ip__get(array('x_forwarded_for'), false),
+          'x_real_ip' => CleantalkHelper::ip__get(array('x_real_ip'), false),
           'agent' => CLEANTALK_USER_AGENT,
           'response_lang' => 'ru',
           'js_on' => $checkjs,
@@ -1301,65 +1301,52 @@ class CleantalkAntispam {
             case 'comment':
                 $timelabels_key = 'mail_error_comment';
 
-                $a_post_info['comment_type'] = 'comment';
-                $post_info = json_encode($a_post_info);
-
                 $request_params['message'] = $arEntity['message'];
                 $request_params['example'] = $arEntity['example'];
-                $request_params['post_info'] = $post_info;
+                $request_params['post_info']['comment_type'] = 'comment';
                 $ct_request = new CleantalkRequest($request_params);
                 $ct_result = $ct->isAllowMessage($ct_request);
                 break;
                 
-            case 'order':
-                
-                $a_post_info['comment_type'] = 'order';
-                $post_info = json_encode($a_post_info);               
+            case 'order':             
                 $timelabels_key = 'mail_error_comment';
                 $request_params['message'] = $arEntity['message'];
-                $request_params['post_info'] = $post_info;
+                $request_params['post_info']['comment_type'] = 'order';
                 $ct_request = new CleantalkRequest($request_params);
                 $ct_result = $ct->isAllowMessage($ct_request);
                 break;
                 
             case 'feedback_general_contact_form':
                 
-                $a_post_info['comment_type'] = 'feedback_general_contact_form';
-                $post_info = json_encode($a_post_info);
-                
                 $timelabels_key = 'mail_error_comment';
 
                 $request_params['message'] = $arEntity['message'];
  
-                $request_params['post_info'] = $post_info;
+                $request_params['post_info']['comment_type'] = 'feedback_general_contact_form';
                 $ct_request = new CleantalkRequest($request_params);
 
                 $ct_result = $ct->isAllowMessage($ct_request);
+
                 break;
 
             case strpos($type, 'contact_form_bitrix') !== false:
-                $a_post_info['comment_type'] = $type;
-                $post_info = json_encode($a_post_info);
                 
                 $timelabels_key = 'mail_error_comment';
 
                 $request_params['message'] = $arEntity['message'];
 
-                $request_params['post_info'] = $post_info;
+                $request_params['post_info']['comment_type'] = $type;
                 $ct_request = new CleantalkRequest($request_params);
                 $ct_result = $ct->isAllowMessage($ct_request);
                 break;
                 
             case 'webform':
-                
-                $a_post_info['comment_type'] = 'webform';
-                $post_info = json_encode($a_post_info);
-                
+      
                 $timelabels_key = 'mail_error_comment';
 
                 $request_params['message'] = $arEntity['message'];
 
-                $request_params['post_info'] = $post_info;
+                $request_params['post_info']['comment_type'] = 'webform';
                 $ct_request = new CleantalkRequest($request_params);
                 $ct_result = $ct->isAllowMessage($ct_request);
                 break;
@@ -1374,15 +1361,12 @@ class CleantalkAntispam {
                 break;
                 
             case 'private_message':
-            
-                $a_post_info['comment_type'] = 'private_message';
-                $post_info = json_encode($a_post_info);
-            
+
                 $timelabels_key = 'mail_error_comment';
 
                 $request_params['message'] = $arEntity['message'];
                 $request_params['tz'] = isset($arEntity['user_timezone']) ? $arEntity['user_timezone'] : NULL;
-                $request_params['post_info'] = $post_info;
+                $request_params['post_info']['comment_type'] = 'private_message';
                 $ct_request = new CleantalkRequest($request_params);
                 $ct_result = $ct->isAllowMessage($ct_request);
         }
@@ -1593,7 +1577,7 @@ class CleantalkAntispam {
             $request_params = array (
               'auth_key' => $ct_key,
               'agent' => CLEANTALK_USER_AGENT,
-              'sender_ip' => CleantalkHelper::ip_get(array('real'), false),
+              'sender_ip' => CleantalkHelper::ip__get(array('real'), false),
               'feedback' => $request_id . ':' . ($feedback == 'Y' ? '1' : '0'),
             );
             $ct_request = new CleantalkRequest($request_params);
