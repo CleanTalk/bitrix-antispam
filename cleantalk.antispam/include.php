@@ -18,9 +18,6 @@ require_once(dirname(__FILE__) . '/lib/Cleantalk/Common/API.php');
 // SFW class
 require_once(dirname(__FILE__) . '/lib/Cleantalk/ApbctBitrix/SFW.php');
 
-// Custom config
-require_once(dirname(__FILE__) . '/custom_config.php');
-
 
 //Antispam classes
 use Cleantalk\Antispam\Cleantalk as Cleantalk;
@@ -136,230 +133,7 @@ class CleantalkAntispam {
         
         die();
     }
-    /*
-    * Get data from submit recursively
-    */
-    static public function CleantalkGetFields($arr, $message=array(), $email = null, $nickname = array('nick' => '', 'first' => '', 'last' => ''), $subject = null, $contact = true, $prev_name = '')
-    {
-      //Skip request if fields exists
-      $skip_params = array(
-          'ipn_track_id',   // PayPal IPN #
-          'txn_type',     // PayPal transaction type
-          'payment_status',   // PayPal payment status
-          'ccbill_ipn',     // CCBill IPN 
-        'ct_checkjs',     // skip ct_checkjs field
-        'api_mode',         // DigiStore-API
-        'loadLastCommentId', // Plugin: WP Discuz. ticket_id=5571
-        );
-      
-      // Fields to replace with ****
-        $obfuscate_params = array(
-            'password',
-            'pass',
-            'pwd',
-        'pswd'
-        );
-      
-      // Skip feilds with these strings and known service fields
-      $skip_fields_with_strings = array( 
-        // Common
-        'ct_checkjs', //Do not send ct_checkjs
-        'nonce', //nonce for strings such as 'rsvp_nonce_name'
-        'security',
-        // 'action',
-        'http_referer',
-        'timestamp',
-        'captcha',
-        // Formidable Form
-        'form_key',
-        'submit_entry',
-        // Custom Contact Forms
-        'form_id',
-        'ccf_form',
-        'form_page',
-        // Qu Forms
-        'iphorm_uid',
-        'form_url',
-        'post_id',
-        'iphorm_ajax',
-        'iphorm_id',
-        // Fast SecureContact Froms
-        'fs_postonce_1',
-        'fscf_submitted',
-        'mailto_id',
-        'si_contact_action',
-        // Ninja Forms
-        'formData_id',
-        'formData_settings',
-        'formData_fields_\d+_id',
-        'formData_fields_\d+_files.*',    
-        // E_signature
-        'recipient_signature',
-        'output_\d+_\w{0,2}',
-        // Contact Form by Web-Settler protection
-            '_formId',
-            '_returnLink',
-        // Social login and more
-        '_save',
-        '_facebook',
-        '_social',
-        'user_login-',
-        // Contact Form 7
-        '_wpcf7',
-        'avatar__file_image_data',
-        'sessid',
-        'soa-action',
-        'location_type',
-        'BUYER_STORE',
-        'PAY_SYSTEM_ID',
-        'PERSON_TYPE',
-        'PERSON_TYPE_OLD',
-        'ORDER_PROP_18',
-        'RECENT_DELIVERY_VALUE',
-        'DELIVERY_ID',
-        'via_ajax',
-        'action',
-        'SITE_ID',
-        'signedParamsString',
-      );
-        $fields_exclusions = CleantalkCustomConfig::get_fields_exclusions();
-        if ($fields_exclusions)
-            $skip_fields_with_strings = array_merge($skip_fields_with_strings,$fields_exclusions);
-      // Reset $message if we have a sign-up data
-        $skip_message_post = array(
-            'edd_action', // Easy Digital Downloads
-        );
-      
-        foreach($skip_params as $value){
-          if(@array_key_exists($value,$_GET)||@array_key_exists($value,$_POST))
-            $contact = false;
-        } unset($value);
-        
-      if(count($arr)){
-        foreach($arr as $key => $value){
-          
-          if(gettype($value)=='string'){
-            $decoded_json_value = json_decode($value, true);
-            if($decoded_json_value !== null)
-              $value = $decoded_json_value;
-          }
-          
-          if(!is_array($value) && !is_object($value)){
-            
-            if (in_array($key, $skip_params, true) && $key != 0 && $key != '' || preg_match("/^ct_checkjs/", $key))
-              $contact = false;
-            
-            if($value === '')
-              continue;
-            
-            // Skipping fields names with strings from (array)skip_fields_with_strings
-            foreach($skip_fields_with_strings as $needle){
-              if (preg_match("/".$needle."/", $prev_name.$key) == 1){
-                continue(2);
-              }
-            }unset($needle);
-            
-            // Obfuscating params
-            foreach($obfuscate_params as $needle){
-              if (strpos($key, $needle) !== false){
-                $value = CleantalkAntispam::CleantalkObfuscateParam($value);
-                continue(2);
-              }
-            }unset($needle);
 
-              // Removes whitespaces
-              $value = urldecode( trim( $value ) ); // Fully cleaned message
-              $value_for_email = trim( $value );    // Removes shortcodes to do better spam filtration on server side.
-
-              // Email
-              if ( ! $email && preg_match( "/^\S+@\S+\.\S+$/", $value_for_email ) ) {
-                  $email = $value_for_email;
-
-                  // Names
-              }elseif (preg_match("/name/i", $key)){
-              
-              preg_match("/((name.?)?(your|first|for)(.?name)?)$/", $key, $match_forename);
-              preg_match("/((name.?)?(last|family|second|sur)(.?name)?)$/", $key, $match_surname);
-              preg_match("/^(name.?)?(nick|user)(.?name)?$/", $key, $match_nickname);
-              
-              if(count($match_forename) > 1)
-                $nickname['first'] = $value;
-              elseif(count($match_surname) > 1)
-                $nickname['last'] = $value;
-              elseif(count($match_nickname) > 1)
-                $nickname['nick'] = $value;
-              else
-                $nickname[$prev_name.$key] = $value;
-            
-            // Subject
-            }elseif ($subject === null && preg_match("/subject/i", $key)){
-              $subject = $value;
-            
-            // Message
-            }else{
-              $message[$prev_name.$key] = $value;         
-            }
-            
-          }elseif(!is_object($value)){
-            
-            $prev_name_original = $prev_name;
-            $prev_name = ($prev_name === '' ? $key.'_' : $prev_name.$key.'_');
-            
-            $temp = CleantalkAntispam::CleantalkGetFields($value, $message, $email, $nickname, $subject, $contact, $prev_name);
-            
-            $message  = $temp['message'];
-            $email    = ($temp['email']     ? $temp['email'] : null);
-            $nickname   = ($temp['nickname']  ? $temp['nickname'] : null);        
-            $subject  = ($temp['subject']   ? $temp['subject'] : null);
-            if($contact === true)
-              $contact = ($temp['contact'] === false ? false : true);
-            $prev_name  = $prev_name_original;
-          }
-        } unset($key, $value);
-      }
-      
-        foreach ($skip_message_post as $v) {
-            if (isset($_POST[$v])) {
-                $message = null;
-                break;
-            }
-        } unset($v);
-      
-      //If top iteration, returns compiled name field. Example: "Nickname Firtsname Lastname".
-      if($prev_name === ''){
-        if(!empty($nickname)){
-          $nickname_str = '';
-          foreach($nickname as $value){
-            $nickname_str .= ($value ? $value." " : "");
-          }unset($value);
-        }
-        $nickname = $nickname_str;
-      }
-      
-        $return_param = array(
-        'email'   => $email,
-        'nickname'  => $nickname,
-        'subject'   => $subject,
-        'contact'   => $contact,
-        'message'   => $message
-      );  
-      return $return_param;
-
-    }
-
-    /**
-    * Masks a value with asterisks (*) Needed by the getFieldsAny()
-    * @return string
-    */
-    static public function CleantalkObfuscateParam($value = null) {
-      if ($value && (!is_object($value) || !is_array($value))) {
-        $length = strlen($value);
-        $value = str_repeat('*', $length);
-      }
-
-      return $value;
-    }     
-    
     /**
      * Checking all forms for spam
      * @return null|boolean NULL when success or FALSE when spam detected
@@ -369,9 +143,9 @@ class CleantalkAntispam {
         global $USER;
 
         // Set exclusions to the class
-        CleantalkCustomConfig::$cleantalk_url_exclusions      = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_url', '' );
-        CleantalkCustomConfig::$cleantalk_fields_exclusions   = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' );
-        CleantalkCustomConfig::$cleantalk_webforms_checking   = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_webform', '' );
+        $cleantalk_url_exclusions      = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_url', '' );
+        $cleantalk_fields_exclusions   = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' );
+        $cleantalk_webforms_checking   = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_webform', '' );
 
         if (!is_object($USER)) $USER = new CUser;
         $ct_status               = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
@@ -418,26 +192,29 @@ class CleantalkAntispam {
 
                 // Exclusion for web-forms ID
                 $ct_webform= COption::GetOptionInt('cleantalk.antispam', 'web_form', 0);
-                $webforms_id_checking = CleantalkCustomConfig::get_webforms_ids();
-                if ($ct_webform == 1 && $webforms_id_checking && is_array($webforms_id_checking) && count($webforms_id_checking) > 0 && isset($_POST['WEB_FORM_ID']))
-                    if (in_array($_POST['WEB_FORM_ID'], $webforms_id_checking))
+                $webforms_id_checking = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_webform', '' );
+                if ($ct_webform == 1 && $webforms_id_checking && !empty($webforms_id_checking) && isset($_POST['WEB_FORM_ID'])) {
+                  $webforms_id_checking = explode(',', $webforms_id_checking);
+                  if (in_array($_POST['WEB_FORM_ID'], $webforms_id_checking))
                         return;
+                }
 
-                $ct_temp_msg_data = CleantalkAntispam::CleantalkGetFields($_POST); // @todo Works via links need to be fixed
+                $ct_temp_msg_data = CleantalkHelper::get_fields_any($_POST, COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' )); // @todo Works via links need to be fixed
               
                 if ($ct_temp_msg_data === null)
-                    CleantalkAntispam::CleantalkGetFields($_GET);
+                    CleantalkHelper::get_fields_any($_GET, COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' ));
 
                 $arUser = array();
                 $arUser["type"]                 = "feedback_general_contact_form";
-                $arUser["sender_ip"]            = $_SERVER['REMOTE_ADDR'];
-                $arUser["sender_email"]         = ($ct_temp_msg_data['email']    ? $ct_temp_msg_data['email']    : '');
+                $arUser["sender_email"]         = ($ct_temp_msg_data['email'] ? $ct_temp_msg_data['email'] : '');
                 $arUser["sender_nickname"]      = ($ct_temp_msg_data['nickname'] ? $ct_temp_msg_data['nickname'] : '');
-                $arUser["message_title"]        = ($ct_temp_msg_data['subject']  ? $ct_temp_msg_data['subject']  : '');
-                $arUser["message_body"]         = ($ct_temp_msg_data['message']  ? $ct_temp_msg_data['message']  : array());  
+                $arUser["subject"]              = ($ct_temp_msg_data['subject'] ? $ct_temp_msg_data['subject'] : '');
+                $arUser["contact_form"]         = ($ct_temp_msg_data['contact'] ? $ct_temp_msg_data['contact'] : true);
+                $arUser["message"]              = ($ct_temp_msg_data['message'] ? $ct_temp_msg_data['message'] : array());
 
-                if (is_array($arUser["message_body"]))
-                    $arUser["message_body"] = implode("\n", $arUser["message_body"]);
+                if ($arUser['subject'] != '')
+                  $arUser['message']['subject'] = $arUser['subject'];   
+
                 foreach ($_POST as $key => $value) {
                   if (strpos(strtolower($key), 'smt') !== false)
                     $arUser['type'] = 'contact_form_bitrix_smt';
@@ -556,7 +333,7 @@ class CleantalkAntispam {
         if ($ct_status == 1 && $ct_order == 1)
         {
             $sender_email = null;
-            $message = '';
+            $message = array();
             foreach ($_POST as $key => $value)
             {
                 if(strpos($key,'ORDER_PROP_')!==false)
@@ -567,22 +344,18 @@ class CleantalkAntispam {
                     }
                     else
                     {
-                        $message.="$value\n";
+                        $message[] = $value;
                     }
                 }
             }
-            $message.=$_POST['ORDER_DESCRIPTION'];
+            $message[] = $_POST['ORDER_DESCRIPTION'];
             
             $arUser = array();
             $arUser["type"] = "order";
             $arUser["sender_email"] = $sender_email;
             $arUser["sender_nickname"] = '';
-            $arUser["sender_ip"] = $_SERVER['REMOTE_ADDR'];
-            $arUser["message_title"] = "";
-            $arUser["message_body"] = $message;
-            $arUser["example_title"] = "";
-            $arUser["example_body"] = "";
-            $arUser["example_comments"] = "";
+            $arUser["subject"] = "";
+            $arUser["message"] = $message;
             
             $aResult =  CleantalkAntispam::CheckAllBefore($arUser,FALSE);
             if(isset($aResult) && is_array($aResult))
@@ -621,15 +394,18 @@ class CleantalkAntispam {
         $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
         $ct_webform= COption::GetOptionInt('cleantalk.antispam', 'web_form', 0);
 
-        $webforms_id_checking = CleantalkCustomConfig::get_webforms_ids();
-        if ($webforms_id_checking && is_array($webforms_id_checking) && count($webforms_id_checking) > 0)
-            if (in_array($WEB_FORM_ID, $webforms_id_checking))
-                return;      
+        $webforms_id_checking = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_webform', '' );
+        if ($webforms_id_checking && !empty($webforms_id_checking)) {
+          $webforms_id_checking = explode(',', $webforms_id_checking);
+          if (in_array($WEB_FORM_ID, $webforms_id_checking))
+            return;    
+        }
+  
 
         if ($ct_status == 1 && $ct_webform == 1){
             
             $sender_email = null;
-            $message = '';
+            $message = array();
             
             $skip_keys = array(
                 'WEB_FORM_ID',
@@ -653,19 +429,15 @@ class CleantalkAntispam {
                 if ($sender_email === null && preg_match("/^\S+@\S+\.\S+$/", $value))
                     $sender_email = $value;
                 else
-                    $message.="$value\n";
+                    $message[] = $value;
             }
             
             $arUser = array();
             $arUser["type"] = "webform";
             $arUser["sender_email"] = $sender_email;
             $arUser["sender_nickname"] = '';
-            $arUser["sender_ip"] = $_SERVER['REMOTE_ADDR'];
-            $arUser["message_title"] = "";
-            $arUser["message_body"] = $message;
-            $arUser["example_title"] = "";
-            $arUser["example_body"] = "";
-            $arUser["example_comments"] = "";
+            $arUser["subject"] = "";
+            $arUser["message"] = $message;
             
             $aResult =  CleantalkAntispam::CheckAllBefore($arUser,FALSE);
 
@@ -720,11 +492,9 @@ class CleantalkAntispam {
 
             $aComment['type'] = 'comment';
             $aComment['sender_nickname'] = isset($arFields['AUTHOR_NAME']) ? $arFields['AUTHOR_NAME'] : '';
-            $aComment['message_title'] = '';
-            $aComment['message_body'] = isset($arFields['COMMENT']) ? $arFields['COMMENT'] : '';
-            $aComment['example_title'] = '';
-            $aComment['example_body'] = '';
-            $aComment['example_comments'] = '';
+            $aComment['subject'] = '';
+            $aComment['message'] = isset($arFields['COMMENT']) ? array($arFields['COMMENT']) : array();
+            $aComment['example'] = array();
 
             if(COption::GetOptionInt('cleantalk.antispam', 'form_send_example', 0) == 1){
                 // Find last 10 approved comments
@@ -738,7 +508,7 @@ class CleantalkAntispam {
                     10
                 );
                 while($ar_res = $db_res->Fetch()){
-                    $aComment['example_comments'] .= $ar_res['COMMENT'] . "\n\n";
+                    $aComment['example'][] = $ar_res['COMMENT'];
                 }
             }
 
@@ -823,17 +593,15 @@ class CleantalkAntispam {
 
             $aComment['type'] = 'comment';
             $aComment['sender_nickname'] = isset($arFields['AUTHOR_NAME']) ? $arFields['AUTHOR_NAME'] : '';
-            $aComment['message_title'] = '';
-            $aComment['message_body'] = isset($arFields['POST_TEXT']) ? $arFields['POST_TEXT'] : '';
-            $aComment['example_title'] = '';
-            $aComment['example_body'] = '';
-            $aComment['example_comments'] = '';
+            $aComment['subject'] = '';
+            $aComment['message'] = isset($arFields['POST_TEXT']) ? array($arFields['POST_TEXT']) : array();
+            $aComment['example'] = array();
             
         if(COption::GetOptionInt('cleantalk.antispam', 'form_send_example', 0) == 1){
             $arPost = CBlogPost::GetByID($arFields['POST_ID']);
             if(is_array($arPost)){
-                    $aComment['example_title'] = $arPost['TITLE'];
-                    $aComment['example_body'] = $arPost['DETAIL_TEXT'];
+                    $aComment['example']['title'] = $arPost['TITLE'];
+                    $aComment['example']['body'] = $arPost['DETAIL_TEXT'];
                     // Find last 10 approved comments
                     $db_res = CBlogComment::GetList(
                     array('DATE_CREATE' => 'DESC'),
@@ -843,7 +611,8 @@ class CleantalkAntispam {
                     array('POST_TEXT')
                     );
                     while($ar_res = $db_res->Fetch())
-                    $aComment['example_comments'] .= $ar_res['TITLE'] . "\n\n" . $ar_res['POST_TEXT'] . "\n\n";
+                    $aComment['example']['comments'] .= $ar_res['TITLE'] . "\n\n" . $ar_res['POST_TEXT'] . "\n\n"; 
+                    $aComment['example']['comments'] = json_encode($aComment['example']['comments']);
         }
             }
 
@@ -931,16 +700,14 @@ class CleantalkAntispam {
 
             $aComment['type'] = 'comment';
             $aComment['sender_nickname'] = isset($arFields['AUTHOR_NAME']) ? $arFields['AUTHOR_NAME'] : '';
-            $aComment['message_title'] = '';
-            $aComment['message_body'] = isset($arFields['POST_MESSAGE']) ? $arFields['POST_MESSAGE'] : '';
-            $aComment['example_title'] = '';
-            $aComment['example_body'] = '';
-            $aComment['example_comments'] = '';
+            $aComment['subject'] = '';
+            $aComment['message'] = isset($arFields['POST_MESSAGE']) ? array($arFields['POST_MESSAGE']) : array();
+            $aComment['example'] = array();
             
         if(COption::GetOptionInt('cleantalk.antispam', 'form_send_example', 0) == 1){
             $arTopic = CForumTopic::GetByID($arFields['TOPIC_ID']);
             if(is_array($arTopic)){
-                    $aComment['example_title'] = $arTopic['TITLE'];
+                    $aComment['example']['title'] = $arTopic['TITLE'];
 
                     // Messages contains both topic bodies and comment bodies
                     // First find topic body
@@ -952,7 +719,7 @@ class CleantalkAntispam {
                     );
                     $ar_res = $db_res->Fetch();
                     if($ar_res)
-                    $aComment['example_body'] = $ar_res['POST_MESSAGE'];
+                    $aComment['example']['body'] = $ar_res['POST_MESSAGE'];
 
                     // Second find last 10 approved comment bodies
                     $comments = array();
@@ -963,7 +730,8 @@ class CleantalkAntispam {
                     10
                     );
                     while($ar_res = $db_res->Fetch())
-                    $aComment['example_comments'] .= $ar_res['POST_MESSAGE'] . "\n\n";
+                    $aComment['example']['comments'] .= $ar_res['POST_MESSAGE'] . "\n\n";
+                    $aComment['example']['comments'] = json_encode($aComment['example']['comments']);
         }
             }
             
@@ -1063,12 +831,12 @@ class CleantalkAntispam {
             $aComment['type'] = 'comment';
             $aComment['sender_email'] = $USER->GetEmail();
             $aComment['sender_nickname'] = $USER->GetLogin();
-            $aComment['message_title'] = isset($arFields['POST_SUBJ']) ? $arFields['POST_SUBJ'] : '';
-            $aComment['message_body'] = isset($arFields['POST_MESSAGE']) ? $arFields['POST_MESSAGE'] : '';
-            $aComment['example_title'] = '';
-            $aComment['example_body'] = '';
-            $aComment['example_comments'] = '';
-            
+            $aComment['subject'] = isset($arFields['POST_SUBJ']) ? $arFields['POST_SUBJ'] : '';
+            $aComment['message'] = isset($arFields['POST_MESSAGE']) ? array($arFields['POST_MESSAGE']) : array();
+            $aComment['example'] = array();
+
+            if ($aComment['subject'] != '')
+                  $aComment['message']['subject'] = $aComment['subject'];  
             $aResult = self::CheckAllBefore($aComment, TRUE);
             
             if(isset($aResult) && is_array($aResult)){
@@ -1429,9 +1197,10 @@ class CleantalkAntispam {
             return;
         }
 
-        $url_exclusion = CleantalkCustomConfig::get_url_exclusions();
-        if ($url_exclusion)
+        $url_exclusion = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_url', '' );
+        if (!empty($url_exclusion))
         {
+          $url_exclusion = explode(',', $url_exclusion)
             foreach ($url_exclusion as $key=>$value)
                 if (strpos($_SERVER['REQUEST_URI'],$value) !== false)
                     return;         
@@ -1514,60 +1283,42 @@ class CleantalkAntispam {
         $logicalEncoding = strtolower($logicalEncoding);
         $ct->data_codepage = $logicalEncoding == 'utf-8' ? NULL : $logicalEncoding;
 
-        $ct_request = new CleantalkRequest();
-        $ct_request->auth_key = $ct_key;
-        $ct_request->sender_email = isset($arEntity['sender_email']) ? $arEntity['sender_email'] : '';
-        $ct_request->sender_nickname = isset($arEntity['sender_nickname']) ? $arEntity['sender_nickname'] : '';
-        $ct_request->sender_ip = CleantalkHelper::ip_get(array('real'), false);
-        $ct_request->x_forwarded_for = CleantalkHelper::ip_get(array('x_forwarded_for'), false);
-        $ct_request->x_real_ip       = CleantalkHelper::ip_get(array('x_real_ip'), false);
-        $ct_request->agent = CLEANTALK_USER_AGENT;
-        $ct_request->response_lang = 'ru';
-        $ct_request->js_on = $checkjs;
-        $ct_request->sender_info = $sender_info;
-        $ct_request->submit_time = self::ct_cookies_test() == 1 ? time() - (int)$_COOKIE['ct_timestamp'] : null;
-        if (isset($arEntity['message_title']) && is_array($arEntity['message_title']))
-            $arEntity['message_title'] = implode("\n", $arEntity['message_title']);
-        if (isset($arEntity['message_body']) && is_array($arEntity['message_body']))
-            $arEntity['message_body'] = implode("\n", $arEntity['message_body']);
+        $request_params = array(
+          'auth_key' => $ct_key,
+          'sender_email' => isset($arEntity['sender_email']) ? $arEntity['sender_email'] : '',
+          'sender_nickname' => isset($arEntity['sender_nickname']) ? $arEntity['sender_nickname'] : '',
+          'sender_ip' => CleantalkHelper::ip_get(array('real'), false),
+          'x_forwarded_for' => CleantalkHelper::ip_get(array('x_forwarded_for'), false),
+          'x_real_ip' => CleantalkHelper::ip_get(array('x_real_ip'), false),
+          'agent' => CLEANTALK_USER_AGENT,
+          'response_lang' => 'ru',
+          'js_on' => $checkjs,
+          'sender_info' => $sender_info,
+          'submit_time' => self::ct_cookies_test() == 1 ? time() - (int)$_COOKIE['ct_timestamp'] : null,
+        );
+
         switch ($type) {
             case 'comment':
                 $timelabels_key = 'mail_error_comment';
 
-                $ct_request->message = isset($arEntity['message_title']) ? $arEntity['message_title'] : '';
-                $ct_request->message .= "\n\n";
-                $ct_request->message .= isset($arEntity['message_body']) ? $arEntity['message_body'] : '';
-
-                $ct_request->example = isset($arEntity['example_title']) ? $arEntity['example_title'] : '';
-                $ct_request->example .= empty($ct_request->example) ? '' :"\n\n";
-                $ct_request->example .= isset($arEntity['example_body']) ? $arEntity['example_body'] : '';
-                $ct_request->example .= empty($ct_request->example) ? '' :"\n\n";
-                $ct_request->example .= isset($arEntity['example_comments']) ? $arEntity['example_comments'] : '';
-                
-                if(empty($ct_request->example))
-                    $ct_request->example = NULL;
-
                 $a_post_info['comment_type'] = 'comment';
                 $post_info = json_encode($a_post_info);
-                if($post_info === FALSE)
-                    $post_info = '';
-                $ct_request->post_info = $post_info;
 
+                $request_params['message'] = $arEntity['message'];
+                $request_params['example'] = $arEntity['example'];
+                $request_params['post_info'] = $post_info;
+                $ct_request = new CleantalkRequest($request_params);
                 $ct_result = $ct->isAllowMessage($ct_request);
                 break;
                 
             case 'order':
                 
                 $a_post_info['comment_type'] = 'order';
-                $post_info = json_encode($a_post_info);
-                $ct_request->post_info = $post_info;
-                
+                $post_info = json_encode($a_post_info);               
                 $timelabels_key = 'mail_error_comment';
-
-                $ct_request->message = isset($arEntity['message_title']) ? $arEntity['message_title'] : '';
-                $ct_request->message .= "\n\n";
-                $ct_request->message .= isset($arEntity['message_body']) ? $arEntity['message_body'] : '';
-                
+                $request_params['message'] = $arEntity['message'];
+                $request_params['post_info'] = $post_info;
+                $ct_request = new CleantalkRequest($request_params);
                 $ct_result = $ct->isAllowMessage($ct_request);
                 break;
                 
@@ -1575,24 +1326,26 @@ class CleantalkAntispam {
                 
                 $a_post_info['comment_type'] = 'feedback_general_contact_form';
                 $post_info = json_encode($a_post_info);
-                $ct_request->post_info = $post_info;
                 
                 $timelabels_key = 'mail_error_comment';
 
-                $ct_request->message .= isset($arEntity['message_body']) ? $arEntity['message_body'] : '';
-                
+                $request_params['message'] = $arEntity['message'];
+ 
+                $request_params['post_info'] = $post_info;
+                $ct_request = new CleantalkRequest($request_params);
                 $ct_result = $ct->isAllowMessage($ct_request);
                 break;
 
             case strpos($type, 'contact_form_bitrix') !== false:
                 $a_post_info['comment_type'] = $type;
                 $post_info = json_encode($a_post_info);
-                $ct_request->post_info = $post_info;
                 
                 $timelabels_key = 'mail_error_comment';
 
-                $ct_request->message .= isset($arEntity['message_body']) ? $arEntity['message_body'] : '';
-                
+                $request_params['message'] = $arEntity['message'];
+
+                $request_params['post_info'] = $post_info;
+                $ct_request = new CleantalkRequest($request_params);
                 $ct_result = $ct->isAllowMessage($ct_request);
                 break;
                 
@@ -1600,20 +1353,22 @@ class CleantalkAntispam {
                 
                 $a_post_info['comment_type'] = 'webform';
                 $post_info = json_encode($a_post_info);
-                $ct_request->post_info = $post_info;
                 
                 $timelabels_key = 'mail_error_comment';
 
-                $ct_request->message .= isset($arEntity['message_body']) ? $arEntity['message_body'] : '';
-                
+                $request_params['message'] = $arEntity['message'];
+
+                $request_params['post_info'] = $post_info;
+                $ct_request = new CleantalkRequest($request_params);
                 $ct_result = $ct->isAllowMessage($ct_request);
                 break;
                 
             case 'register':
             
                 $timelabels_key = 'mail_error_reg';
-                $ct_request->tz = isset($arEntity['user_timezone']) ? $arEntity['user_timezone'] : NULL;
 
+                $request_params['tz'] = isset($arEntity['user_timezone']) ? $arEntity['user_timezone'] : NULL;
+                $ct_request = new CleantalkRequest($request_params);
                 $ct_result = $ct->isAllowUser($ct_request);
                 break;
                 
@@ -1621,13 +1376,13 @@ class CleantalkAntispam {
             
                 $a_post_info['comment_type'] = 'private_message';
                 $post_info = json_encode($a_post_info);
-                if($post_info === FALSE)
-                    $post_info = '';
-                $ct_request->post_info = $post_info;
             
                 $timelabels_key = 'mail_error_comment';
-                $ct_request->tz = isset($arEntity['user_timezone']) ? $arEntity['user_timezone'] : NULL;
 
+                $request_params['message'] = $arEntity['message'];
+                $request_params['tz'] = isset($arEntity['user_timezone']) ? $arEntity['user_timezone'] : NULL;
+                $request_params['post_info'] = $post_info;
+                $ct_request = new CleantalkRequest($request_params);
                 $ct_result = $ct->isAllowMessage($ct_request);
         }
         
@@ -1668,7 +1423,7 @@ class CleantalkAntispam {
             $ret_val['errstr'] = $err_str;
             
             if(!empty($ct_result->errstr)){
-                if($ct_request->js_on == 1){
+                if($ct_request['js_on'] == 1){
                     $ct_result->allow = 0;
                     $ct_result->comment = str_replace('*** ', '*** JavaScript disabled. ', $ct_result->comment);
                 }else
@@ -1835,12 +1590,13 @@ class CleantalkAntispam {
             $ct->server_url = $ct_ws['server_url'];
             $ct->server_ttl = $ct_ws['server_ttl'];
             $ct->server_changed = $ct_ws['server_changed'];
-
-            $ct_request = new CleantalkRequest();
-            $ct_request->auth_key = $ct_key;
-            $ct_request->agent = CLEANTALK_USER_AGENT;
-            $ct_request->sender_ip = $ct->ct_session_ip($_SERVER['REMOTE_ADDR']);
-            $ct_request->feedback = $request_id . ':' . ($feedback == 'Y' ? '1' : '0');
+            $request_params = array (
+              'auth_key' => $ct_key,
+              'agent' => CLEANTALK_USER_AGENT,
+              'sender_ip' => CleantalkHelper::ip_get(array('real'), false),
+              'feedback' => $request_id . ':' . ($feedback == 'Y' ? '1' : '0'),
+            );
+            $ct_request = new CleantalkRequest($request_params);
 
             $ct->sendFeedback($ct_request);
         }
