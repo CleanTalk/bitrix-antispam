@@ -107,27 +107,27 @@ class CleantalkAntispam {
     static function CleantalkDie($message)
     {
         if( isset( $_POST['feedback_type'] ) && $_POST['feedback_type'] == 'buyoneclick' ) {
-	
-	        $result = Array( 'error' => true, 'msg' => 'js_kr_error_send' );
-	        print json_encode( $result );
-	        
+  
+          $result = Array( 'error' => true, 'msg' => 'js_kr_error_send' );
+          print json_encode( $result );
+          
         // AJAX response
         }elseif( isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) && strtolower( $_SERVER['HTTP_X_REQUESTED_WITH'] ) == 'xmlhttprequest'){
-	
-	        die(json_encode(array(
-	        	'apbct' => array(
-			        'blocked' => true,
-			        'comment' => $message,
-	            ),
-		        'error' => array(
-		        	'msg' => $message,
-		        )
-	        )));
+  
+          die(json_encode(array(
+            'apbct' => array(
+              'blocked' => true,
+              'comment' => $message,
+              ),
+            'error' => array(
+              'msg' => $message,
+            )
+          )));
         
         }else{
-	
-	        $error_tpl = file_get_contents( dirname( __FILE__ ) . "/error.html" );
-	        print str_replace( '%ERROR_TEXT%', $message, $error_tpl );
+  
+          $error_tpl = file_get_contents( dirname( __FILE__ ) . "/error.html" );
+          print str_replace( '%ERROR_TEXT%', $message, $error_tpl );
          
         }
         
@@ -1132,22 +1132,22 @@ class CleantalkAntispam {
                     
                     if(typeof jQuery !== 'undefined') {
 
-						// Capturing responses and output block message for unknown AJAX forms
-						jQuery(document).ajaxComplete(function (event, xhr, settings) {
-							if (xhr.responseText && xhr.responseText.indexOf('\"apbct') !== -1) {
-								var response = JSON.parse(xhr.responseText);
-								if (typeof response.apbct !== 'undefined') {
-									response = response.apbct;
-									if (response.blocked) {
-										alert(response.comment);
-										if(+response.stop_script == 1)
-											window.stop();
-									}
-								}
-							}
-						});
-						
-					}
+            // Capturing responses and output block message for unknown AJAX forms
+            jQuery(document).ajaxComplete(function (event, xhr, settings) {
+              if (xhr.responseText && xhr.responseText.indexOf('\"apbct') !== -1) {
+                var response = JSON.parse(xhr.responseText);
+                if (typeof response.apbct !== 'undefined') {
+                  response = response.apbct;
+                  if (response.blocked) {
+                    alert(response.comment);
+                    if(+response.stop_script == 1)
+                      window.stop();
+                  }
+                }
+              }
+            });
+            
+          }
                     </script>";
 
                     return $js_template;                               
@@ -1200,7 +1200,7 @@ class CleantalkAntispam {
         $url_exclusion = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_url', '' );
         if (!empty($url_exclusion))
         {
-          $url_exclusion = explode(',', $url_exclusion)
+          $url_exclusion = explode(',', $url_exclusion);
             foreach ($url_exclusion as $key=>$value)
                 if (strpos($_SERVER['REQUEST_URI'],$value) !== false)
                     return;         
@@ -1333,6 +1333,7 @@ class CleantalkAntispam {
  
                 $request_params['post_info'] = $post_info;
                 $ct_request = new CleantalkRequest($request_params);
+
                 $ct_result = $ct->isAllowMessage($ct_request);
                 break;
 
@@ -1385,7 +1386,6 @@ class CleantalkAntispam {
                 $ct_request = new CleantalkRequest($request_params);
                 $ct_result = $ct->isAllowMessage($ct_request);
         }
-        
         $ret_val = array();
         $ret_val['ct_request_id'] = $ct_result->id;
 
@@ -1423,7 +1423,7 @@ class CleantalkAntispam {
             $ret_val['errstr'] = $err_str;
             
             if(!empty($ct_result->errstr)){
-                if($ct_request['js_on'] == 1){
+                if($request_params['js_on'] == 1){
                     $ct_result->allow = 0;
                     $ct_result->comment = str_replace('*** ', '*** JavaScript disabled. ', $ct_result->comment);
                 }else
