@@ -92,11 +92,16 @@ class CleantalkAntispam {
     /*
      * Sends and clean local logs storage
      */
-    static public function sfw_send_logs($access_key)
+    static public function sfw_send_logs( $access_key = '' )
     {
-      $sfw = new CleantalkSFW($access_key);
-      $result = $sfw->send_logs();
-      COption::SetOptionInt( 'cleantalk.antispam', 'sfw_last_send_log', time());
+        if( ! empty( $access_key ) ) {
+            $sfw = new CleantalkSFW($access_key);
+            $result = $sfw->send_logs();
+            COption::SetOptionInt( 'cleantalk.antispam', 'sfw_last_send_log', time());
+            return $result;
+        } else {
+            return array( 'error' => true, 'error_string' => 'NO_APIKEY_PROVIDED' );
+        }
     }
     
     /**
