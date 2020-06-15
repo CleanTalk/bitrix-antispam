@@ -52,41 +52,47 @@ class CleantalkAntispam {
      */
     static public function sfw_update($access_key)
     {
-      $sfw = new CleantalkSFW($access_key);
+        if( ! empty( $access_key ) ) {
 
-      $file_urls = isset($_GET['file_urls']) ? urldecode( $_GET['file_urls'] ) : null;
-      $file_urls = isset($file_urls) ? explode(',', $file_urls) : null;
+            $sfw = new CleantalkSFW($access_key);
 
-      if (!$file_urls) {
-        $result = $sfw->sfw_update();
-      } else {
-        if (is_array($file_urls) && count($file_urls)) {
+            $file_urls = isset($_GET['file_urls']) ? urldecode($_GET['file_urls']) : null;
+            $file_urls = isset($file_urls) ? explode(',', $file_urls) : null;
 
-          $result = $sfw->sfw_update($file_urls[0]);
-
-          if(empty($result['error'])){
-
-            array_shift($file_urls);
-
-            if (count($file_urls)) {
-              CleantalkHelper::http__request(
-                (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://".$_SERVER['HTTP_HOST'],
-                array(
-                  'spbc_remote_call_token'  => md5($access_key),
-                  'spbc_remote_call_action' => 'sfw_update',
-                  'plugin_name'             => 'apbct',
-                  'file_urls'               => implode(',', $file_urls),
-                ),
-                array('get', 'async')
-              );
+            if (!$file_urls) {
+                $result = $sfw->sfw_update();
             } else {
-                COption::SetOptionInt( 'cleantalk.antispam', 'sfw_last_update', time());
+                if (is_array($file_urls) && count($file_urls)) {
+
+                    $result = $sfw->sfw_update($file_urls[0]);
+
+                    if (empty($result['error'])) {
+
+                        array_shift($file_urls);
+
+                        if (count($file_urls)) {
+                            CleantalkHelper::http__request(
+                                (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'],
+                                array(
+                                    'spbc_remote_call_token' => md5($access_key),
+                                    'spbc_remote_call_action' => 'sfw_update',
+                                    'plugin_name' => 'apbct',
+                                    'file_urls' => implode(',', $file_urls),
+                                ),
+                                array('get', 'async')
+                            );
+                        } else {
+                            COption::SetOptionInt('cleantalk.antispam', 'sfw_last_update', time());
+                        }
+                    } else
+                        return array('error' => 'ERROR_WHILE_INSERTING_SFW_DATA');
+                }
             }
-          } else
-            return array('error' => 'ERROR_WHILE_INSERTING_SFW_DATA');
+            return $result;
+
+        } else {
+            return array( 'error' => true, 'error_string' => 'NO_APIKEY_PROVIDED' );
         }
-      }
-      return $result;
     }
 
     /*
