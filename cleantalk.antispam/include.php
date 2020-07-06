@@ -218,7 +218,7 @@ class CleantalkAntispam {
                 foreach ($_POST as $key => $value) {
                   if (strpos(strtolower($key), 'smt') !== false)
                     $arUser['type'] = 'contact_form_bitrix_smt';
-                  if (strpos(strtolower($key), 'iblock') !== false)
+                  if (strpos(strtolower($key), 'iblock_submit') !== false)
                     $arUser['type'] = 'contact_form_bitrix_iblock_ajax';
                 }
                 if(($arUser["sender_email"] != '' && $arUser['type'] == 'feedback_general_contact_form') || $ct_global_without_email == 1 || $arUser['type'] != 'feedback_general_contact_form') {
