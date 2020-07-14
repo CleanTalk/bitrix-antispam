@@ -954,7 +954,13 @@ class CleantalkAntispam {
      * @param string Content to modify
      */
     function OnEndBufferContentHandler(&$content) {
-        if(!defined("ADMIN_SECTION") && COption::GetOptionInt( 'cleantalk.antispam', 'status', 0 ) == 1 && strpos($content,'<!-- CLEANTALK template addon -->') === false && strpos($content,'</body>') !== false)
+        if(
+            !defined("ADMIN_SECTION") &&
+            COption::GetOptionInt( 'cleantalk.antispam', 'status', 0 ) == 1 &&
+            strpos($content,'<!-- CLEANTALK template addon -->') === false &&
+            strpos($content,'</body>') !== false &&
+            strpos($content,'function ImgShw') === false
+        )
             $content = preg_replace('/(<\/body[^>]*>(?!.*<\/body[^>]*>))/i', '${1}'."\n".self::FormAddon(), $content, 1);
     }
     /**
