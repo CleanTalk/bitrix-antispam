@@ -709,7 +709,7 @@ class Helper
 			foreach($arr as $key => $value){
 							
 				if(gettype($value) == 'string'){
-					
+
 					$tmp = strpos($value, '\\') !== false ? stripslashes($value) : $value;
 					$decoded_json_value = json_decode($tmp, true);
 					
@@ -743,7 +743,7 @@ class Helper
 							continue(2);
 						}
 					}unset($needle);
-					
+
 					// Obfuscating params
 					foreach($obfuscate_params as $needle){
 						if (strpos($key, $needle) !== false){
@@ -752,14 +752,13 @@ class Helper
 						}
 					}unset($needle);
 
-	                $value_for_email = trim( strip_shortcodes( $value ) );    // Removes shortcodes to do better spam filtration on server side.
 					
 					// Email
 					if ( ! $email && preg_match( "/^\S+@\S+\.\S+$/", $value_for_email ) ) {
 						$email = $value_for_email;
 
 	                // Removes whitespaces
-	                $value = urldecode( trim( strip_shortcodes( $value ) ) ); // Fully cleaned message
+	                $value = urldecode( trim( $value) ); // Fully cleaned message
 						
 					// Names
 					}elseif (preg_match("/name/i", $key)){
@@ -829,6 +828,7 @@ class Helper
 			'contact' 	=> $contact,
 			'message' 	=> $message
 		);	
+
 		return $return_param;
 	}
 
