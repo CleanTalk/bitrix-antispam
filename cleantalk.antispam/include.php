@@ -993,24 +993,24 @@ class CleantalkAntispam {
                         ctSetCookie('ct_checkjs', ct_checkjs_val);  
                     },1000);
 
-                    //Writing first key press timestamp
+                    /* Writing first key press timestamp */
                     var ctFunctionFirstKey = function output(event){
                         var KeyTimestamp = Math.floor(new Date().getTime()/1000);
                         ctSetCookie('ct_fkp_timestamp', KeyTimestamp);
                         ctKeyStopStopListening();
                     }
 
-                    //Reading interval
+                    /* Reading interval */
                     var ctMouseReadInterval = setInterval(function(){
                         ctMouseEventTimerFlag = true;
                     }, 150);
                         
-                    //Writting interval
+                    /* Writting interval */
                     var ctMouseWriteDataInterval = setInterval(function(){
                         ctSetCookie('ct_pointer_data', JSON.stringify(ctMouseData));
                     }, 1200);
 
-                    //Logging mouse position each 150 ms
+                    /* Logging mouse position each 150 ms */
                     var ctFunctionMouseMove = function output(event){
                         if(ctMouseEventTimerFlag == true){
                             
@@ -1028,7 +1028,7 @@ class CleantalkAntispam {
                         }
                     }
 
-                    //Stop mouse observing function
+                    /* Stop mouse observing function */
                     function ctMouseStopData(){
                         if(typeof window.addEventListener == 'function'){
                             window.removeEventListener('mousemove', ctFunctionMouseMove);
@@ -1039,7 +1039,7 @@ class CleantalkAntispam {
                         clearInterval(ctMouseWriteDataInterval);                
                     }
 
-                    //Stop key listening function
+                    /* Stop key listening function */
                     function ctKeyStopStopListening(){
                         if(typeof window.addEventListener == 'function'){
                             window.removeEventListener('mousedown', ctFunctionFirstKey);
@@ -1059,7 +1059,7 @@ class CleantalkAntispam {
                         window.attachEvent('mousedown', ctFunctionFirstKey);
                         window.attachEvent('keydown', ctFunctionFirstKey);
                     }
-                    // Ready function
+                    /* Ready function */
                     function ct_ready(){
                       ctSetCookie('ct_visible_fields', 0);
                       ctSetCookie('ct_visible_fields_count', 0);
@@ -1070,19 +1070,19 @@ class CleantalkAntispam {
                           form.onsubmit_prev = form.onsubmit;
                           form.onsubmit = function(event){
 
-                            // Get only fields
+                            /* Get only fields */
                             var elements = [];
                             for(var key in this.elements){
                               if(!isNaN(+key))
                                 elements[key] = this.elements[key];
                             }
 
-                            // Filter fields
+                            /* Filter fields */
                             elements = elements.filter(function(elem){
 
                               var pass = true;
 
-                              // Filter fields
+                              /* Filter fields */
                               if( getComputedStyle(elem).display    === 'none' ||   // hidden
                                 getComputedStyle(elem).visibility === 'hidden' || // hidden
                                 getComputedStyle(elem).opacity    === '0' ||      // hidden
@@ -1094,7 +1094,7 @@ class CleantalkAntispam {
                                 return false;
                               }
 
-                              // Filter elements with same names for type == radio
+                              /* Filter elements with same names for type == radio */
                               if(elem.getAttribute('type') === 'radio'){
                                 elements.forEach(function(el, j, els){
                                   if(elem.getAttribute('name') === el.getAttribute('name')){
@@ -1107,10 +1107,10 @@ class CleantalkAntispam {
                               return true;
                             });
 
-                            // Visible fields count
+                            /* Visible fields count */
                             var visible_fields_count = elements.length;
 
-                            // Visible fields
+                            /* Visible fields */
                             var visible_fields = '';
                             elements.forEach(function(elem, i, elements){
                               visible_fields += '' + elem.getAttribute('name');
@@ -1120,7 +1120,7 @@ class CleantalkAntispam {
                             ctSetCookie('ct_visible_fields', visible_fields);
                             ctSetCookie('ct_visible_fields_count', visible_fields_count);
 
-                            // Call previous submit action
+                            /* Call previous submit action */
                             if(event.target.onsubmit_prev instanceof Function){
                               setTimeout(function(){
                                 event.target.onsubmit_prev.call(event.target, event);
@@ -1143,7 +1143,7 @@ class CleantalkAntispam {
                     
                     if(typeof jQuery !== 'undefined') {
 
-            // Capturing responses and output block message for unknown AJAX forms
+            /* Capturing responses and output block message for unknown AJAX forms */
             jQuery(document).ajaxComplete(function (event, xhr, settings) {
               if (xhr.responseText && xhr.responseText.indexOf('\"apbct') !== -1) {
                 var response = JSON.parse(xhr.responseText);
