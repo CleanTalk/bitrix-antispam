@@ -773,7 +773,7 @@ class Helper
 							$nickname['last'] = $value;
 						elseif(count($match_nickname) > 1)
 							$nickname['nick'] = $value;
-						else
+						elseif (is_array($message))
 							$message[$prev_name.$key] = $value;
 							
 					// Subject
@@ -782,7 +782,7 @@ class Helper
 					
 					// Message
 					}else{
-						if (is_array($message) && isset($message[$prev_name.$key])) {
+						if (is_array($message)) {
 							$message[$prev_name.$key] = $value;					
 						}
 					}
