@@ -782,7 +782,9 @@ class Helper
 					
 					// Message
 					}else{
-						$message[$prev_name.$key] = $value;					
+						if (is_array($message) && isset($message[$prev_name.$key])) {
+							$message[$prev_name.$key] = $value;					
+						}
 					}
 					
 				}elseif(!is_object($value)){
