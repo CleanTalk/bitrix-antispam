@@ -22,7 +22,7 @@ require_once(dirname(__FILE__) . '/lib/Cleantalk/ApbctBitrix/SFW.php');
 //Antispam classes
 use Cleantalk\Antispam\Cleantalk as Cleantalk;
 use Cleantalk\Antispam\CleantalkRequest as CleantalkRequest;
-use Cleantalk\Antispam\CleantalkRequest as CleantalkResponse;
+use Cleantalk\Antispam\CleantalkResponse as CleantalkResponse;
 
 //Bitrix classes
 use Cleantalk\ApbctBitrix\SFW as CleantalkSFW;
