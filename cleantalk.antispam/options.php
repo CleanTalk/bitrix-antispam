@@ -109,16 +109,33 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     // SFW scheduled actions
     if($_POST['form_sfw'] == 1) {
      
-	    CAgent::RemoveModuleAgents("cleantalk.antispam");
-	    CAgent::AddAgent("CleantalkAntispam::sfw_send_logs();", "cleantalk.antispam", "N", 3600);
-	    CAgent::AddAgent("CleantalkAntispam::sfw_update();",    "cleantalk.antispam", "N", 86400);
-        CleantalkAntispam::sfw_update($new_key);
-        CleantalkAntispam::sfw_send_logs($new_key);
+	    CAgent::RemoveModuleAgents( 'cleantalk.antispam' );
+	    CAgent::AddAgent(
+            'CleantalkAntispam::sfw_send_logs();',
+		    'cleantalk.antispam',
+		    'N',
+		    3600,
+		    date( 'd.m.Y H:i:s' ),
+		    'Y',
+		    date( 'd.m.Y H:i:s' ) + 3600
+        );
+	    CAgent::AddAgent(
+	            'CleantalkAntispam::sfw_update();',
+                'cleantalk.antispam',
+                'N',
+                86400,
+                date( 'd.m.Y H:i:s' ),
+                'Y',
+                date( 'd.m.Y H:i:s' ) + 86400
+        );
+	    
+	    CleantalkAntispam::sfw_update( $new_key );
+	    CleantalkAntispam::sfw_send_logs( $new_key );
         
     // Remove it if SFW is disabled
-    }else{
+    }else
 	    CAgent::RemoveModuleAgents("cleantalk.antispam");
-    }
+    
 }
 
 /**
