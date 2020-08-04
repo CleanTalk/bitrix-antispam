@@ -50,56 +50,60 @@ class CleantalkAntispam {
     /*
      * Updates SFW local database
      */
-	static public function sfw_update( $key ){
+	static public function sfw_update( $key = '' ){
 		
 	    $is_sfw    = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw',  0 );
 	    $key       = $key ? $key : COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
 	    $key_is_ok = COption::GetOptionString( 'cleantalk.antispam', 'key_is_ok', '0');
-	    
-	    if(!empty($is_sfw) && !empty($key) && !empty($key_is_ok)){
-	
-	        $sfw = new CleantalkSFW( $key );
-
-            $file_urls = isset($_GET['file_urls']) ? urldecode($_GET['file_urls']) : null;
-            $file_urls = isset($file_urls) ? explode(',', $file_urls) : null;
-	
-	        if( ! $file_urls ){
-	        	
-                $result = $sfw->sfw_update();
 		
-                if( ! empty( $result['error'] ) )
-	                COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( $result ) );
-		
-	        }elseif( is_array( $file_urls ) && count( $file_urls ) ){
-		
-		        $result = $sfw->sfw_update( $file_urls[0] );
-		
-		        if( empty( $result['error'] ) ){
+		if( ! empty( $key ) && ! empty( $key_is_ok ) ){
 			
-			        array_shift( $file_urls );
-			
-			        if( count( $file_urls ) ){
+			if( ! empty( $is_sfw ) ){
 	
-	                    CleantalkHelper::http__request(
-		                    ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ? "https" : "http" ) . "://" . $_SERVER['HTTP_HOST'],
-		                    array(
-			                    'spbc_remote_call_token'  => md5( $key ),
-			                    'spbc_remote_call_action' => 'sfw_update',
-			                    'plugin_name'             => 'apbct',
-			                    'file_urls'               => implode( ',', $file_urls ),
-		                    ),
-		                    array( 'get', 'async' )
-	                    );
-                     
-                    // Success. Update completed.
-                    }else
-                        COption::SetOptionInt('cleantalk.antispam', 'sfw_last_update', time());
-                } else
-	                COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( $result ) );
-            }else
-		        COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'SFW_UPDATE WRONG_FILE_URLS') ) );
+		        $sfw = new CleantalkSFW( $key );
+	
+	            $file_urls = isset($_GET['file_urls']) ? urldecode($_GET['file_urls']) : null;
+	            $file_urls = isset($file_urls) ? explode(',', $file_urls) : null;
+		
+		        if( ! $file_urls ){
+		            
+	                $result = $sfw->sfw_update();
+			
+	                if( ! empty( $result['error'] ) )
+		                COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( $result ) );
+			
+		        }elseif( is_array( $file_urls ) && count( $file_urls ) ){
+			
+			        $result = $sfw->sfw_update( $file_urls[0] );
+			
+			        if( empty( $result['error'] ) ){
+				
+				        array_shift( $file_urls );
+				
+				        if( count( $file_urls ) ){
+		
+		                    CleantalkHelper::http__request(
+			                    ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ? "https" : "http" ) . "://" . $_SERVER['HTTP_HOST'],
+			                    array(
+				                    'spbc_remote_call_token'  => md5( $key ),
+				                    'spbc_remote_call_action' => 'sfw_update',
+				                    'plugin_name'             => 'apbct',
+				                    'file_urls'               => implode( ',', $file_urls ),
+			                    ),
+			                    array( 'get', 'async' )
+		                    );
+	                     
+	                    // Success. Update completed.
+	                    }else
+	                        COption::SetOptionInt('cleantalk.antispam', 'sfw_last_update', time());
+	                } else
+		                COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( $result ) );
+	            }else
+			        COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'SFW_UPDATE WRONG_FILE_URLS') ) );
+	        }else
+				COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'SFW_IS_DISABLED' ) ) );
         }else
-	        COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => true, 'error_string' => 'NO_APIKEY_PROVIDED' ) ) );
+	        COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'NO_VALID_APIKEY_PROVIDED_OR_SFW' ) ) );
 	
 	    return 'CleantalkAntispam::sfw_update();';
     }
@@ -107,21 +111,28 @@ class CleantalkAntispam {
     /*
      * Sends and clean local logs storage
      */
-    static public function sfw_send_logs( $access_key = '' ){
-    	
-        if( ! empty( $access_key ) ) {
+    static public function sfw_send_logs( $key = '' ){
+	
+	    $is_sfw    = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw',  0 );
+	    $key       = $key ? $key : COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
+	    $key_is_ok = COption::GetOptionString( 'cleantalk.antispam', 'key_is_ok', '0');
+	
+	    if( ! empty( $key ) && ! empty( $key_is_ok ) ){
+		
+		    if( ! empty( $is_sfw ) ){
         	
-            $sfw = new CleantalkSFW($access_key);
-            $result = $sfw->send_logs();
-            
-	        if( ! empty( $result['error'] ) )
-		        COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( $result ) );
-            else
-                COption::SetOptionInt( 'cleantalk.antispam', 'sfw_last_send_log', time());
-            
-        } else {
-	        COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'NO_APIKEY_PROVIDED' ) ) );
-        }
+	            $sfw = new CleantalkSFW($key);
+	            $result = $sfw->send_logs();
+	            
+		        if( ! empty( $result['error'] ) )
+			        COption::SetOptionString( 'cleantalk.antispam', 'sfw_send_log_result', json_encode( $result ) );
+	            else
+	                COption::SetOptionInt( 'cleantalk.antispam', 'sfw_last_send_log', time());
+			
+		    }else
+			    COption::SetOptionString( 'cleantalk.antispam', 'sfw_send_log_result', json_encode( array( 'error' => 'SFW_IS_DISABLED' ) ) );
+	    }else
+		    COption::SetOptionString( 'cleantalk.antispam', 'sfw_send_log_result', json_encode( array( 'error' => 'NO_VALID_APIKEY_PROVIDED' ) ) );
         
         return 'CleantalkAntispam::sfw_send_logs();';
     }
