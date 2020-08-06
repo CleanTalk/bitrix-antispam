@@ -56,6 +56,8 @@ class CleantalkAntispam {
 	    $key       = $key ? $key : COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
 	    $key_is_ok = COption::GetOptionString( 'cleantalk.antispam', 'key_is_ok', '0');
 		
+		COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', 'OK' );
+	 
 		if( ! empty( $key ) && ! empty( $key_is_ok ) ){
 			
 			if( ! empty( $is_sfw ) ){
@@ -67,10 +69,7 @@ class CleantalkAntispam {
 		
 		        if( ! $file_urls ){
 		            
-	                $result = $sfw->sfw_update();
-			
-	                if( ! empty( $result['error'] ) )
-		                COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( $result ) );
+	                $sfw->sfw_update();
 			
 		        }elseif( is_array( $file_urls ) && count( $file_urls ) ){
 			
@@ -103,8 +102,8 @@ class CleantalkAntispam {
 	        }else
 				COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'SFW_IS_DISABLED' ) ) );
         }else
-	        COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'NO_VALID_APIKEY_PROVIDED_OR_SFW' ) ) );
-	
+	        COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'NO_VALID_APIKEY_PROVIDED_OR_SFW_DISABLED' ) ) );
+				
 	    return 'CleantalkAntispam::sfw_update();';
     }
 

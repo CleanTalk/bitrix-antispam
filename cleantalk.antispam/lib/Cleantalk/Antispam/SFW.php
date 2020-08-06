@@ -139,30 +139,29 @@ abstract class SFW
 	*/
 	public function sfw_update($file_url = null) {
 
-		if(!$file_url) {
+		if( ! $file_url ){
 
 			$result = CleantalkAPI::method__get_2s_blacklists_db($this->api_key, 'multifiles', '2_0');
 
 			sleep(3);
 			
 			if(empty($result['error'])) {
-			
-				if( !empty($result['file_url']) ){
+				
+				if( ! empty( $result['file_url'] ) ){
 
 					if(CleantalkHelper::http__request($result['file_url'], array(), 'get_code') === 200) {
 
 						if(ini_get('allow_url_fopen')) {
-
-							$pattenrs = array();
-							$pattenrs = array('get', 'async');		
+							
+							$patterns = array('get', 'async');
 							$base_host_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://".$_SERVER['HTTP_HOST'];
 
 							$this->universal_query("TRUNCATE TABLE `".$this->table_prefix."cleantalk_sfw`");
 							
-							if (preg_match('/multifiles/', $result['file_url'])) {
+							if( preg_match( '/multifiles/', $result['file_url'] ) ){
 								
-								$gf = gzopen($result['file_url'], 'rb');
-
+								$gf = gzopen( $result['file_url'], 'rb' );
+								
 								if ($gf) {
 
 									$file_urls = array();
@@ -180,10 +179,13 @@ abstract class SFW
 											'plugin_name'             => 'apbct',
 											'file_urls'               => implode(',', $file_urls),
 										),
-										$pattenrs
+										$patterns
 									);								
-								}
-							}else {
+								}else
+									COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'COULD_NOT_OPEN_MULTIFILE') ) );
+								
+							}else{
+								
 								return CleantalkHelper::http__request(
 									$base_host_url, 
 									array(
@@ -192,8 +194,9 @@ abstract class SFW
 										'plugin_name'             => 'apbct',
 										'file_urls'               => $result['file_url'],
 									),
-									$pattenrs
-								);								
+									$patterns
+								);
+								
 							}
 						} else
 							return array('error' => 'ERROR_ALLOW_URL_FOPEN_DISABLED');
