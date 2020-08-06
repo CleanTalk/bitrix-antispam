@@ -55,39 +55,42 @@ class CleantalkAntispam {
 	    $is_sfw    = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw',  0 );
 	    $key       = $key ? $key : COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
 	    $key_is_ok = COption::GetOptionString( 'cleantalk.antispam', 'key_is_ok', '0');
-		
+	    
 		COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', 'OK' );
-	 
+		
 		if( ! empty( $key ) && ! empty( $key_is_ok ) ){
 			
-			if( ! empty( $is_sfw ) ){
+			if( $is_sfw ){
 	
 		        $sfw = new CleantalkSFW( $key );
-	
-	            $file_urls = isset($_GET['file_urls']) ? urldecode($_GET['file_urls']) : null;
-	            $file_urls = isset($file_urls) ? explode(',', $file_urls) : null;
-		
-		        if( ! $file_urls ){
+		  
+				$file_url_hash = isset($_GET['file_url_hash']) ? urldecode($_GET['file_url_hash']) : null;
+	            
+	            $file_url_nums = isset($_GET['file_url_nums']) ? urldecode($_GET['file_url_nums']) : null;
+				$file_url_nums = isset($file_url_nums) ? explode(',', $file_url_nums) : null;
+								
+		        if( ! isset( $file_url_hash, $file_url_nums ) ){
 		            
 	                $sfw->sfw_update();
 			
-		        }elseif( is_array( $file_urls ) && count( $file_urls ) ){
+		        }elseif( $file_url_hash && is_array( $file_url_nums ) && count( $file_url_nums ) ){
 			
-			        $result = $sfw->sfw_update( $file_urls[0] );
-			
+			        $result = $sfw->sfw_update( $file_url_hash, $file_url_nums[0] );
+			        
 			        if( empty( $result['error'] ) ){
 				
-				        array_shift( $file_urls );
+				        array_shift( $file_url_nums );
 				
-				        if( count( $file_urls ) ){
-		
+				        if( count( $file_url_nums ) ){
+				        	
 		                    CleantalkHelper::http__request(
 			                    ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ? "https" : "http" ) . "://" . $_SERVER['HTTP_HOST'],
 			                    array(
 				                    'spbc_remote_call_token'  => md5( $key ),
 				                    'spbc_remote_call_action' => 'sfw_update',
 				                    'plugin_name'             => 'apbct',
-				                    'file_urls'               => implode( ',', $file_urls ),
+				                    'file_url_hash'           => $file_url_hash,
+				                    'file_url_nums'           => implode(',', $file_url_nums),
 			                    ),
 			                    array( 'get', 'async' )
 		                    );
@@ -98,7 +101,7 @@ class CleantalkAntispam {
 	                } else
 		                COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( $result ) );
 	            }else
-			        COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'SFW_UPDATE WRONG_FILE_URLS') ) );
+			        COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'SFW_UPDATE WRONG_FILE_URLS', 'file_url_hash' => $file_url_hash, '$file_url_nums' => $file_url_nums) ) );
 	        }else
 				COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'SFW_IS_DISABLED' ) ) );
         }else
@@ -199,14 +202,14 @@ class CleantalkAntispam {
         // Don't take any actions if module is disabled
 	    if( ! $ct_status )
 	    	return;
-      
+	    
+        // Remote calls
+        if(isset( $_GET['spbc_remote_call_token'], $_GET['spbc_remote_call_action'], $_GET['plugin_name']) && in_array($_GET['plugin_name'], array('antispam','anti-spam', 'apbct'))){
+            self::apbct_remote_call__perform();
+        }
+        
 	    if( ! $USER->IsAdmin() ){
-        	
-            // Remote calls
-            if(isset($_GET['spbc_remote_call_token'], $_GET['spbc_remote_call_action'], $_GET['plugin_name']) && in_array($_GET['plugin_name'], array('antispam','anti-spam', 'apbct'))){
-                self::apbct_remote_call__perform();
-            }
-            
+	    	
             // Set cookies
             if( ! headers_sent() )
                 self::ct_cookie();
@@ -1838,13 +1841,13 @@ class CleantalkAntispam {
     private static function apbct_remote_call__perform()
     {
         $remote_calls_config = json_decode(COption::GetOptionString('cleantalk.antispam','remote_calls', ''),true);
-
+	   
         $remote_action = $_GET['spbc_remote_call_action'];
         $auth_key = trim(COption::GetOptionString('cleantalk.antispam', 'key', ''));
 
         if(array_key_exists($remote_action, $remote_calls_config)){
                     
-            if(time() - $remote_calls_config[$remote_action]['last_call'] > self::APBCT_REMOTE_CALL_SLEEP || ($remote_action == 'sfw_update' && isset($_GET['file_urls']))) {
+            if(time() - $remote_calls_config[$remote_action]['last_call'] > self::APBCT_REMOTE_CALL_SLEEP || ($remote_action == 'sfw_update' && isset($_GET['file_url_hash']))) {
                 
                 $remote_calls_config[$remote_action]['last_call'] = time();
                 COption::SetOptionString('cleantalk.antispam', 'remote_calls', json_encode($remote_calls_config));
@@ -1872,5 +1875,5 @@ class CleantalkAntispam {
                 die('FAIL '.json_encode(array('error' => 'TOO_MANY_ATTEMPTS')));
         }else
             die('FAIL '.json_encode(array('error' => 'UNKNOWN_ACTION')));
-    }           
+    }
 }

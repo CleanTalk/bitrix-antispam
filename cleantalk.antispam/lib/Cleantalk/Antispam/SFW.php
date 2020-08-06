@@ -137,12 +137,13 @@ abstract class SFW
 	* 
 	* return mixed true || array('error' => true, 'error_string' => STRING)
 	*/
-	public function sfw_update($file_url = null) {
-
-		if( ! $file_url ){
-
+	public function sfw_update( $file_url_hash = null, $file_url_num = null ) {
+		
+		
+		if( ! isset( $file_url_hash, $file_url_num ) ){
+			
 			$result = CleantalkAPI::method__get_2s_blacklists_db($this->api_key, 'multifiles', '2_0');
-
+			
 			sleep(3);
 			
 			if(empty($result['error'])) {
@@ -163,50 +164,48 @@ abstract class SFW
 								$gf = gzopen( $result['file_url'], 'rb' );
 								
 								if ($gf) {
+									
+									$file_url_nums = array();
 
-									$file_urls = array();
-
-									while(!gzeof($gf))
-										$file_urls[] = trim(gzgets($gf, 1024));			
-
+									while(!gzeof($gf)){
+										$file_url       = trim( gzgets( $gf, 1024 ) );
+										$file_url_nums[] = preg_replace( '@(https://.*)\.(\d*)(\.csv\.gz)@', '$2', $file_url );
+										
+										if( ! $file_url_hash )
+											$file_url_hash = preg_replace( '@(https://.*)\.(\d*)(\.csv\.gz)@', '$1', $file_url );
+										
+									}
+									
 									gzclose($gf);
-
+									
 									return CleantalkHelper::http__request(
 										$base_host_url, 
 										array(
 											'spbc_remote_call_token'  => md5($this->api_key),
 											'spbc_remote_call_action' => 'sfw_update',
 											'plugin_name'             => 'apbct',
-											'file_urls'               => implode(',', $file_urls),
+											'file_url_hash'           => $file_url_hash,
+											'file_url_nums'           => implode(',', $file_url_nums),
 										),
 										$patterns
 									);								
 								}else
-									COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'COULD_NOT_OPEN_MULTIFILE') ) );
-								
-							}else{
-								
-								return CleantalkHelper::http__request(
-									$base_host_url, 
-									array(
-										'spbc_remote_call_token'  => md5($this->api_key),
-										'spbc_remote_call_action' => 'sfw_update',
-										'plugin_name'             => 'apbct',
-										'file_urls'               => $result['file_url'],
-									),
-									$patterns
-								);
-								
-							}
+									\COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'COULD_NOT_OPEN_MULTIFILE') ) );
+							}else
+								\COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'WRONG_MULTIFILE_NAME') ) );
 						} else
-							return array('error' => 'ERROR_ALLOW_URL_FOPEN_DISABLED');
-					}				
+							\COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array('error' => 'ERROR_ALLOW_URL_FOPEN_DISABLED') ) ) ;
+					}else
+						\COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array('error' => 'ERROR_ALLOW_URL_FOPEN_DISABLED') ) ) ;
 				} else
-					return array('error' => 'BAD_RESPONSE');
+					\COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array('error' => 'BAD_RESPONSE') ) ) ;
 			} else
-				return $result;
-		} else {
-						
+				\COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( $result ) );
+			
+		}elseif( isset( $file_url_hash, $file_url_num ) ) {
+			
+			$file_url = $file_url_hash . '.' . $file_url_num . '.csv.gz';
+			
 			if(CleantalkHelper::http__request($file_url, array(), 'get_code') === 200) { // Check if it's there
 		
 					$gf = gzopen($file_url, 'rb');
@@ -248,13 +247,14 @@ abstract class SFW
 							gzclose($gf);
 							return $count_result;
 							
-						} else
-							return array('error' => 'ERROR_GZ_EMPTY');
-					} else
-						return array('error' => 'ERROR_OPEN_GZ_FILE');
-			} else
-				return array('error' => 'NO_REMOTE_FILE_FOUND');
-		}
+						}else
+							\COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array('error' => 'ERROR_GZ_EMPTY') ) );
+					}else
+						\COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array('error' => 'NO_REMOTE_FILE_FOUND') ) );
+			}else
+				\COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array('error' => 'NO_REMOTE_FILE_FOUND') ) );
+		}else
+			\COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array('error' => 'NOTHING!') ) );
 	}
 	
 	/*
