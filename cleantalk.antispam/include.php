@@ -52,9 +52,9 @@ class CleantalkAntispam {
      */
 	static public function sfw_update( $key = '' ){
 		
-	    $is_sfw    = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw',  0 );
+	    $is_sfw    = COption::GetOptionInt( 'cleantalk.antispam', 'form_sfw',  0 );
 	    $key       = $key ? $key : COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
-	    $key_is_ok = COption::GetOptionString( 'cleantalk.antispam', 'key_is_ok', '0');
+	    $key_is_ok = COption::GetOptionInt( 'cleantalk.antispam', 'key_is_ok', 0);
 	    
 		COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', 'OK' );
 		
@@ -115,9 +115,9 @@ class CleantalkAntispam {
      */
     static public function sfw_send_logs( $key = '' ){
 	
-	    $is_sfw    = COption::GetOptionString( 'cleantalk.antispam', 'form_sfw',  0 );
+	    $is_sfw    = COption::GetOptionInt( 'cleantalk.antispam', 'form_sfw',  0 );
 	    $key       = $key ? $key : COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
-	    $key_is_ok = COption::GetOptionString( 'cleantalk.antispam', 'key_is_ok', '0');
+	    $key_is_ok = COption::GetOptionInt( 'cleantalk.antispam', 'key_is_ok', 0);
 	
 	    if( ! empty( $key ) && ! empty( $key_is_ok ) ){
 		
@@ -191,7 +191,7 @@ class CleantalkAntispam {
         $ct_status               = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
         $ct_global               = COption::GetOptionInt('cleantalk.antispam', 'form_global_check', 0);
         $ct_global_without_email = COption::GetOptionInt('cleantalk.antispam', 'form_global_check_without_email', 0);
-        $ct_key                  = COption::GetOptionInt( 'cleantalk.antispam', 'key', '' );
+        $ct_key                  = COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
         $last_checked            = COption::GetOptionInt( 'cleantalk.antispam', 'last_checked', 0 );
         $show_review             = COption::GetOptionInt( 'cleantalk.antispam', 'show_review', 0 );
         $is_sfw                  = COption::GetOptionInt( 'cleantalk.antispam', 'form_sfw', 0 );
