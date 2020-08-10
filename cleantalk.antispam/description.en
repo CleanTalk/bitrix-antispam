@@ -1,6 +1,2 @@
-New: Exclusions functionality.
-Fix: Bitrix composite support fix.
-Fix: Admin side catching fixed.
-Fix: Check register via checkout.
-Fix: OnBeforeUserSimpleRegister event handler added.
-Bug fixes and other minor improvements.
+Fix: SpamFireWall update.
+Fix: Slow work of module.
