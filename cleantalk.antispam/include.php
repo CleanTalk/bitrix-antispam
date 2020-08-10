@@ -33,7 +33,7 @@ use Cleantalk\Common\Helper as CleantalkHelper;
 
 
 if ( ! defined( 'CLEANTALK_USER_AGENT' ) )
-    define( 'CLEANTALK_USER_AGENT', 'bitrix-3119' );
+    define( 'CLEANTALK_USER_AGENT', 'bitrix-31110' );
 
 /**
  * CleanTalk module class
@@ -46,10 +46,26 @@ class CleantalkAntispam {
     const KEYS_NUM = 12; // 12 last JS keys are valid
 
     const APBCT_REMOTE_CALL_SLEEP = 10;
-    
-    /*
-     * Updates SFW local database
-     */
+	
+	/**
+	 * Wrapper for Bitrix agent to prevent database block ofr 10 minutes
+	 *
+	 * @return string
+	 */
+	static public function sfw_update__agent(){
+		
+		self::sfw_update();
+		
+		return 'CleantalkAntispam::sfw_update__agent();';
+	}
+	
+	/**
+	 * Updates SFW local database
+	 *
+	 * @param string $key
+	 *
+	 * @return string
+	 */
 	static public function sfw_update( $key = '' ){
 		
 	    $is_sfw    = COption::GetOptionInt( 'cleantalk.antispam', 'form_sfw',  0 );

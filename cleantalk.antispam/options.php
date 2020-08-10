@@ -120,7 +120,7 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
             date( 'd.m.Y H:i:s' , time() + 3600)
         );
         CAgent::AddAgent(
-            'CleantalkAntispam::sfw_update();',
+            'CleantalkAntispam::sfw_update__agent();',
             'cleantalk.antispam',
             'N',
             86400,
