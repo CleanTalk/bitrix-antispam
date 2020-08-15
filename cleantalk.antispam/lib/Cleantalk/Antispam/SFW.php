@@ -137,7 +137,7 @@ abstract class SFW
 	* 
 	* return mixed true || array('error' => true, 'error_string' => STRING)
 	*/
-	public function sfw_update( $file_url_hash = null, $file_url_num = null ) {
+	public function sfw_update( $host_url = '', $file_url_hash = null, $file_url_num = null ) {
 		
 		
 		if( ! isset( $file_url_hash, $file_url_num ) ){
@@ -154,9 +154,6 @@ abstract class SFW
 
 						if(ini_get('allow_url_fopen')) {
 							
-							$patterns = array('get', 'async');
-							$base_host_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://".$_SERVER['HTTP_HOST'];
-
 							$this->universal_query("TRUNCATE TABLE `".$this->table_prefix."cleantalk_sfw`");
 							
 							if( preg_match( '/multifiles/', $result['file_url'] ) ){
@@ -179,7 +176,7 @@ abstract class SFW
 									gzclose($gf);
 									
 									return CleantalkHelper::http__request(
-										$base_host_url, 
+										$host_url,
 										array(
 											'spbc_remote_call_token'  => md5($this->api_key),
 											'spbc_remote_call_action' => 'sfw_update',
@@ -187,7 +184,7 @@ abstract class SFW
 											'file_url_hash'           => $file_url_hash,
 											'file_url_nums'           => implode(',', $file_url_nums),
 										),
-										$patterns
+										array('get', 'async',)
 									);								
 								}else
 									\COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'COULD_NOT_OPEN_MULTIFILE') ) );
