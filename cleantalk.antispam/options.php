@@ -106,6 +106,9 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
 
     COption::SetOptionString( $sModuleId, 'key', $new_key );
     
+    // URL host
+    COption::SetOptionString( $sModuleId, 'host_url', ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ? "https" : "http" ) . "://" . $_SERVER['HTTP_HOST'] );
+    
     // SFW scheduled actions
     if($_POST['form_sfw'] == 1) {
      

@@ -71,7 +71,8 @@ class CleantalkAntispam {
 	    $is_sfw    = COption::GetOptionInt( 'cleantalk.antispam', 'form_sfw',  0 );
 	    $key       = $key ? $key : COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
 	    $key_is_ok = COption::GetOptionInt( 'cleantalk.antispam', 'key_is_ok', 0);
-	    
+		$host_url  = COption::GetOptionString( 'cleantalk.antispam', 'host_url', 0);
+	 
 		COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', 'OK' );
 		
 		if( ! empty( $key ) && ! empty( $key_is_ok ) ){
@@ -87,11 +88,11 @@ class CleantalkAntispam {
 								
 		        if( ! isset( $file_url_hash, $file_url_nums ) ){
 		            
-	                $sfw->sfw_update();
+	                $sfw->sfw_update( $host_url );
 			
 		        }elseif( $file_url_hash && is_array( $file_url_nums ) && count( $file_url_nums ) ){
 			
-			        $result = $sfw->sfw_update( $file_url_hash, $file_url_nums[0] );
+			        $result = $sfw->sfw_update( $host_url, $file_url_hash, $file_url_nums[0] );
 			        
 			        if( empty( $result['error'] ) ){
 				
@@ -100,7 +101,7 @@ class CleantalkAntispam {
 				        if( count( $file_url_nums ) ){
 				        	
 		                    CleantalkHelper::http__request(
-			                    ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ? "https" : "http" ) . "://" . $_SERVER['HTTP_HOST'],
+			                    $host_url,
 			                    array(
 				                    'spbc_remote_call_token'  => md5( $key ),
 				                    'spbc_remote_call_action' => 'sfw_update',
