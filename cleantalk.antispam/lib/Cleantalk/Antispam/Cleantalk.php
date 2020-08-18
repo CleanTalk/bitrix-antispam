@@ -299,7 +299,22 @@ class Cleantalk {
     
         return $response;
     }
-    
+
+    /**
+     * Function convert string from UTF8
+     * param string
+     * param string
+     * @return string
+     */
+    public function stringFromUTF8($str, $data_codepage = null){
+        if (preg_match('//u', $str) && function_exists('mb_convert_encoding') && $data_codepage !== null)
+        {
+            return mb_convert_encoding($str, $data_codepage, 'UTF-8');
+        }
+
+        return $str;
+    }
+
     /**
      * Function DNS request
      * @param $host
