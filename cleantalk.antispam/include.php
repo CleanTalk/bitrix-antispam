@@ -85,7 +85,7 @@ class CleantalkAntispam {
                 
                 $file_url_nums = isset($_GET['file_url_nums']) ? urldecode($_GET['file_url_nums']) : null;
                 $file_url_nums = isset($file_url_nums) ? explode(',', $file_url_nums) : null;
-                                
+                
                 if( ! isset( $file_url_hash, $file_url_nums ) ){
                     
                     $sfw->sfw_update( $host_url );
@@ -123,7 +123,7 @@ class CleantalkAntispam {
                 COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'SFW_IS_DISABLED' ) ) );
         }else
             COption::SetOptionString( 'cleantalk.antispam', 'sfw_update_result', json_encode( array( 'error' => 'NO_VALID_APIKEY_PROVIDED_OR_SFW_DISABLED' ) ) );
-                
+            
         return 'CleantalkAntispam::sfw_update();';
     }
 
@@ -1017,7 +1017,7 @@ class CleantalkAntispam {
         global $USER;
         
         if(!$USER->IsAdmin() && !defined("ADMIN_SECTION") && COption::GetOptionInt( 'cleantalk.antispam', 'status', 0 ) == 1 && strpos($content,'<!-- CLEANTALK template addon -->') === false && strpos($content,'</body>') !== false)
-            $content = preg_replace('/(<\/body[^>]*>(?!.*<\/body[^>]*>))/is', '${1}'."\n".self::FormAddon(), $content, 1);
+	        $content = preg_replace('/(<\/body[^>]*>(?!.*<\/body[^>]*>))/is', self::FormAddon() . '$1', $content, 1);
     }
     /**
      * Deprecated!
