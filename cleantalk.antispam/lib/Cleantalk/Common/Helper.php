@@ -751,14 +751,13 @@ class Helper
 							continue(2);
 						}
 					}unset($needle);
-
 					
-					// Email
-					if ( ! $email && preg_match( "/^\S+@\S+\.\S+$/", $value_for_email ) ) {
-						$email = $value_for_email;
-
 	                // Removes whitespaces
 	                $value = urldecode( trim( $value) ); // Fully cleaned message
+					
+					// Email
+					if ( ! $email && preg_match( "/^\S+@\S+\.\S+$/", $value ) ) {
+						$email = $value;
 						
 					// Names
 					}elseif (preg_match("/name/i", $key)){
