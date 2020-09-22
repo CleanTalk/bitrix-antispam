@@ -1,2 +1,8 @@
-Fix: SpamFireWall update.
-Fix: Slow work of module.
+Fix: Correct username for register form.
+Fix: Namespace usage.
+Fix: Restoring error.html file.
+Fix: Collecting email in form test.
+Fix: Template modification.
+Fix: Increase async curl timeout to 1000ms.
+Fix: Missing UTF-8 func, correct sender_email handler in comments.
+Fix: Skip adding js code if admin.
