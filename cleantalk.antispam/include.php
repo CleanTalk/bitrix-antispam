@@ -953,10 +953,13 @@ class CleantalkAntispam {
             $aUser = array();
             $aUser['type'] = 'register';
             $aUser['sender_email'] = isset($arFields['EMAIL']) ? $arFields['EMAIL'] : '';
-            if (isset($arFields['NAME']) && isset($arFields['LAST_NAME'])) {
+            
+            if (isset($arFields['NAME']) && isset($arFields['LAST_NAME']) && !empty($arFields['NAME']) && !empty($arFields['LAST_NAME'])) {
                 $aUser['sender_nickname'] = $arFields['NAME'] . ' ' . $arFields['LAST_NAME'];
-            } elseif (isset($arFields['USER_NAME']) && isset($arFields['USER_LAST_NAME'])) {
+            } elseif (isset($arFields['USER_NAME']) && isset($arFields['USER_LAST_NAME']) && !empty($arFields['USER_NAME']) && !empty($arFields['USER_LAST_NAME'])) {
                 $aUser['sender_nickname'] = $arFields['USER_NAME'] . ' ' . $arFields['USER_LAST_NAME'];
+            } elseif (isset($arFields['LOGIN']) && !empty($arFields['LOGIN'])) {
+                $aUser['sender_nickname'] = $arFields['LOGIN'];
             } else {
                 $aUser['sender_nickname'] = '';
             }
