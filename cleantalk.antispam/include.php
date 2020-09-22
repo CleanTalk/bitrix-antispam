@@ -161,8 +161,8 @@ class CleantalkAntispam {
      * @param string message
      */
     
-    static function CleantalkDie($message)
-    {
+    static function CleantalkDie($message){
+    	
         if( isset( $_POST['feedback_type'] ) && $_POST['feedback_type'] == 'buyoneclick' ) {
   
           $result = Array( 'error' => true, 'msg' => 'js_kr_error_send' );
@@ -182,10 +182,10 @@ class CleantalkAntispam {
           )));
         
         }else{
-  
-          $error_tpl = file_get_contents( dirname( __FILE__ ) . "/error.html" );
-          print str_replace( '%ERROR_TEXT%', $message, $error_tpl );
-         
+	       
+			$error_tpl = file_get_contents( dirname( __FILE__ ) . "/error.html" );
+			print str_replace( '%ERROR_TEXT%', $message, $error_tpl );
+	       
         }
         
         die();
@@ -288,38 +288,42 @@ class CleantalkAntispam {
                 if(($arUser["sender_email"] != '' && $arUser['type'] == 'feedback_general_contact_form') || $ct_global_without_email == 1 || $arUser['type'] != 'feedback_general_contact_form') {
                   
                     $aResult =  CleantalkAntispam::CheckAllBefore($arUser,FALSE);
-                    
-                    if(isset($aResult) && is_array($aResult))
-                    {
-                        if($aResult['errno'] == 0)
-                        {
-                            if($aResult['allow'] == 1)
-                            {
-                                //Not spammer - just return;
-                                return;
-                            }
-                            else
-                            {
-                              if ($arUser['type'] == 'contact_form_bitrix_smt') {
-                                echo '<div class="smt-form smt-form_bordered">
-                                  <div class="smt-alert smt-alert_warning">'.$aResult['ct_result_comment'].'</div>
-                                </div>';
-                                die();
-                              }
-                              elseif ($arUser['type'] == 'contact_form_bitrix_iblock_ajax') {
-                                echo json_encode(array('STATUS' => 'success', 'MSG' => $aResult['ct_result_comment'], 'CAPTCHA' => ''));
-                                die();
-                              } else {
-                                CleantalkAntispam::CleantalkDie($aResult['ct_result_comment']);
-                                return false;
-                              }
-                            }
+	
+	                if( isset( $aResult ) && is_array( $aResult ) ){
+	                	
+	                    if( $aResult['errno'] == 0 ){
+	                    	
+		                    if( $aResult['allow'] == 1 ){
+		                    	
+			                    //Not spammer - just return;
+			                    return;
+			                    
+		                    }else{
+			                    if( $arUser['type'] == 'contact_form_bitrix_smt' ){
+				
+				                    echo '<div class="smt-form smt-form_bordered"><div class="smt-alert smt-alert_warning">' . $aResult['ct_result_comment'] . '</div></div>';
+				                    die();
+				
+			                    }elseif( $arUser['type'] == 'contact_form_bitrix_iblock_ajax' ){
+				
+				                    echo json_encode( array( 'STATUS'  => 'success',
+				                                             'MSG'     => $aResult['ct_result_comment'],
+				                                             'CAPTCHA' => ''
+				                    ) );
+				                    die();
+				
+			                    }else{
+				
+				                    CleantalkAntispam::CleantalkDie( $aResult['ct_result_comment'] );
+				                    return false;
+				
+			                    }
+		                    }
                         }
                     }
                 }
             }            
-        }
-        else {
+        }else{
             if($ct_key!='' && $ct_key!='enter key') {
                 $new_status=$show_review;
 
@@ -1015,17 +1019,25 @@ class CleantalkAntispam {
     /**
      * *** Universal methods section - for using in other modules ***
      */
-
-    /**
-     * Content modification - adding JavaScript code to final content
-     * @param string Content to modify
-     */
-    function OnEndBufferContentHandler(&$content) {
-        global $USER;
-        
-        if(!$USER->IsAdmin() && !defined("ADMIN_SECTION") && COption::GetOptionInt( 'cleantalk.antispam', 'status', 0 ) == 1 && strpos($content,'<!-- CLEANTALK template addon -->') === false && strpos($content,'</body>') !== false)
-	        $content = preg_replace('/(<\/body[^>]*>(?!.*<\/body[^>]*>))/is', self::FormAddon() . '$1', $content, 1);
-    }
+	
+	/**
+	 * Content modification - adding JavaScript code to final content
+	 *
+	 * @param string Content to modify
+	 */
+	function OnEndBufferContentHandler( &$content ) {
+		global $USER;
+		
+		if(
+			! $USER->IsAdmin() &&
+			! defined( "ADMIN_SECTION" ) &&
+			COption::GetOptionInt( 'cleantalk.antispam', 'status', 0 ) == 1 &&
+			strpos( $content, '<!-- CLEANTALK template addon -->' ) === false &&
+			strpos( $content, '</body>' ) !== false
+		){
+			$content = preg_replace( '/(<\/body[^>]*>(?!.*<\/body[^>]*>))/is', self::FormAddon() . '$1', $content, 1 );
+		}
+	}
     /**
      * Deprecated!
      */
