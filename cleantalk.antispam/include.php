@@ -263,10 +263,14 @@ class CleantalkAntispam {
                         return;
                 }
 
-                $ct_temp_msg_data = CleantalkHelper::get_fields_any($_POST, COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' )); // @todo Works via links need to be fixed
+                // @todo Make form_exclusions_fields!!
+//              $ct_temp_msg_data = CleantalkHelper::get_fields_any($_POST, COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' )); // @todo Works via links need to be fixed
+                $ct_temp_msg_data = CleantalkHelper::get_fields_any($_POST); // @todo Works via links need to be fixed
               
                 if ($ct_temp_msg_data === null)
-                    CleantalkHelper::get_fields_any($_GET, COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' ));
+		            // @todo Make form_exclusions_fields!!
+//					CleantalkHelper::get_fields_any($_GET, COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' ));
+                    CleantalkHelper::get_fields_any($_GET);
 
                 $arUser = array();
                 $arUser["type"]                 = "feedback_general_contact_form";
