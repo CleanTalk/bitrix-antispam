@@ -420,6 +420,7 @@ class Helper
 	 */
 	static public function toUTF8($obj, $data_codepage = null)
 	{
+
 		// Array || object
 		if(is_array($obj) || is_object($obj)){
 			foreach($obj as $key => &$val){
@@ -430,12 +431,15 @@ class Helper
 			//String
 		}else{
 			if(!preg_match('//u', $obj) && function_exists('mb_detect_encoding') && function_exists('mb_convert_encoding')){
-				$encoding = mb_detect_encoding($obj);
-				$encoding = $encoding ? $encoding : $data_codepage;
-				if($encoding)
-					$obj = mb_convert_encoding($obj, 'UTF-8', $encoding);
+				if ($data_codepage !== null) {
+					return mb_convert_encoding($obj, 'UTF-8', $data_codepage);
+				}
+	            $encoding = mb_detect_encoding($obj);
+	            if ($encoding)
+	                return mb_convert_encoding($obj, 'UTF-8', $encoding);
 			}
 		}
+
 		return $obj;
 	}
 
