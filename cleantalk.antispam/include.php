@@ -33,7 +33,7 @@ use Cleantalk\Common\Helper as CleantalkHelper;
 
 
 if ( ! defined( 'CLEANTALK_USER_AGENT' ) )
-    define( 'CLEANTALK_USER_AGENT', 'bitrix-31112' );
+    define( 'CLEANTALK_USER_AGENT', 'bitrix-31113' );
 
 /**
  * CleanTalk module class
