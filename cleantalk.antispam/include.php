@@ -291,6 +291,14 @@ class CleantalkAntispam {
                   if (strpos(strtolower($key), 'iblock_submit') !== false)
                     $arUser['type'] = 'contact_form_bitrix_iblock_ajax';
                 }
+                // Try to get compressed data from the _POST
+                if( $arUser["sender_email"] == '' && $arUser['type'] == 'feedback_general_contact_form' ) {
+
+                    parse_str( urldecode($_POST['data']),$second_chance);
+                    $ct_temp_msg_data = CleantalkHelper::get_fields_any($second_chance);
+                    $arUser["sender_email"] = ($ct_temp_msg_data['email'] ? $ct_temp_msg_data['email'] : '');
+
+                }
                 if(($arUser["sender_email"] != '' && $arUser['type'] == 'feedback_general_contact_form') || $ct_global_without_email == 1 || $arUser['type'] != 'feedback_general_contact_form') {
                   
                     $aResult =  CleantalkAntispam::CheckAllBefore($arUser,FALSE);
