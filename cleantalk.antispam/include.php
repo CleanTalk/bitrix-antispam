@@ -1043,14 +1043,15 @@ class CleantalkAntispam {
 	 * @param string Content to modify
 	 */
 	function OnEndBufferContentHandler( &$content ) {
-		global $USER;
+		global $USER, $APPLICATION;
 		
 		if(
 			! $USER->IsAdmin() &&
 			! defined( "ADMIN_SECTION" ) &&
 			COption::GetOptionInt( 'cleantalk.antispam', 'status', 0 ) == 1 &&
 			strpos( $content, '<!-- CLEANTALK template addon -->' ) === false &&
-			strpos( $content, '</body>' ) !== false
+			strpos( $content, '</body>' ) !== false &&
+            ( strpos($APPLICATION->GetCurDir(), 'amp') === false && ! empty( $_COOKIE ) )
 		){
 			$content = preg_replace( '/(<\/body[^>]*>(?!.*<\/body[^>]*>))/is', self::FormAddon() . '$1', $content, 1 );
 		}
