@@ -962,7 +962,9 @@ class CleantalkAntispam {
         
         $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
         $ct_new_user = COption::GetOptionInt('cleantalk.antispam', 'form_new_user', 0);
-
+        if ( isset( $_SERVER['USER_AGENT'] ) && strpos( $_SERVER['USER_AGENT'], 'Bitrix SQS Server' ) !== false ) {
+            return; 
+        }
         if ($ct_status == 1 && $ct_new_user == 1) {
             $aUser = array();
             $aUser['type'] = 'register';
