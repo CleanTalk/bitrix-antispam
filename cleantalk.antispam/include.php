@@ -1247,15 +1247,20 @@ class CleantalkAntispam {
             /* Capturing responses and output block message for unknown AJAX forms */
             jQuery(document).ajaxComplete(function (event, xhr, settings) {
               if (xhr.responseText && xhr.responseText.indexOf('\"apbct') !== -1) {
-                var response = JSON.parse(xhr.responseText);
-                if (typeof response.apbct !== 'undefined') {
-                  response = response.apbct;
-                  if (response.blocked) {
-                    alert(response.comment);
-                    if(+response.stop_script == 1)
-                      window.stop();
-                  }
+                try {
+                  var response = JSON.parse(xhr.responseText);
+                  if (typeof response.apbct !== 'undefined') {
+                    response = response.apbct;
+                    if (response.blocked) {
+                      alert(response.comment);
+                      if(+response.stop_script == 1)
+                        window.stop();
+                    }
+                  }                  
+                } catch (e) {
+                  return;
                 }
+
               }
             });
             
