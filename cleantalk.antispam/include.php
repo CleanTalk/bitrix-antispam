@@ -13,7 +13,6 @@ use Cleantalk\Antispam\CleantalkResponse;
 //Common classes
 use Cleantalk\Common\API as CleantalkAPI;
 use Cleantalk\ApbctBitrix\Helper as CleantalkHelper;
-use Cleantalk\ApbctBitrix\DB;
 use Cleantalk\Common\Firewall\Firewall;
 use Cleantalk\ApbctBitrix\RemoteCalls;
 use Cleantalk\ApbctBitrix\Cron;
