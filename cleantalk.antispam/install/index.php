@@ -3,7 +3,7 @@
 global $MESS;
 IncludeModuleLangFile(__FILE__);
 
-require_once(dirname(__FILE__) . '/../lib/Cleantalk/Common/API.php');
+require_once(dirname(__FILE__) . '/../lib/autoload.php');
 
 use Cleantalk\Common\API as CleantalkAPI;
 
@@ -112,10 +112,6 @@ class cleantalk_antispam extends CModule {
 		$result = CleantalkAPI::method__notice_paid_till($api_key, preg_replace('/http[s]?:\/\//', '', $_SERVER['HTTP_HOST'], 1));
 		COption::SetOptionInt( 'cleantalk.antispam', 'key_is_ok', isset($result['valid']) && $result['valid'] == '1' ? 1 : 0);
 
-		//Remote calls
-		if (!COption::GetOptionString('cleantalk.antispam', 'remote_calls', '')) {
-			COption::SetOptionString('cleantalk.antispam', 'remote_calls', json_encode(array('close_renew_banner' => array('last_call' => 0), 'sfw_update' => array('last_call' => 0), 'sfw_send_logs' => array('last_call' => 0), 'update_plugin' => array('last_call' => 0))));
-		}
 		if(!empty($this->template_messages)){
 			$this->messages[] = GetMessage("CLEANTALK_TEMPLATES_HEADER");
 			foreach($this->template_messages as $val)
