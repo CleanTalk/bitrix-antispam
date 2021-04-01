@@ -239,7 +239,29 @@ class API
 		
 		return $result;
 	}
-	
+
+	/**
+	 * Function sends empty feedback for version comparison in Dashboard
+	 *
+	 * @param string api_key
+	 * @param string agent-version
+	 * @param bool perform check flag
+	 * @return mixed (STRING || array('error' => true, 'error_string' => STRING))
+	 */
+	public static function method__send_empty_feedback($api_key, $agent, $do_check = true){
+		
+		$request = array(
+			'method_name' => 'send_feedback',
+			'auth_key' => $api_key,
+			'feedback' => 0 . ':' . $agent,
+		);
+		
+		$result = static::send_request($request);
+		$result = $do_check ? static::check_response($result, 'send_feedback') : $result;
+		
+		return $result;
+	}
+
 	/**
 	 * Wrapper for sfw_logs API method.
 	 * Sends SpamFireWall logs to the cloud.
