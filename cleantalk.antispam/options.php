@@ -49,7 +49,7 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
      * Set settings when submit
      */
     //Validating key
-    if (CleantalkHelper::api_key__is_correct($new_key)) {
+    if (CleantalkHelper::key_is_correct($new_key)) {
         $result = CleantalkAPI::method__notice_paid_till($new_key, preg_replace('/http[s]?:\/\//', '', $_SERVER['HTTP_HOST'], 1));
 
         COption::SetOptionInt($sModuleId, 'key_is_ok', (empty($result['error']) && isset($result['valid']) && $result['valid'] == 1) ? 1 : 0);
