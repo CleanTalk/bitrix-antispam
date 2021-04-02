@@ -42,15 +42,15 @@ class cleantalk_antispam extends CModule {
 		$path = str_replace("\\", "/", __FILE__);
 		$path = substr($path, 0, strlen($path) - strlen("/index.php"));
 		include($path."/version.php");
-			if (is_array($arModuleVersion) && array_key_exists("VERSION", $arModuleVersion)) {
-				$this->MODULE_VERSION = $arModuleVersion["VERSION"];
-				$this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
-			} else {
-				$this->MODULE_VERSION = "3.3.0";
-				$this->MODULE_VERSION_DATE = "2015-11-03 00:00:00";
-			}
-			$this->MODULE_NAME = GetMessage('CLEANTALK_MODULE_NAME');
-			$this->MODULE_DESCRIPTION = GetMessage('CLEANTALK_MODULE_DESCRIPTION');
+		if (is_array($arModuleVersion) && array_key_exists("VERSION", $arModuleVersion)) {
+			$this->MODULE_VERSION = $arModuleVersion["VERSION"];
+			$this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
+		} else {
+			$this->MODULE_VERSION = "3.3.0";
+			$this->MODULE_VERSION_DATE = "2015-11-03 00:00:00";
+		}
+		$this->MODULE_NAME = GetMessage('CLEANTALK_MODULE_NAME');
+		$this->MODULE_DESCRIPTION = GetMessage('CLEANTALK_MODULE_DESCRIPTION');
 		$this->PARTNER_NAME = "CleanTalk"; 
 		$this->PARTNER_URI = "http://www.cleantalk.org";
 
@@ -212,14 +212,14 @@ class cleantalk_antispam extends CModule {
 		
 		// Creating SFW DATA
 		$result = $DB->Query(
-			"CREATE 
-			TABLE IF NOT EXISTS `cleantalk_sfw` (
-				`network` int(11) unsigned NOT NULL,
-				`mask` int(11) unsigned NOT NULL,
-				`status` tinyint(1) NOT NULL DEFAULT 0,
-				INDEX (  `network` ,  `mask` )
-			)
-			ENGINE = MYISAM ;"
+			'CREATE TABLE IF NOT EXISTS `%scleantalk_sfw` (
+			`id` INT(11) NOT NULL AUTO_INCREMENT,
+			`network` int(11) unsigned NOT NULL,
+			`mask` int(11) unsigned NOT NULL,
+			`status` TINYINT(1) NOT NULL DEFAULT 0,
+			PRIMARY KEY (`id`),
+			INDEX (  `network` ,  `mask` )
+		    );'
 		);
 		if(!$result){
 			$this->errors[] = GetMessage('CLEANTALK_ERROR_CREATE_SFW_DATA');
@@ -228,15 +228,16 @@ class cleantalk_antispam extends CModule {
 		
 		// Creating SFW LOGS
 		$result = $DB->Query(
-			"CREATE 
-			TABLE IF NOT EXISTS `cleantalk_sfw_logs` (
-				`ip` VARCHAR(15) NOT NULL,
-				`all_entries` INT NOT NULL,
-				`blocked_entries` INT NOT NULL,
-				`entries_timestamp` INT NOT NULL,
-				PRIMARY KEY (`ip`)
-			)
-			ENGINE = MYISAM ;"
+			'CREATE TABLE IF NOT EXISTS `%scleantalk_sfw_logs` (
+            `id` VARCHAR(40) NOT NULL,
+            `ip` VARCHAR(15) NOT NULL,
+            `status` ENUM(\'PASS_SFW\',\'DENY_SFW\',\'PASS_SFW__BY_WHITELIST\',\'PASS_SFW__BY_COOKIE\',\'DENY_ANTICRAWLER\',\'PASS_ANTICRAWLER\',\'DENY_ANTICRAWLER_UA\',\'PASS_ANTICRAWLER_UA\',\'DENY_ANTIFLOOD\',\'PASS_ANTIFLOOD\') NULL DEFAULT NULL,
+            `all_entries` INT NOT NULL,
+            `blocked_entries` INT NOT NULL,
+            `entries_timestamp` INT NOT NULL,
+            `ua_id` INT(11) NULL DEFAULT NULL,
+            `ua_name` VARCHAR(1024) NOT NULL, 
+            PRIMARY KEY (`id`));'
 		);
 		if(!$result){
 			$this->errors[] = GetMessage('CLEANTALK_ERROR_CREATE_SFW_LOGS');
