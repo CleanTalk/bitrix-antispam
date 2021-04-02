@@ -58,7 +58,9 @@ class DB extends \Cleantalk\Common\DB {
      * @return array|object|void|null
      */
     public function fetch( $query = false, $response_type = false ) {
-        $this->result = $this->db_result->Fetch();
+        global $DB;
+
+        $this->result = $DB->query($query)->Fetch();
         
         return $this->result;
     }
@@ -73,8 +75,9 @@ class DB extends \Cleantalk\Common\DB {
      * @return array|object|null
      */
     public function fetch_all( $query = false, $response_type = false ) {
+        global $DB;
 
-        while ($row = $this->db_result->Fetch()){
+        while ($row = $DB->query($query)->Fetch()){
             $this->result[] = $row;
         }
         return $this->result;

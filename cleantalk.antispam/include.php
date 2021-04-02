@@ -1,4 +1,5 @@
 <?php
+
 global $MESS;
 IncludeModuleLangFile(__FILE__);
 
@@ -83,7 +84,7 @@ class CleantalkAntispam {
      */
     
     static function CleantalkDie($message){
-    	
+        
         if( isset( $_POST['feedback_type'] ) && $_POST['feedback_type'] == 'buyoneclick' ) {
   
           $result = Array( 'error' => true, 'msg' => 'js_kr_error_send' );
@@ -103,10 +104,10 @@ class CleantalkAntispam {
           )));
         
         }else{
-	       
-			$error_tpl = file_get_contents( dirname( __FILE__ ) . "/error.html" );
-			print str_replace( '%ERROR_TEXT%', $message, $error_tpl );
-	       
+           
+            $error_tpl = file_get_contents( dirname( __FILE__ ) . "/error.html" );
+            print str_replace( '%ERROR_TEXT%', $message, $error_tpl );
+           
         }
         
         die();
@@ -114,12 +115,13 @@ class CleantalkAntispam {
     private static function apbct_run_cron()
     {
         $cron = new Cron();
-        $cron = json_decode(COption::GetOptionString('cleantalk.antispam', $cron->getCronOptionName(), ''),true);
-        if (empty($cron)) {
+        $cron_option = json_decode(COption::GetOptionString('cleantalk.antispam', $cron->getCronOptionName(), ''),true);
+        if (empty($cron_option)) {
             $cron->addTask( 'sfw_update', 'apbct_sfw_update', 86400, time() + 60 );
             $cron->addTask( 'sfw_send_logs', 'apbct_sfw_send_logs', 3600 );
         }
         $tasks_to_run = $cron->checkTasks(); // Check for current tasks. Drop tasks inner counters.
+
         if(
             ! empty( $tasks_to_run ) && // There is tasks to run
             ! RemoteCalls::check() && // Do not doing CRON in remote call action
@@ -227,8 +229,8 @@ class CleantalkAntispam {
                 $ct_temp_msg_data = CleantalkHelper::get_fields_any($_POST); // @todo Works via links need to be fixed
               
                 if ($ct_temp_msg_data === null)
-		            // @todo Make form_exclusions_fields!!
-//					CleantalkHelper::get_fields_any($_GET, COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' ));
+                    // @todo Make form_exclusions_fields!!
+//                  CleantalkHelper::get_fields_any($_GET, COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' ));
                     CleantalkHelper::get_fields_any($_GET);
 
                 $arUser = array();
@@ -259,37 +261,37 @@ class CleantalkAntispam {
                 if(($arUser["sender_email"] != '' && $arUser['type'] == 'feedback_general_contact_form') || $ct_global_without_email == 1 || $arUser['type'] != 'feedback_general_contact_form') {
                   
                     $aResult =  CleantalkAntispam::CheckAllBefore($arUser,FALSE);
-	
-	                if( isset( $aResult ) && is_array( $aResult ) ){
-	                	
-	                    if( $aResult['errno'] == 0 ){
-	                    	
-		                    if( $aResult['allow'] == 1 ){
-		                    	
-			                    //Not spammer - just return;
-			                    return;
-			                    
-		                    }else{
-			                    if( $arUser['type'] == 'contact_form_bitrix_smt' ){
-				
-				                    echo '<div class="smt-form smt-form_bordered"><div class="smt-alert smt-alert_warning">' . $aResult['ct_result_comment'] . '</div></div>';
-				                    die();
-				
-			                    }elseif( $arUser['type'] == 'contact_form_bitrix_iblock_ajax' ){
-				
-				                    echo json_encode( array( 'STATUS'  => 'success',
-				                                             'MSG'     => $aResult['ct_result_comment'],
-				                                             'CAPTCHA' => ''
-				                    ) );
-				                    die();
-				
-			                    }else{
-				
-				                    CleantalkAntispam::CleantalkDie( $aResult['ct_result_comment'] );
-				                    return false;
-				
-			                    }
-		                    }
+    
+                    if( isset( $aResult ) && is_array( $aResult ) ){
+                        
+                        if( $aResult['errno'] == 0 ){
+                            
+                            if( $aResult['allow'] == 1 ){
+                                
+                                //Not spammer - just return;
+                                return;
+                                
+                            }else{
+                                if( $arUser['type'] == 'contact_form_bitrix_smt' ){
+                
+                                    echo '<div class="smt-form smt-form_bordered"><div class="smt-alert smt-alert_warning">' . $aResult['ct_result_comment'] . '</div></div>';
+                                    die();
+                
+                                }elseif( $arUser['type'] == 'contact_form_bitrix_iblock_ajax' ){
+                
+                                    echo json_encode( array( 'STATUS'  => 'success',
+                                                             'MSG'     => $aResult['ct_result_comment'],
+                                                             'CAPTCHA' => ''
+                                    ) );
+                                    die();
+                
+                                }else{
+                
+                                    CleantalkAntispam::CleantalkDie( $aResult['ct_result_comment'] );
+                                    return false;
+                
+                                }
+                            }
                         }
                     }
                 }
@@ -995,26 +997,26 @@ class CleantalkAntispam {
     /**
      * *** Universal methods section - for using in other modules ***
      */
-	
-	/**
-	 * Content modification - adding JavaScript code to final content
-	 *
-	 * @param string Content to modify
-	 */
-	function OnEndBufferContentHandler( &$content ) {
-		global $USER, $APPLICATION;
-		
-		if(
-			! $USER->IsAdmin() &&
-			! defined( "ADMIN_SECTION" ) &&
-			COption::GetOptionInt( 'cleantalk.antispam', 'status', 0 ) == 1 &&
-			strpos( $content, '<!-- CLEANTALK template addon -->' ) === false &&
-			strpos( $content, '</body>' ) !== false &&
+    
+    /**
+     * Content modification - adding JavaScript code to final content
+     *
+     * @param string Content to modify
+     */
+    function OnEndBufferContentHandler( &$content ) {
+        global $USER, $APPLICATION;
+        
+        if(
+            ! $USER->IsAdmin() &&
+            ! defined( "ADMIN_SECTION" ) &&
+            COption::GetOptionInt( 'cleantalk.antispam', 'status', 0 ) == 1 &&
+            strpos( $content, '<!-- CLEANTALK template addon -->' ) === false &&
+            strpos( $content, '</body>' ) !== false &&
             ( strpos($APPLICATION->GetCurDir(), 'amp') === false && ! empty( $_COOKIE ) )
-		){
-			$content = preg_replace( '/(<\/body[^>]*>(?!.*<\/body[^>]*>))/is', self::FormAddon() . '$1', $content, 1 );
-		}
-	}
+        ){
+            $content = preg_replace( '/(<\/body[^>]*>(?!.*<\/body[^>]*>))/is', self::FormAddon() . '$1', $content, 1 );
+        }
+    }
     /**
      * Deprecated!
      */

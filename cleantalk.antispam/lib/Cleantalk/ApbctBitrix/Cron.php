@@ -6,7 +6,7 @@ class Cron extends \Cleantalk\Common\Cron {
 
     public function saveTasks($tasks)
     {
-        COption::SetOptionString('cleantalk.antispam', $this->cron_option_name, json_encode(array('last_start' => time(), 'tasks' => $tasks)))
+        \COption::SetOptionString('cleantalk.antispam', $this->cron_option_name, json_encode(array('last_start' => time(), 'tasks' => $tasks)));
     }
 
     /**
@@ -17,7 +17,7 @@ class Cron extends \Cleantalk\Common\Cron {
     public function getTasks()
     {
         // TODO: Implement getTasks() method.
-        $cron = json_decode(COption::GetOptionString('cleantalk.antispam', $this->cron_option_name, ''),true);
+        $cron = json_decode(\COption::GetOptionString('cleantalk.antispam', $this->cron_option_name, ''),true);
         return !empty($cron) ? $cron['tasks'] : null;
     }
 
@@ -28,7 +28,7 @@ class Cron extends \Cleantalk\Common\Cron {
      */
     public function getCronLastStart()
     {
-        $cron = json_decode(COption::GetOptionString('cleantalk.antispam', $this->cron_option_name, ''),true);
+        $cron = json_decode(\COption::GetOptionString('cleantalk.antispam', $this->cron_option_name, ''),true);
         return !empty($cron) ? $cron['last_start']: 0;
     }
 
@@ -39,7 +39,7 @@ class Cron extends \Cleantalk\Common\Cron {
      */
     public function setCronLastStart()
     {
-        COption::SetOptionString('cleantalk.antispam', $this->cron_option_name, json_encode(array('last_start' => time(), 'tasks' => $this->getTasks())));
+        \COption::SetOptionString('cleantalk.antispam', $this->cron_option_name, json_encode(array('last_start' => time(), 'tasks' => $this->getTasks())));
         return true;
     }
 }

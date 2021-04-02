@@ -176,7 +176,7 @@ class cleantalk_antispam extends CModule {
 	    );
 	    
 	    foreach ($results as $dir => $result){
-	    	if($result != 0){
+	    	if(is_dir($dir) && $result != 0){
 			    error_log('CLEANTALK_ERROR: INSTALLING_IN_TEMPLATE_FILES: ' . $dir . sprintf('%02d', $result ));
 		    }
 	    }
@@ -196,9 +196,8 @@ class cleantalk_antispam extends CModule {
 	        ),
 		    $this->ct_template_addon_tag
 	    );
-	
 	    foreach ($results as $dir => $result){
-		    if($result != 0){
+		    if(is_dir($dir) && $result != 0){
 			    error_log('CLEANTALK_ERROR: UNINSTALLING_IN_TEMPLATE_FILES: ' . $dir . sprintf('%02d', $result ));
 		    }
 	    }
@@ -212,7 +211,7 @@ class cleantalk_antispam extends CModule {
 		
 		// Creating SFW DATA
 		$result = $DB->Query(
-			'CREATE TABLE IF NOT EXISTS `%scleantalk_sfw` (
+			'CREATE TABLE IF NOT EXISTS `cleantalk_sfw` (
 			`id` INT(11) NOT NULL AUTO_INCREMENT,
 			`network` int(11) unsigned NOT NULL,
 			`mask` int(11) unsigned NOT NULL,
@@ -228,7 +227,7 @@ class cleantalk_antispam extends CModule {
 		
 		// Creating SFW LOGS
 		$result = $DB->Query(
-			'CREATE TABLE IF NOT EXISTS `%scleantalk_sfw_logs` (
+			'CREATE TABLE IF NOT EXISTS `cleantalk_sfw_logs` (
             `id` VARCHAR(40) NOT NULL,
             `ip` VARCHAR(15) NOT NULL,
             `status` ENUM(\'PASS_SFW\',\'DENY_SFW\',\'PASS_SFW__BY_WHITELIST\',\'PASS_SFW__BY_COOKIE\',\'DENY_ANTICRAWLER\',\'PASS_ANTICRAWLER\',\'DENY_ANTICRAWLER_UA\',\'PASS_ANTICRAWLER_UA\',\'DENY_ANTIFLOOD\',\'PASS_ANTIFLOOD\') NULL DEFAULT NULL,

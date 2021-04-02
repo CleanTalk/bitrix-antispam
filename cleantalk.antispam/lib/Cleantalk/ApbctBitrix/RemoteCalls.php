@@ -34,7 +34,7 @@ class RemoteCalls extends \Cleantalk\Common\RemoteCalls {
      */
     protected function getAvailableRcActions()
     {
-        $remote_calls = COption::GetOptionString('cleantalk.antispam', 'remote_calls', '');
+        $remote_calls = \COption::GetOptionString('cleantalk.antispam', 'remote_calls', '');
         return ($remote_calls && !empty($remote_calls)) ? json_decode($remote_calls,true) : json_encode(array('close_renew_banner' => array('last_call' => 0, 'cooldown' => self::COOLDOWN), 'sfw_update' => array('last_call' => 0, 'cooldown' => self::COOLDOWN), 'sfw_send_logs' => array('last_call' => 0, 'cooldown' => self::COOLDOWN), 'sfw_update__write_base' => array('last_call' => 0, 'cooldown' => 0)));
     }
 
@@ -49,6 +49,6 @@ class RemoteCalls extends \Cleantalk\Common\RemoteCalls {
         // TODO: Implement setLastCall() method.
         $remote_calls = $this->getAvailableRcActions();
         $remote_calls[$action]['last_call'] = time();
-        COption::SetOptionString('cleantalk.antispam', 'remote_calls', json_encode($remote_calls));
+        \COption::SetOptionString('cleantalk.antispam', 'remote_calls', json_encode($remote_calls));
     }
 }
