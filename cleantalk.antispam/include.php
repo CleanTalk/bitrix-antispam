@@ -728,7 +728,6 @@ class CleantalkAntispam {
         $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
         $ct_comment_forum = COption::GetOptionInt('cleantalk.antispam', 'form_comment_forum', 0);
         if ($ct_status == 1 && $ct_comment_forum == 1) {
-
             $aComment = array();
 
             // Skip authorized user with more than 5 approved messages
@@ -782,7 +781,6 @@ class CleantalkAntispam {
                     $aComment['example']['comments'] = json_encode($aComment['example']['comments']);
         }
             }
-            
             $aResult = self::CheckAllBefore($aComment, TRUE);
 
             if(isset($aResult) && is_array($aResult)){
@@ -1376,7 +1374,12 @@ class CleantalkAntispam {
         switch ($type) {
             case 'comment':
                 $timelabels_key = 'mail_error_comment';
-
+                if (is_array($arEntity['message'])) {
+                    $arEntity['message'] = json_encode($arEntity['message']);
+                }
+                if (is_array($arEntity['example'])) {
+                    $arEntity['example'] = json_encode($arEntity['example']);
+                }
                 $request_params['message'] = $arEntity['message'];
                 $request_params['example'] = $arEntity['example'];
                 $request_params['post_info']['comment_type'] = 'comment';
@@ -1388,6 +1391,9 @@ class CleantalkAntispam {
                 
             case 'order':             
                 $timelabels_key = 'mail_error_comment';
+                if (is_array($arEntity['message'])) {
+                    $arEntity['message'] = json_encode($arEntity['message']);
+                }
                 $request_params['message'] = $arEntity['message'];
                 $request_params['post_info']['comment_type'] = 'order';
                 $ct_request = new CleantalkRequest($request_params);
@@ -1397,7 +1403,9 @@ class CleantalkAntispam {
             case 'feedback_general_contact_form':
                 
                 $timelabels_key = 'mail_error_comment';
-
+                if (is_array($arEntity['message'])) {
+                    $arEntity['message'] = json_encode($arEntity['message']);
+                }
                 $request_params['message'] = $arEntity['message'];
  
                 $request_params['post_info']['comment_type'] = 'feedback_general_contact_form';
@@ -1410,7 +1418,9 @@ class CleantalkAntispam {
             case strpos($type, 'contact_form_bitrix') !== false:
                 
                 $timelabels_key = 'mail_error_comment';
-
+                if (is_array($arEntity['message'])) {
+                    $arEntity['message'] = json_encode($arEntity['message']);
+                }
                 $request_params['message'] = $arEntity['message'];
 
                 $request_params['post_info']['comment_type'] = $type;
@@ -1421,7 +1431,9 @@ class CleantalkAntispam {
             case 'webform':
       
                 $timelabels_key = 'mail_error_comment';
-
+                if (is_array($arEntity['message'])) {
+                    $arEntity['message'] = json_encode($arEntity['message']);
+                }
                 $request_params['message'] = $arEntity['message'];
 
                 $request_params['post_info']['comment_type'] = 'webform';
@@ -1441,7 +1453,9 @@ class CleantalkAntispam {
             case 'private_message':
 
                 $timelabels_key = 'mail_error_comment';
-
+                if (is_array($arEntity['message'])) {
+                    $arEntity['message'] = json_encode($arEntity['message']);
+                }
                 $request_params['message'] = $arEntity['message'];
                 $request_params['tz'] = isset($arEntity['user_timezone']) ? $arEntity['user_timezone'] : NULL;
                 $request_params['post_info']['comment_type'] = 'private_message';
