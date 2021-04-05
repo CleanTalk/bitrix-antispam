@@ -44,7 +44,9 @@ class DB extends \Cleantalk\Common\DB {
      */
     public function execute( $query ) {
         global $DB;
+
         $this->db_result = $DB->Query($query);
+        
         return $this->db_result;
     }
 
@@ -77,7 +79,9 @@ class DB extends \Cleantalk\Common\DB {
     public function fetch_all( $query = false, $response_type = false ) {
         global $DB;
 
-        while ($row = $DB->Query($query)->Fetch()){
+        $this->db_result = $DB->Query($query);
+
+        while ($row = $this->db_result->Fetch()){
             $this->result[] = $row;
         }
         return $this->result;
