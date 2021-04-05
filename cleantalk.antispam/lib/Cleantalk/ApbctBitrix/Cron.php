@@ -18,7 +18,7 @@ class Cron extends \Cleantalk\Common\Cron {
     {
         // TODO: Implement getTasks() method.
         $cron = json_decode(\COption::GetOptionString('cleantalk.antispam', $this->cron_option_name, ''),true);
-        return !empty($cron) ? $cron['tasks'] : null;
+        return (!empty($cron) && isset($cron['tasks'])) ? $cron['tasks'] : null;
     }
 
     /**
@@ -29,7 +29,7 @@ class Cron extends \Cleantalk\Common\Cron {
     public function getCronLastStart()
     {
         $cron = json_decode(\COption::GetOptionString('cleantalk.antispam', $this->cron_option_name, ''),true);
-        return !empty($cron) ? $cron['last_start']: 0;
+        return (!empty($cron) && isset($cron['last_start'])) ? $cron['last_start']: 0;
     }
 
     /**
