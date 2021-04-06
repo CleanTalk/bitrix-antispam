@@ -89,7 +89,7 @@ class FirewallUpdater
         if( Get::get('spbc_remote_call_action') == 'sfw_update__write_base' &&
             ! Get::get('firewall_updating_id') &&
             $fw_stats['firewall_updating_id'] &&
-            time() - $fw_stats['firewall_updating_last_start'] < 60 ){
+            time() - $fw_stats['firewall_updating_last_start'] < 0 ){
             return true;
         }
 
@@ -107,7 +107,7 @@ class FirewallUpdater
         }
 
         // Set new update ID
-        if( ! $fw_stats['firewall_updating_id'] || time() - $fw_stats['firewall_updating_last_start'] > 300 ){
+        if( Get::get('spbc_remote_call_action') == 'sfw_update__write_base' && (! $fw_stats['firewall_updating_id'] || time() - $fw_stats['firewall_updating_last_start'] > 300)) {
             $helper::setFwStats(
                 array(
                     'firewall_updating_id' => md5( rand( 0, 100000 ) ),
