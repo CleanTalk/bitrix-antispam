@@ -1028,7 +1028,7 @@ class CleantalkAntispam {
 
                 $ct_check_values = self::SetCheckJSValues();  
                 
-                $js_template = "<script>
+                $js_template = "<script data-skip-moving = 'true'>
                     var ct_checkjs_val = '".$ct_check_values[0]."', ct_date = new Date(), 
                     ctTimeMs = new Date().getTime(),
                     ctMouseEventTimerFlag = true, //Reading interval flag
