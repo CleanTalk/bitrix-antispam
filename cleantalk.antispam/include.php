@@ -210,7 +210,8 @@ class CleantalkAntispam {
                     (isset($_POST['comment_post_id'], $_POST['comment'], $_POST['blog_upload_cid'])) || 
                     strpos($_SERVER['REQUEST_URI'], '/order/make') ||
                     (isset($_POST['NEW_PASSWORD'], $_POST['NEW_PASSWORD_CONFIRM']) && strpos($_SERVER['REQUEST_URI'], 'personal/profile/') !== false) ||
-                    (isset($_POST['t'], $_POST['dl'], $_POST['dt']) && $_POST['t'] == 'pageview')
+                    (isset($_POST['t'], $_POST['dl'], $_POST['dt']) && $_POST['t'] == 'pageview') ||
+                    strpos($_SERVER['REQUEST_URI'], 'bitrix/tools/conversion/') !== false
                 )
                 {
                     return;
