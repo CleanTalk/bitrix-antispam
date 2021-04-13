@@ -1,3 +1,3 @@
-Fix: Encoding issues.
-Fix: Skip global hook on comments.
-Fix: Empty message field for custom forms.
+Fix: SFW updating.
+Fix: composite template.
+Other minor improvements.
