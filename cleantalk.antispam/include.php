@@ -209,7 +209,8 @@ class CleantalkAntispam {
                     ( isset( $_SERVER['USER_AGENT'] ) && strpos( $_SERVER['USER_AGENT'], 'Bitrix Telephony Controller' ) !== false ) || 
                     (isset($_POST['comment_post_id'], $_POST['comment'], $_POST['blog_upload_cid'])) || 
                     strpos($_SERVER['REQUEST_URI'], '/order/make') ||
-                    (isset($_POST['NEW_PASSWORD'], $_POST['NEW_PASSWORD_CONFIRM']) && strpos($_SERVER['REQUEST_URI'], 'personal/profile/') !== false)
+                    (isset($_POST['NEW_PASSWORD'], $_POST['NEW_PASSWORD_CONFIRM']) && strpos($_SERVER['REQUEST_URI'], 'personal/profile/') !== false) ||
+                    (isset($_POST['t'], $_POST['dl'], $_POST['dt']) && $_POST['t'] == 'pageview')
                 )
                 {
                     return;
