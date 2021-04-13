@@ -56,7 +56,7 @@ class cleantalk_antispam extends CModule {
 
 		// Values for all templates
 		$this->ct_template_addon_tag = 'CLEANTALK template addon';
-		$this->ct_template_addon_body = "\n" . '<?php $frame = (new BufferArea("cleantalk_frame"))->begin(); if(Loader::IncludeModule("cleantalk_antispam")) echo CleantalkAntispam::FormAddon(); $frame->end(); ?>' . "\n";
+		$this->ct_template_addon_body = "\n" . '<?php $frame = (new \Bitrix\Main\Page\FrameHelper("cleantalk_frame"))->begin(); if(CModule::IncludeModule("cleantalk.antispam")) echo CleantalkAntispam::FormAddon(); $frame->end(); ?>' . "\n";
 
 		// Values for templates folder
 		$this->SAR_template_file = 'footer.php';
