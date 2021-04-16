@@ -1125,46 +1125,48 @@ class CleantalkAntispam {
                       ctSetCookie('ct_visible_fields_count', 0);
                       setTimeout(function(){
                         for(var i = 0; i < document.forms.length; i++){
-                          var form = document.forms[i];
-                          
-                          form.onsubmit_prev = form.onsubmit;
-                          form.onsubmit = function(event){
-
-                            /* Get only fields */
-                            var elements = [];
-                            for(var key in this.elements){
-                              if(!isNaN(+key))
-                                elements[key] = this.elements[key];
+                            var form = document.forms[i];
+                            if (form.action.toString().indexOf('/auth/?forgot_password') !== -1)  {
+                                continue;
                             }
+                            form.onsubmit_prev = form.onsubmit;
+                            form.onsubmit = function(event){
 
-                            /* Filter fields */
-                            elements = elements.filter(function(elem){
+                                /* Get only fields */
+                                var elements = [];
+                                for(var key in this.elements){
+                                  if(!isNaN(+key))
+                                    elements[key] = this.elements[key];
+                                }
 
-                              var pass = true;
+                                /* Filter fields */
+                                elements = elements.filter(function(elem){
 
-                              /* Filter fields */
-                              if( getComputedStyle(elem).display    === 'none' ||   // hidden
-                                getComputedStyle(elem).visibility === 'hidden' || // hidden
-                                getComputedStyle(elem).opacity    === '0' ||      // hidden
-                                elem.getAttribute('type')         === 'hidden' || // type == hidden
-                                elem.getAttribute('type')         === 'submit' || // type == submit
-                                elem.value                        === ''       || // empty value
-                                elem.getAttribute('name')         === null
-                              ){
-                                return false;
-                              }
+                                    var pass = true;
 
-                              /* Filter elements with same names for type == radio */
-                              if(elem.getAttribute('type') === 'radio'){
-                                elements.forEach(function(el, j, els){
-                                  if(elem.getAttribute('name') === el.getAttribute('name')){
-                                    pass = false;
-                                    return;
-                                  }
-                                });
-                              }
+                                    /* Filter fields */
+                                    if( getComputedStyle(elem).display    === 'none' ||   // hidden
+                                        getComputedStyle(elem).visibility === 'hidden' || // hidden
+                                        getComputedStyle(elem).opacity    === '0' ||      // hidden
+                                        elem.getAttribute('type')         === 'hidden' || // type == hidden
+                                        elem.getAttribute('type')         === 'submit' || // type == submit
+                                        elem.value                        === ''       || // empty value
+                                        elem.getAttribute('name')         === null
+                                    ){
+                                    return false;
+                                    }
 
-                              return true;
+                                    /* Filter elements with same names for type == radio */
+                                    if(elem.getAttribute('type') === 'radio'){
+                                        elements.forEach(function(el, j, els){
+                                        if(elem.getAttribute('name') === el.getAttribute('name')){
+                                            pass = false;
+                                            return;
+                                        }
+                                    });
+                                }
+
+                                return true;
                             });
 
                             /* Visible fields count */
