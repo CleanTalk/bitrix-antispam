@@ -107,10 +107,10 @@ class FirewallUpdater
         }
 
         // Set new update ID
-        if( Get::get('spbc_remote_call_action') == 'sfw_update__write_base' && (! $fw_stats['firewall_updating_id'] || time() - $fw_stats['firewall_updating_last_start'] > 300)) {
+        if( Get::get('spbc_remote_call_action') == 'sfw_update__write_base' && ( $fw_stats['firewall_updating_id'] == 0 || !$fw_stats['firewall_updating_id'] || time() - $fw_stats['firewall_updating_last_start'] > 300)) {
             $helper::setFwStats(
                 array(
-                    'firewall_updating_id' => md5( rand( 0, 100000 ) ),
+                    'firewall_updating_id' => md5( rand( 1, 100000 ) ),
                     'firewall_updating_last_start' => time(),
                 )
             );
