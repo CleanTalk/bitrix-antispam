@@ -212,7 +212,7 @@ class SFW extends FirewallModule {
 				'{SFW_DIE_YOU_WILL_BE_REDIRECTED}' => sprintf( $this->__('Or you will be automatically redirected to the requested page after %d seconds.', 'cleantalk-spam-protect'), 3),
 				'{CLEANTALK_TITLE}'                => ($this->test ? $this->__('This is the testing page for SpamFireWall', 'cleantalk-spam-protect') : ''),
 				'{REMOTE_ADDRESS}'                 => $result['ip'],
-				'{SERVICE_ID}'                     => $net_count,
+				'{SERVICE_ID}'                     => $net_count['net_count'],
 				'{HOST}'                           => '',
 				'{GENERATED}'                      => '<p>The page was generated at&nbsp;' . date( 'D, d M Y H:i:s' ) . "</p>",
 				'{REQUEST_URI}'                    => Server::get( 'REQUEST_URI' ),
