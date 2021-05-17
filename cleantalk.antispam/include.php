@@ -253,7 +253,7 @@ class CleantalkAntispam {
                     $arUser['type'] = 'contact_form_bitrix_iblock_ajax';
                 }
                 // Try to get compressed data from the _POST
-                if( $arUser["sender_email"] == '' && $arUser['type'] == 'feedback_general_contact_form' ) {
+                if( $arUser["sender_email"] == '' && $arUser['type'] === 'feedback_general_contact_form' && isset( $_POST['data'] ) && is_string( $_POST['data'] ) ) {
 
                     parse_str( urldecode($_POST['data']),$second_chance);
                     $ct_temp_msg_data = CleantalkHelper::get_fields_any($second_chance);
