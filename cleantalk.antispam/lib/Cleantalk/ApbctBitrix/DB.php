@@ -79,11 +79,16 @@ class DB extends \Cleantalk\Common\DB {
     public function fetch_all( $query = false, $response_type = false ) {
         global $DB;
 
-        $this->db_result = $DB->Query($query);
+        $db_result = $DB->Query($query);
 
-        while ($row = $this->db_result->Fetch()){
-            $this->result[] = $row;
+        $result = array();
+
+        while ($row = $db_result->Fetch()){
+            $result[] = $row;
         }
+
+        $this->result = $result;
+
         return $this->result;
     }
 
