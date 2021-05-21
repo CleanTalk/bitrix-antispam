@@ -229,6 +229,15 @@ class CleantalkAntispam {
                 // @todo Make form_exclusions_fields!!
 //              $ct_temp_msg_data = CleantalkHelper::get_fields_any($_POST, COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' )); // @todo Works via links need to be fixed
                 $ct_temp_msg_data = CleantalkHelper::get_fields_any($_POST); // @todo Works via links need to be fixed
+
+                // SLAM Easyform ajax integration
+                if( isset( $_POST['FIELDS'] ) && IsModuleInstalled('slam.easyform') ) {
+                    $nickname = isset( $_POST['FIELDS']['TITLE'] ) ? $_POST['FIELDS']['TITLE'] : '';
+                    if( ! empty( $nickname ) ) {
+                        unset( $_POST['FIELDS']['TITLE'] );
+                    }
+                    $ct_temp_msg_data = CleantalkHelper::get_fields_any( $_POST['FIELDS'], '', array(), null, array( 'nick' => $nickname, 'first' => '', 'last' => '' ) );
+                }
               
                 if ($ct_temp_msg_data === null)
                     // @todo Make form_exclusions_fields!!
