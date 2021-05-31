@@ -1,3 +1,7 @@
-Fix: SFW updating.
-Fix: composite template.
-Other minor improvements.
+Fix: skip forgot_password from from visible fields checking.
+Fix: sfw update fw stats.
+Fix: setlastcall in remotecall.
+Fix: SFW. Block page net count show.
+Fix: Forms. Possible notices fixed.
+Fix. DB. Fetch all method fixed.
+New. SLAM Easyform ajax integration implemented.
