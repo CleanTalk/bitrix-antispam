@@ -258,7 +258,9 @@ $oTabControl->Begin();
     <tr>
         <td width="50%" valign="top"><label for="form_exclusions_check"><?echo GetMessage( 'CLEANTALK_EXCLUSIONS_URL' );?>:</td>
         <td  valign="top">
-            <input type="text" name="form_exclusions_url" id="form_exclusions_url" value="<?php echo COption::GetOptionString( $sModuleId, 'form_exclusions_url', '' ); ?>" />
+            <div class="ui-ctl ui-ctl-textarea">
+                <textarea class="ui-ctl-element" name = "form_exclusions_url" id = "form_exclusions_url" cols = "45" rows = "10"><?php echo COption::GetOptionString( $sModuleId, 'form_exclusions_url', '' ); ?></textarea>
+            </div>
             <div><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_URL_DESCRIPTION' ); ?></div>
         </td>
     </tr>

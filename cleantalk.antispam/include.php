@@ -144,6 +144,12 @@ class CleantalkAntispam {
 
         // Set exclusions to the class
         $cleantalk_url_exclusions      = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_url', '' );
+        if (!empty($cleantalk_url_exclusions)) {
+          $cleantalk_url_exclusions = explode(',', $cleantalk_url_exclusions);
+            foreach ($cleantalk_url_exclusions as $key=>$value)
+                if (strpos($_SERVER['REQUEST_URI'],$value) !== false)
+                    return;         
+        }
         $cleantalk_fields_exclusions   = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' );
         $cleantalk_webforms_checking   = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_webform', '' );
 
