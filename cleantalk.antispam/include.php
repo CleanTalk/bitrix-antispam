@@ -138,7 +138,7 @@ class CleantalkAntispam {
      * Checking all forms for spam
      * @return null|boolean NULL when success or FALSE when spam detected
      */
-    public function OnPageStartHandler()
+    public static function OnPageStartHandler()
     {
         global $USER;
 
@@ -1018,7 +1018,7 @@ class CleantalkAntispam {
      *
      * @param string Content to modify
      */
-    function OnEndBufferContentHandler( &$content ) {
+    public static function OnEndBufferContentHandler( &$content ) {
         global $USER, $APPLICATION;
         
         if(
