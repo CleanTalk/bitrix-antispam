@@ -22,7 +22,7 @@ use Cleantalk\Common\Variables\Server;
 use Cleantalk\Common\Firewall\Modules\SFW;
 
 if ( ! defined( 'CLEANTALK_USER_AGENT' ) )
-    define( 'CLEANTALK_USER_AGENT', 'bitrix-31116' );
+    define( 'CLEANTALK_USER_AGENT', 'bitrix-31117' );
 
 define('APBCT_TBL_FIREWALL_DATA', 'cleantalk_sfw');      // Table with firewall data.
 define('APBCT_TBL_FIREWALL_LOG',  'cleantalk_sfw_logs'); // Table with firewall logs.
@@ -142,6 +142,16 @@ class CleantalkAntispam {
     {
         global $USER;
 
+        $cleantalk_site_exclusions = COption::GetOptionString('cleantalk.antispam', 'site_exclusions', '');
+
+        if (!empty($cleantalk_site_exclusions)) {
+            $context = \Bitrix\Main\Application::getInstance()->getContext();
+            $siteId = $context->getSite();  
+            $cleantalk_site_exclusions = explode(',', $cleantalk_site_exclusions);
+            if (in_array($siteId, $cleantalk_site_exclusions)) {
+                return;
+            }
+        }
         // Set exclusions to the class
         $cleantalk_url_exclusions      = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_url', '' );
         if (!empty($cleantalk_url_exclusions)) {
@@ -1039,6 +1049,16 @@ class CleantalkAntispam {
 
         if(!defined("ADMIN_SECTION") && COption::GetOptionInt( 'cleantalk.antispam', 'status', 0 ) == 1 )
             {
+                $cleantalk_site_exclusions = COption::GetOptionString('cleantalk.antispam', 'site_exclusions', '');
+
+                if (!empty($cleantalk_site_exclusions)) {
+                    $context = \Bitrix\Main\Application::getInstance()->getContext();
+                    $siteId = $context->getSite();  
+                    $cleantalk_site_exclusions = explode(',', $cleantalk_site_exclusions);
+                    if (in_array($siteId, $cleantalk_site_exclusions)) {
+                        return;
+                    }
+                }                
                 $field_name = 'ct_checkjs';
                 $ct_check_def = '0';
                 if (!isset($_COOKIE[$field_name])) setcookie($field_name, $ct_check_def, 0, '/');
@@ -1288,6 +1308,17 @@ class CleantalkAntispam {
                 'DESCRIPTION' => GetMessage('CLEANTALK_E_TYPE')
             ));
             return;
+        }
+        $cleantalk_site_exclusions = COption::GetOptionString('cleantalk.antispam', 'site_exclusions', '');
+
+        if (!empty($cleantalk_site_exclusions)) {
+            $context = \Bitrix\Main\Application::getInstance()->getContext();
+            $siteId = $context->getSite();  
+                      
+            $cleantalk_site_exclusions = explode(',', $cleantalk_site_exclusions);
+            if (in_array($siteId, $cleantalk_site_exclusions)) {
+                return;
+            }
         }
 
         $url_exclusion = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_url', '' );
