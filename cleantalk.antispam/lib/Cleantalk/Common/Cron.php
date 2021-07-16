@@ -97,20 +97,22 @@ abstract class Cron
     {
         // First call time() + period
         $first_call = ! $first_call ? time() + $period : $first_call;
-        
-        if( isset( $this->tasks[ $task ] ) ){
+
+        $tasks = ! empty( $this->tasks ) ? $this->tasks : $this->getTasks();
+
+        if( isset( $tasks[ $task ] ) ){
             return false;
         }
         
         // Task entry
-        $this->tasks[$task] = array(
+        $tasks[$task] = array(
             'handler'   => $handler,
             'next_call' => $first_call,
             'period'    => $period,
             'params'    => $params,
         );
         
-        return $this->saveTasks( $this->tasks );
+        return $this->saveTasks( $tasks );
     }
     
     /**
@@ -122,13 +124,15 @@ abstract class Cron
      */
     public function removeTask( $task )
     {
-        if( ! isset( $this->tasks[ $task ] ) ){
+        $tasks = ! empty( $this->tasks ) ? $this->tasks : $this->getTasks();
+
+        if( ! isset( $tasks[ $task ] ) ){
             return false;
         }
         
-        unset( $this->tasks[ $task ] );
+        unset( $tasks[ $task ] );
 
-        return $this->saveTasks( $this->tasks );
+        return $this->saveTasks( $tasks );
     }
 
     /**
@@ -144,8 +148,18 @@ abstract class Cron
      */
     public function updateTask( $task, $handler, $period, $first_call = null, $params = array() )
     {
-        $this->removeTask( $task );
-        return $this->addTask( $task, $handler, $period, $first_call, $params );
+        $tasks = ! empty( $this->tasks ) ? $this->tasks : $this->getTasks();
+        if( isset( $tasks[ $task ] ) ){
+            // Rewrite the task
+            $tasks[$task] = array(
+                'handler'   => $handler,
+                'next_call' => is_null( $first_call ) ? time() + $period : $first_call,
+                'period'    => $period,
+                'params'    => $params,
+            );
+            return $this->saveTasks( $tasks );
+        }
+        return false;
     }
 
     /**
