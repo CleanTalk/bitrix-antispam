@@ -1280,341 +1280,350 @@ class CleantalkAntispam {
     static function CheckAllBefore(&$arEntity, $bSendEmail = FALSE, $form_errors = null) {
         global $DB, $USER;
 
-        if (class_exists('Bitrix\Main\Context')) {
-          $isAdminSection = \Bitrix\Main\Context::getCurrent()->getRequest()->isAdminSection();
-        } else {
-            $isAdminSection = (strpos($_SERVER['REQUEST_URI'], 'bitrix/admin') !== false) ? true : false;
-        }
-        
-        if ($USER->IsAdmin() || $isAdminSection)
-            return;
+        static $executed_check = true;
 
-        if(!is_array($arEntity) || !array_key_exists('type', $arEntity)){
-            CEventLog::Add(array(
-                'SEVERITY' => 'SECURITY',
-                'AUDIT_TYPE_ID' => 'CLEANTALK_E_INTERNAL',
-                'MODULE_ID' => 'cleantalk.antispam',
-                'DESCRIPTION' => GetMessage('CLEANTALK_E_PARAM')
-            ));
-            return;
-        }
+        if ($executed_check) {
 
-        $type = $arEntity['type'];
-        if($type != 'comment' && $type != 'webform' && $type != 'register' && $type != 'order' && $type != 'feedback_general_contact_form' && $type != 'private_message' && strpos($type, 'contact_form_bitrix') === false){
-            CEventLog::Add(array(
-                'SEVERITY' => 'SECURITY',
-                'AUDIT_TYPE_ID' => 'CLEANTALK_E_INTERNAL',
-                'MODULE_ID' => 'cleantalk.antispam',
-                'DESCRIPTION' => GetMessage('CLEANTALK_E_TYPE')
-            ));
-            return;
-        }
-        $cleantalk_site_exclusions = COption::GetOptionString('cleantalk.antispam', 'site_exclusions', '');
+            $executed_check = false;
 
-        if (!empty($cleantalk_site_exclusions)) {
-            $context = \Bitrix\Main\Application::getInstance()->getContext();
-            $siteId = $context->getSite();  
-                      
-            $cleantalk_site_exclusions = explode(',', $cleantalk_site_exclusions);
-            if (in_array($siteId, $cleantalk_site_exclusions)) {
+            if (class_exists('Bitrix\Main\Context')) {
+              $isAdminSection = \Bitrix\Main\Context::getCurrent()->getRequest()->isAdminSection();
+            } else {
+                $isAdminSection = (strpos($_SERVER['REQUEST_URI'], 'bitrix/admin') !== false) ? true : false;
+            }
+            
+            if ($USER->IsAdmin() || $isAdminSection)
+                return;
+
+            if(!is_array($arEntity) || !array_key_exists('type', $arEntity)){
+                CEventLog::Add(array(
+                    'SEVERITY' => 'SECURITY',
+                    'AUDIT_TYPE_ID' => 'CLEANTALK_E_INTERNAL',
+                    'MODULE_ID' => 'cleantalk.antispam',
+                    'DESCRIPTION' => GetMessage('CLEANTALK_E_PARAM')
+                ));
                 return;
             }
-        }
 
-        $url_exclusion = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_url', '' );
-        if (!empty($url_exclusion))
-        {
-          $url_exclusion = explode(',', $url_exclusion);
-            foreach ($url_exclusion as $key=>$value)
-                if (strpos($_SERVER['REQUEST_URI'],$value) !== false)
-                    return;         
-        }
+            $type = $arEntity['type'];
+            if($type != 'comment' && $type != 'webform' && $type != 'register' && $type != 'order' && $type != 'feedback_general_contact_form' && $type != 'private_message' && strpos($type, 'contact_form_bitrix') === false){
+                CEventLog::Add(array(
+                    'SEVERITY' => 'SECURITY',
+                    'AUDIT_TYPE_ID' => 'CLEANTALK_E_INTERNAL',
+                    'MODULE_ID' => 'cleantalk.antispam',
+                    'DESCRIPTION' => GetMessage('CLEANTALK_E_TYPE')
+                ));
+                return;
+            }
+            $cleantalk_site_exclusions = COption::GetOptionString('cleantalk.antispam', 'site_exclusions', '');
 
-        $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '');
-        $ct_ws = self::GetWorkServer();
-
-        if (!isset($_COOKIE['ct_checkjs']))
-            $checkjs = NULL;
-        elseif (in_array($_COOKIE['ct_checkjs'], self::GetCheckJSValues()))
-            $checkjs = 1;
-        else
-            $checkjs = 0;
-        
-        $pointer_data        = (isset($_COOKIE['ct_pointer_data'])  ? json_decode($_COOKIE['ct_pointer_data']) : '');
-        $js_timezone         = (isset($_COOKIE['ct_timezone'])      ? $_COOKIE['ct_timezone']                  : 'none');
-        $first_key_timestamp = (isset($_COOKIE['ct_fkp_timestamp']) ? $_COOKIE['ct_fkp_timestamp']             : 0);
-        $page_set_timestamp  = (isset($_COOKIE['ct_ps_timestamp'])  ? $_COOKIE['ct_ps_timestamp']              : 0);
-
-        if(isset($_SERVER['HTTP_USER_AGENT']))
-            $user_agent = htmlspecialchars((string) $_SERVER['HTTP_USER_AGENT']);
-        else
-            $user_agent = NULL;
-
-        if(isset($_SERVER['HTTP_REFERER']))
-            $refferrer = htmlspecialchars((string) $_SERVER['HTTP_REFERER']);
-        else
-            $refferrer = NULL;
-
-        $ct_options=Array(
-            'access_key' => COption::GetOptionString('cleantalk.antispam', 'key', ''),
-            'form_new_user' => COption::GetOptionInt('cleantalk.antispam', 'form_new_user', 0),
-            'form_comment_blog' => COption::GetOptionInt('cleantalk.antispam', 'form_comment_blog', 0),
-            'form_comment_forum' => COption::GetOptionInt('cleantalk.antispam', 'form_comment_forum', 0),
-            'form_forum_private_messages' => COption::GetOptionInt('cleantalk.antispam', 'form_forum_private_messages', 0),
-            'form_comment_treelike' => COption::GetOptionInt('cleantalk.antispam', 'form_comment_treelike', 0),
-            'form_send_example' => COption::GetOptionInt('cleantalk.antispam', 'form_send_example', 0),
-            'form_order' => COption::GetOptionInt('cleantalk.antispam', 'form_order', 0),
-            'web_form' => COption::GetOptionInt('cleantalk.antispam', 'web_form', 0),
-            'form_global_check' => COption::GetOptionInt('cleantalk.antispam', 'form_global_check', 0),
-            'form_global_check_without_email' => COption::GetOptionInt('cleantalk.antispam', 'form_global_check_without_email', 0),
-            'form_sfw' => COption::GetOptionInt('cleantalk.antispam', 'form_sfw', 0),
-        );
-
-        $sender_info = array(
-            'cms_lang' => 'ru',
-            'REFFERRER' => $refferrer,
-            'post_url' => $refferrer,
-            'USER_AGENT' => $user_agent,
-            'js_timezone' => $js_timezone,
-            'mouse_cursor_positions' => $pointer_data,
-            'key_press_timestamp' => $first_key_timestamp,
-            'page_set_timestamp' => $page_set_timestamp,
-            'REFFERRER_PREVIOUS' => isset($_COOKIE['ct_prev_referer']) ? $_COOKIE['ct_prev_referer'] : null,
-            'cookies_enabled' => self::ct_cookies_test(),
-            'ct_options' => json_encode($ct_options),
-            'form_validation' => ($form_errors && is_array($form_errors)) ? json_encode(array('validation_notice' => json_encode($form_errors), 'page_url' => $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'])) : null,
-            'apbct_visible_fields'   => !empty($_COOKIE['ct_visible_fields']) ? self::ct_visibile_fields__process($_COOKIE['ct_visible_fields'])  : null,
-        );
-        $sender_info = json_encode($sender_info);
-
-        $ct = new Cleantalk();
-        $ct->work_url = $ct_ws['work_url'];
-        $ct->server_url = $ct_ws['server_url'];
-        $ct->server_ttl = $ct_ws['server_ttl'];
-        $ct->server_changed = $ct_ws['server_changed'];
-
-        if(defined('BX_UTF'))
-            $logicalEncoding = "utf-8";
-        elseif(defined("SITE_CHARSET") && (strlen(SITE_CHARSET) > 0))
-            $logicalEncoding = SITE_CHARSET;
-        elseif(defined("LANG_CHARSET") && (strlen(LANG_CHARSET) > 0))
-            $logicalEncoding = LANG_CHARSET;
-        elseif(defined("BX_DEFAULT_CHARSET"))
-            $logicalEncoding = BX_DEFAULT_CHARSET;
-        else
-            $logicalEncoding = "windows-1251";
-
-        $logicalEncoding = strtolower($logicalEncoding);
-        $ct->data_codepage = $logicalEncoding == 'utf-8' ? NULL : $logicalEncoding;
-
-        $request_params = array(
-          'auth_key' => $ct_key,
-          'sender_email' => isset($arEntity['sender_email']) ? $arEntity['sender_email'] : '',
-          'sender_nickname' => isset($arEntity['sender_nickname']) ? $arEntity['sender_nickname'] : '',
-          'sender_ip' => CleantalkHelper::ip__get(array('real'), false),
-          'x_forwarded_for' => CleantalkHelper::ip__get(array('x_forwarded_for'), false),
-          'x_real_ip' => CleantalkHelper::ip__get(array('x_real_ip'), false),
-          'agent' => CLEANTALK_USER_AGENT,
-          'response_lang' => 'ru',
-          'js_on' => $checkjs,
-          'sender_info' => $sender_info,
-          'submit_time' => self::ct_cookies_test() == 1 ? time() - (int)$_COOKIE['ct_timestamp'] : null,
-        );
-
-        switch ($type) {
-            case 'comment':
-                $timelabels_key = 'mail_error_comment';
-                if (is_array($arEntity['message'])) {
-                    $arEntity['message'] = json_encode($arEntity['message']);
+            if (!empty($cleantalk_site_exclusions)) {
+                $context = \Bitrix\Main\Application::getInstance()->getContext();
+                $siteId = $context->getSite();  
+                          
+                $cleantalk_site_exclusions = explode(',', $cleantalk_site_exclusions);
+                if (in_array($siteId, $cleantalk_site_exclusions)) {
+                    return;
                 }
-                if (is_array($arEntity['example'])) {
-                    $arEntity['example'] = json_encode($arEntity['example']);
-                }
-                $request_params['message'] = $arEntity['message'];
-                $request_params['example'] = $arEntity['example'];
-                $request_params['post_info']['comment_type'] = 'comment';
+            }
 
-                $ct_request = new CleantalkRequest($request_params);
-                $ct_result = $ct->isAllowMessage($ct_request);
+            $url_exclusion = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_url', '' );
+            if (!empty($url_exclusion))
+            {
+              $url_exclusion = explode(',', $url_exclusion);
+                foreach ($url_exclusion as $key=>$value)
+                    if (strpos($_SERVER['REQUEST_URI'],$value) !== false)
+                        return;         
+            }
 
-                break;
-                
-            case 'order':             
-                $timelabels_key = 'mail_error_comment';
-                if (is_array($arEntity['message'])) {
-                    $arEntity['message'] = json_encode($arEntity['message']);
-                }
-                $request_params['message'] = $arEntity['message'];
-                $request_params['post_info']['comment_type'] = 'order';
-                $ct_request = new CleantalkRequest($request_params);
-                $ct_result = $ct->isAllowMessage($ct_request);
-                break;
-                
-            case 'feedback_general_contact_form':
-                
-                $timelabels_key = 'mail_error_comment';
-                if (is_array($arEntity['message'])) {
-                    $arEntity['message'] = json_encode($arEntity['message']);
-                }
-                $request_params['message'] = $arEntity['message'];
- 
-                $request_params['post_info']['comment_type'] = 'feedback_general_contact_form';
-                $ct_request = new CleantalkRequest($request_params);
+            $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '');
+            $ct_ws = self::GetWorkServer();
 
-                $ct_result = $ct->isAllowMessage($ct_request);
-
-                break;
-
-            case strpos($type, 'contact_form_bitrix') !== false:
-                
-                $timelabels_key = 'mail_error_comment';
-                if (is_array($arEntity['message'])) {
-                    $arEntity['message'] = json_encode($arEntity['message']);
-                }
-                $request_params['message'] = $arEntity['message'];
-
-                $request_params['post_info']['comment_type'] = $type;
-                $ct_request = new CleantalkRequest($request_params);
-                $ct_result = $ct->isAllowMessage($ct_request);
-                break;
-                
-            case 'webform':
-      
-                $timelabels_key = 'mail_error_comment';
-                if (is_array($arEntity['message'])) {
-                    $arEntity['message'] = json_encode($arEntity['message']);
-                }
-                $request_params['message'] = $arEntity['message'];
-
-                $request_params['post_info']['comment_type'] = 'webform';
-                $ct_request = new CleantalkRequest($request_params);
-                $ct_result = $ct->isAllowMessage($ct_request);
-                break;
-                
-            case 'register':
+            if (!isset($_COOKIE['ct_checkjs']))
+                $checkjs = NULL;
+            elseif (in_array($_COOKIE['ct_checkjs'], self::GetCheckJSValues()))
+                $checkjs = 1;
+            else
+                $checkjs = 0;
             
-                $timelabels_key = 'mail_error_reg';
+            $pointer_data        = (isset($_COOKIE['ct_pointer_data'])  ? json_decode($_COOKIE['ct_pointer_data']) : '');
+            $js_timezone         = (isset($_COOKIE['ct_timezone'])      ? $_COOKIE['ct_timezone']                  : 'none');
+            $first_key_timestamp = (isset($_COOKIE['ct_fkp_timestamp']) ? $_COOKIE['ct_fkp_timestamp']             : 0);
+            $page_set_timestamp  = (isset($_COOKIE['ct_ps_timestamp'])  ? $_COOKIE['ct_ps_timestamp']              : 0);
 
-                $request_params['tz'] = isset($arEntity['user_timezone']) ? $arEntity['user_timezone'] : NULL;
-                $ct_request = new CleantalkRequest($request_params);
-                $ct_result = $ct->isAllowUser($ct_request);
-                break;
-                
-            case 'private_message':
+            if(isset($_SERVER['HTTP_USER_AGENT']))
+                $user_agent = htmlspecialchars((string) $_SERVER['HTTP_USER_AGENT']);
+            else
+                $user_agent = NULL;
 
-                $timelabels_key = 'mail_error_comment';
-                if (is_array($arEntity['message'])) {
-                    $arEntity['message'] = json_encode($arEntity['message']);
-                }
-                $request_params['message'] = $arEntity['message'];
-                $request_params['tz'] = isset($arEntity['user_timezone']) ? $arEntity['user_timezone'] : NULL;
-                $request_params['post_info']['comment_type'] = 'private_message';
-                $ct_request = new CleantalkRequest($request_params);
-                $ct_result = $ct->isAllowMessage($ct_request);
-        }
+            if(isset($_SERVER['HTTP_REFERER']))
+                $refferrer = htmlspecialchars((string) $_SERVER['HTTP_REFERER']);
+            else
+                $refferrer = NULL;
 
-        $ret_val = array();
-        $ret_val['ct_request_id'] = $ct_result->id;
-
-        if($ct->server_change)
-            self::SetWorkServer(
-                $ct->work_url, $ct->server_url, $ct->server_ttl, time()
+            $ct_options=Array(
+                'access_key' => COption::GetOptionString('cleantalk.antispam', 'key', ''),
+                'form_new_user' => COption::GetOptionInt('cleantalk.antispam', 'form_new_user', 0),
+                'form_comment_blog' => COption::GetOptionInt('cleantalk.antispam', 'form_comment_blog', 0),
+                'form_comment_forum' => COption::GetOptionInt('cleantalk.antispam', 'form_comment_forum', 0),
+                'form_forum_private_messages' => COption::GetOptionInt('cleantalk.antispam', 'form_forum_private_messages', 0),
+                'form_comment_treelike' => COption::GetOptionInt('cleantalk.antispam', 'form_comment_treelike', 0),
+                'form_send_example' => COption::GetOptionInt('cleantalk.antispam', 'form_send_example', 0),
+                'form_order' => COption::GetOptionInt('cleantalk.antispam', 'form_order', 0),
+                'web_form' => COption::GetOptionInt('cleantalk.antispam', 'web_form', 0),
+                'form_global_check' => COption::GetOptionInt('cleantalk.antispam', 'form_global_check', 0),
+                'form_global_check_without_email' => COption::GetOptionInt('cleantalk.antispam', 'form_global_check_without_email', 0),
+                'form_sfw' => COption::GetOptionInt('cleantalk.antispam', 'form_sfw', 0),
             );
 
-        // First check errstr flag.
-        if(!empty($ct_result->errstr) || (!empty($ct_result->inactive) && $ct_result->inactive == 1)){
-            // Cleantalk error so we go default way (no action at all).
-            $ret_val['errno'] = 1;
-            // Just inform admin.
-            $err_title = 'CleanTalk module error';
-            
-            if(isset($ct_result->inactive) && intval($ct_result->inactive) == 1)
-                COption::SetOptionInt( 'cleantalk.antispam', 'key_is_ok', 0);
-            
-            if(!empty($ct_result->errstr)){
-                
-                if (preg_match('//u', $ct_result->errstr))
-                    $err_str = preg_replace('/^[^\*]*?\*\*\*|\*\*\*[^\*]*?$/iu', '', $ct_result->errstr);
-                else
-                    $err_str = preg_replace('/^[^\*]*?\*\*\*|\*\*\*[^\*]*?$/i', '', $ct_result->errstr);
-                
-            }else{
-                
-                if (preg_match('//u', $ct_result->comment))
-                    $err_str = preg_replace('/^[^\*]*?\*\*\*|\*\*\*[^\*]*?$/iu', '', $ct_result->comment);
-                else
-                    $err_str = preg_replace('/^[^\*]*?\*\*\*|\*\*\*[^\*]*?$/i', '', $ct_result->comment);
-                
-            }
+            $sender_info = array(
+                'cms_lang' => 'ru',
+                'REFFERRER' => $refferrer,
+                'post_url' => $refferrer,
+                'USER_AGENT' => $user_agent,
+                'js_timezone' => $js_timezone,
+                'mouse_cursor_positions' => $pointer_data,
+                'key_press_timestamp' => $first_key_timestamp,
+                'page_set_timestamp' => $page_set_timestamp,
+                'REFFERRER_PREVIOUS' => isset($_COOKIE['ct_prev_referer']) ? $_COOKIE['ct_prev_referer'] : null,
+                'cookies_enabled' => self::ct_cookies_test(),
+                'ct_options' => json_encode($ct_options),
+                'form_validation' => ($form_errors && is_array($form_errors)) ? json_encode(array('validation_notice' => json_encode($form_errors), 'page_url' => $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'])) : null,
+                'apbct_visible_fields'   => !empty($_COOKIE['ct_visible_fields']) ? self::ct_visibile_fields__process($_COOKIE['ct_visible_fields'])  : null,
+            );
+            $sender_info = json_encode($sender_info);
 
-            $ret_val['errstr'] = $err_str;
-            
-            if(!empty($ct_result->errstr)){
-                if($request_params['js_on'] == 1){
-                    $ct_result->allow = 0;
-                    $ct_result->comment = str_replace('*** ', '*** JavaScript disabled. ', $ct_result->comment);
-                }else
-                    $ct_result->allow = 1;
-            }
-            
-            CEventLog::Add(array(
-                'SEVERITY' => 'SECURITY',
-                'AUDIT_TYPE_ID' => 'CLEANTALK_E_SERVER',
-                'MODULE_ID' => 'cleantalk.antispam',
-                'DESCRIPTION' => $err_str
-            ));
+            $ct = new Cleantalk();
+            $ct->work_url = $ct_ws['work_url'];
+            $ct->server_url = $ct_ws['server_url'];
+            $ct->server_ttl = $ct_ws['server_ttl'];
+            $ct->server_changed = $ct_ws['server_changed'];
 
-            if($bSendEmail){
-                $send_flag = FALSE;
-                $insert_flag = FALSE;
-                $time = $DB->Query('SELECT ct_value FROM cleantalk_timelabels WHERE ct_key=\''. $timelabels_key .'\'')->Fetch();
-                if($time === FALSE){
-                    $send_flag = TRUE;
-                    $insert_flag = TRUE;
-                }elseif(time()-900 > $time['ct_value']) {       // 15 minutes
-                    $send_flag = TRUE;
-                    $insert_flag = FALSE;
-                }
-                if($send_flag){
-                    if($insert_flag){
-                        $arInsert = $DB->PrepareInsert('cleantalk_timelabels', array('ct_key'=>$timelabels_key, 'ct_value' => time()));
-                        $strSql = 'INSERT INTO cleantalk_timelabels('.$arInsert[0].') VALUES ('.$arInsert[1].')';
-                    }else{
-                        $strUpdate = $DB->PrepareUpdate('cleantalk_timelabels', array('ct_value' => time()));
-                        $strSql = 'UPDATE cleantalk_timelabels SET '.$strUpdate.' WHERE ct_key = \''. $timelabels_key .'\'';
+            if(defined('BX_UTF'))
+                $logicalEncoding = "utf-8";
+            elseif(defined("SITE_CHARSET") && (strlen(SITE_CHARSET) > 0))
+                $logicalEncoding = SITE_CHARSET;
+            elseif(defined("LANG_CHARSET") && (strlen(LANG_CHARSET) > 0))
+                $logicalEncoding = LANG_CHARSET;
+            elseif(defined("BX_DEFAULT_CHARSET"))
+                $logicalEncoding = BX_DEFAULT_CHARSET;
+            else
+                $logicalEncoding = "windows-1251";
+
+            $logicalEncoding = strtolower($logicalEncoding);
+            $ct->data_codepage = $logicalEncoding == 'utf-8' ? NULL : $logicalEncoding;
+
+            $request_params = array(
+              'auth_key' => $ct_key,
+              'sender_email' => isset($arEntity['sender_email']) ? $arEntity['sender_email'] : '',
+              'sender_nickname' => isset($arEntity['sender_nickname']) ? $arEntity['sender_nickname'] : '',
+              'sender_ip' => CleantalkHelper::ip__get(array('real'), false),
+              'x_forwarded_for' => CleantalkHelper::ip__get(array('x_forwarded_for'), false),
+              'x_real_ip' => CleantalkHelper::ip__get(array('x_real_ip'), false),
+              'agent' => CLEANTALK_USER_AGENT,
+              'response_lang' => 'ru',
+              'js_on' => $checkjs,
+              'sender_info' => $sender_info,
+              'submit_time' => self::ct_cookies_test() == 1 ? time() - (int)$_COOKIE['ct_timestamp'] : null,
+            );
+
+            switch ($type) {
+                case 'comment':
+                    $timelabels_key = 'mail_error_comment';
+                    if (is_array($arEntity['message'])) {
+                        $arEntity['message'] = json_encode($arEntity['message']);
                     }
-                    $DB->Query($strSql);
-                    bxmail(
-                        COption::GetOptionString("main", "email_from"),
-                        $err_title,
-                        $err_str
-                    );
+                    if (is_array($arEntity['example'])) {
+                        $arEntity['example'] = json_encode($arEntity['example']);
+                    }
+                    $request_params['message'] = $arEntity['message'];
+                    $request_params['example'] = $arEntity['example'];
+                    $request_params['post_info']['comment_type'] = 'comment';
+
+                    $ct_request = new CleantalkRequest($request_params);
+                    $ct_result = $ct->isAllowMessage($ct_request);
+
+                    break;
+                    
+                case 'order':             
+                    $timelabels_key = 'mail_error_comment';
+                    if (is_array($arEntity['message'])) {
+                        $arEntity['message'] = json_encode($arEntity['message']);
+                    }
+                    $request_params['message'] = $arEntity['message'];
+                    $request_params['post_info']['comment_type'] = 'order';
+                    $ct_request = new CleantalkRequest($request_params);
+                    $ct_result = $ct->isAllowMessage($ct_request);
+                    break;
+                    
+                case 'feedback_general_contact_form':
+                    
+                    $timelabels_key = 'mail_error_comment';
+                    if (is_array($arEntity['message'])) {
+                        $arEntity['message'] = json_encode($arEntity['message']);
+                    }
+                    $request_params['message'] = $arEntity['message'];
+     
+                    $request_params['post_info']['comment_type'] = 'feedback_general_contact_form';
+                    $ct_request = new CleantalkRequest($request_params);
+
+                    $ct_result = $ct->isAllowMessage($ct_request);
+
+                    break;
+
+                case strpos($type, 'contact_form_bitrix') !== false:
+                    
+                    $timelabels_key = 'mail_error_comment';
+                    if (is_array($arEntity['message'])) {
+                        $arEntity['message'] = json_encode($arEntity['message']);
+                    }
+                    $request_params['message'] = $arEntity['message'];
+
+                    $request_params['post_info']['comment_type'] = $type;
+                    $ct_request = new CleantalkRequest($request_params);
+                    $ct_result = $ct->isAllowMessage($ct_request);
+                    break;
+                    
+                case 'webform':
+          
+                    $timelabels_key = 'mail_error_comment';
+                    if (is_array($arEntity['message'])) {
+                        $arEntity['message'] = json_encode($arEntity['message']);
+                    }
+                    $request_params['message'] = $arEntity['message'];
+
+                    $request_params['post_info']['comment_type'] = 'webform';
+                    $ct_request = new CleantalkRequest($request_params);
+                    $ct_result = $ct->isAllowMessage($ct_request);
+                    break;
+                    
+                case 'register':
+                
+                    $timelabels_key = 'mail_error_reg';
+
+                    $request_params['tz'] = isset($arEntity['user_timezone']) ? $arEntity['user_timezone'] : NULL;
+                    $ct_request = new CleantalkRequest($request_params);
+                    $ct_result = $ct->isAllowUser($ct_request);
+                    break;
+                    
+                case 'private_message':
+
+                    $timelabels_key = 'mail_error_comment';
+                    if (is_array($arEntity['message'])) {
+                        $arEntity['message'] = json_encode($arEntity['message']);
+                    }
+                    $request_params['message'] = $arEntity['message'];
+                    $request_params['tz'] = isset($arEntity['user_timezone']) ? $arEntity['user_timezone'] : NULL;
+                    $request_params['post_info']['comment_type'] = 'private_message';
+                    $ct_request = new CleantalkRequest($request_params);
+                    $ct_result = $ct->isAllowMessage($ct_request);
+            }
+
+            $ret_val = array();
+            $ret_val['ct_request_id'] = $ct_result->id;
+
+            if($ct->server_change)
+                self::SetWorkServer(
+                    $ct->work_url, $ct->server_url, $ct->server_ttl, time()
+                );
+
+            // First check errstr flag.
+            if(!empty($ct_result->errstr) || (!empty($ct_result->inactive) && $ct_result->inactive == 1)){
+                // Cleantalk error so we go default way (no action at all).
+                $ret_val['errno'] = 1;
+                // Just inform admin.
+                $err_title = 'CleanTalk module error';
+                
+                if(isset($ct_result->inactive) && intval($ct_result->inactive) == 1)
+                    COption::SetOptionInt( 'cleantalk.antispam', 'key_is_ok', 0);
+                
+                if(!empty($ct_result->errstr)){
+                    
+                    if (preg_match('//u', $ct_result->errstr))
+                        $err_str = preg_replace('/^[^\*]*?\*\*\*|\*\*\*[^\*]*?$/iu', '', $ct_result->errstr);
+                    else
+                        $err_str = preg_replace('/^[^\*]*?\*\*\*|\*\*\*[^\*]*?$/i', '', $ct_result->errstr);
+                    
+                }else{
+                    
+                    if (preg_match('//u', $ct_result->comment))
+                        $err_str = preg_replace('/^[^\*]*?\*\*\*|\*\*\*[^\*]*?$/iu', '', $ct_result->comment);
+                    else
+                        $err_str = preg_replace('/^[^\*]*?\*\*\*|\*\*\*[^\*]*?$/i', '', $ct_result->comment);
+                    
+                }
+
+                $ret_val['errstr'] = $err_str;
+                
+                if(!empty($ct_result->errstr)){
+                    if($request_params['js_on'] == 1){
+                        $ct_result->allow = 0;
+                        $ct_result->comment = str_replace('*** ', '*** JavaScript disabled. ', $ct_result->comment);
+                    }else
+                        $ct_result->allow = 1;
+                }
+                
+                CEventLog::Add(array(
+                    'SEVERITY' => 'SECURITY',
+                    'AUDIT_TYPE_ID' => 'CLEANTALK_E_SERVER',
+                    'MODULE_ID' => 'cleantalk.antispam',
+                    'DESCRIPTION' => $err_str
+                ));
+
+                if($bSendEmail){
+                    $send_flag = FALSE;
+                    $insert_flag = FALSE;
+                    $time = $DB->Query('SELECT ct_value FROM cleantalk_timelabels WHERE ct_key=\''. $timelabels_key .'\'')->Fetch();
+                    if($time === FALSE){
+                        $send_flag = TRUE;
+                        $insert_flag = TRUE;
+                    }elseif(time()-900 > $time['ct_value']) {       // 15 minutes
+                        $send_flag = TRUE;
+                        $insert_flag = FALSE;
+                    }
+                    if($send_flag){
+                        if($insert_flag){
+                            $arInsert = $DB->PrepareInsert('cleantalk_timelabels', array('ct_key'=>$timelabels_key, 'ct_value' => time()));
+                            $strSql = 'INSERT INTO cleantalk_timelabels('.$arInsert[0].') VALUES ('.$arInsert[1].')';
+                        }else{
+                            $strUpdate = $DB->PrepareUpdate('cleantalk_timelabels', array('ct_value' => time()));
+                            $strSql = 'UPDATE cleantalk_timelabels SET '.$strUpdate.' WHERE ct_key = \''. $timelabels_key .'\'';
+                        }
+                        $DB->Query($strSql);
+                        bxmail(
+                            COption::GetOptionString("main", "email_from"),
+                            $err_title,
+                            $err_str
+                        );
+                    }
+                }
+                // return $ret_val;
+            }
+
+            $ret_val['errno'] = 0;
+            if ($ct_result->allow == 1) {
+                // Not spammer.
+                $ret_val['allow'] = 1;
+                $GLOBALS['ct_request_id'] = $ct_result->id;
+            }else{
+                $ret_val['allow'] = 0;
+                $ret_val['ct_result_comment'] = $ct_result->comment;
+                // Spammer.
+                // Check stop_queue flag.
+                if($type == 'comment' && $ct_result->stop_queue == 0) {
+                    // Spammer and stop_queue == 0 - to manual approvement.
+                    $ret_val['stop_queue'] = 0;
+                    $GLOBALS['ct_request_id'] = $ct_result->id;
+                    $GLOBALS['ct_result_comment'] = $ct_result->comment;
+                }else{
+                    // New user or Spammer and stop_queue == 1 - display message and exit.
+                    $ret_val['stop_queue'] = 1;
                 }
             }
-            // return $ret_val;
+            return $ret_val;            
         }
 
-        $ret_val['errno'] = 0;
-        if ($ct_result->allow == 1) {
-            // Not spammer.
-            $ret_val['allow'] = 1;
-            $GLOBALS['ct_request_id'] = $ct_result->id;
-        }else{
-            $ret_val['allow'] = 0;
-            $ret_val['ct_result_comment'] = $ct_result->comment;
-            // Spammer.
-            // Check stop_queue flag.
-            if($type == 'comment' && $ct_result->stop_queue == 0) {
-                // Spammer and stop_queue == 0 - to manual approvement.
-                $ret_val['stop_queue'] = 0;
-                $GLOBALS['ct_request_id'] = $ct_result->id;
-                $GLOBALS['ct_result_comment'] = $ct_result->comment;
-            }else{
-                // New user or Spammer and stop_queue == 1 - display message and exit.
-                $ret_val['stop_queue'] = 1;
-            }
-        }
-        return $ret_val;
+        return false;
     }
 
     /**
