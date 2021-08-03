@@ -493,6 +493,11 @@ class CleantalkAntispam {
                     if(strpos($key, $skip) !== false)
                         continue 2;
                 }
+
+                // Skip check checkbox values and avoid of warning in next check by preg_match of array $value 
+                if(strpos($key,'form_checkbox') !== false && is_array($value)){
+                    continue;
+                }
                 
                 if ($sender_email === null && preg_match("/^\S+@\S+\.\S+$/", $value))
                     $sender_email = $value;
