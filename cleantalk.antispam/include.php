@@ -1315,6 +1315,9 @@ class CleantalkAntispam {
                 ));
                 return;
             }
+            if (isset($arEntity['sender_email']) && empty($arEntity['sender_email']) && COption::GetOptionInt('cleantalk.antispam', 'form_global_check_without_email', 0) != 1) {
+                return;
+            }
             $cleantalk_site_exclusions = COption::GetOptionString('cleantalk.antispam', 'site_exclusions', '');
 
             if (!empty($cleantalk_site_exclusions)) {
