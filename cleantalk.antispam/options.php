@@ -17,10 +17,9 @@ use Cleantalk\Common\API as CleantalkAPI;
 use Cleantalk\Common\Helper as CleantalkHelper;
 
 if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
-    
-    $old_key = COption::GetOptionString( $sModuleId, 'key', '' );
-    
-    
+
+    $old_key = COption::GetOptionString( $sModuleId, 'key', '' );    
+
     //Getting key automatically
     if(isset($_POST['getautokey'])){
         
@@ -100,6 +99,15 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     COption::SetOptionInt( $sModuleId, 'form_global_check_without_email', $_POST['form_global_check_without_email'] == '1' ? 1 : 0 );
     COption::SetOptionInt( $sModuleId, 'form_sfw',                        $_POST['form_sfw'] == '1'                        ? 1 : 0 );
 
+    if (isset($_POST['form_exclusions_sites']) && is_array($_POST['form_exclusions_sites'])) {
+        $exclusion_sites = array();
+        foreach ($_POST['form_exclusions_sites'] as $value) {
+            $exclusion_sites[] = $value;
+        }
+        COption::SetOptionString( $sModuleId, 'site_exclusions', implode(',', $exclusion_sites));
+    } else {
+        COption::SetOptionString( $sModuleId, 'site_exclusions', '');
+    }
     COption::SetOptionString( $sModuleId, 'form_exclusions_url',             isset($_POST['form_exclusions_url'])     ? $_POST['form_exclusions_url']     : '' );
     COption::SetOptionString( $sModuleId, 'form_exclusions_fields',          isset($_POST['form_exclusions_fields'])  ? $_POST['form_exclusions_fields']  : '' );
     COption::SetOptionString( $sModuleId, 'form_exclusions_webform',         isset($_POST['form_exclusions_webform']) ? $_POST['form_exclusions_webform'] : '' );
@@ -112,14 +120,13 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     // SFW scheduled actions
     if($_POST['form_sfw'] == 1) {
     
-	    CAgent::RemoveModuleAgents( 'cleantalk.antispam' );	    
-	    CleantalkAntispam::apbct_sfw_update( $new_key );
-	    CleantalkAntispam::apbct_sfw_send_logs( $new_key );
+        CAgent::RemoveModuleAgents( 'cleantalk.antispam' );     
+        CleantalkAntispam::apbct_sfw_update( $new_key );
+        CleantalkAntispam::apbct_sfw_send_logs( $new_key );
         
     // Remove it if SFW is disabled
     }else
-	    CAgent::RemoveModuleAgents("cleantalk.antispam");
-    
+        CAgent::RemoveModuleAgents("cleantalk.antispam"); 
 }
 
 /**
@@ -256,9 +263,24 @@ $oTabControl->Begin();
         <td colspan="2"><?=GetMessage( 'CLEANTALK_EXCLUSIONS' )?></td>
     </tr>
     <tr>
+        <td width="50%" valign="top"><label for="form_exclusions_webform"><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_SITES' );?>:</td>
+        <td  valign="top">
+            <select name="form_exclusions_sites[]" id="form_exclusions_sites" multiple>
+            <?php $rsSites = CSite::GetList($by ="sort", $order="desc");
+            $excluded_sites = explode(",", COption::GetOptionString( $sModuleId, 'site_exclusions', '')); 
+            while ($arSite = $rsSites->Fetch()) {
+              echo "<option value = \"".$arSite['ID']."\" " . (in_array($arSite['ID'], $excluded_sites) ? "selected" : "") . ">".$arSite['NAME']."</option>";
+            } ?>
+            </select>
+            <div><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_SITES_DESCRIPTION' ); ?></div>
+        </td>
+    </tr>
+    <tr>
         <td width="50%" valign="top"><label for="form_exclusions_check"><?echo GetMessage( 'CLEANTALK_EXCLUSIONS_URL' );?>:</td>
         <td  valign="top">
-            <input type="text" name="form_exclusions_url" id="form_exclusions_url" value="<?php echo COption::GetOptionString( $sModuleId, 'form_exclusions_url', '' ); ?>" />
+            <div class="ui-ctl ui-ctl-textarea">
+                <textarea class="ui-ctl-element" name = "form_exclusions_url" id = "form_exclusions_url" cols = "45" rows = "10"><?php echo COption::GetOptionString( $sModuleId, 'form_exclusions_url', '' ); ?></textarea>
+            </div>
             <div><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_URL_DESCRIPTION' ); ?></div>
         </td>
     </tr>
