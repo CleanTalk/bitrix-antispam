@@ -398,8 +398,7 @@ class CleantalkAntispam {
      * @param &array Comment fields to check
      * @return null|boolean NULL when success or FALSE when spam detected
      */
-    
-    function OnBeforeOrderAddHandler(&$arFields)
+    static function OnBeforeOrderAddHandler(&$arFields)
     {
         global $APPLICATION, $USER;
         $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
@@ -460,8 +459,8 @@ class CleantalkAntispam {
      * @param $WEB_FORM_ID, &$arFields, &$arrVALUES Comment fields to check
      * @return null|boolean NULL when success or FALSE when spam detected
      */
-    
-    function OnBeforeResultAddHandler($WEB_FORM_ID, &$arFields, &$arrVALUES)
+
+    static function OnBeforeResultAddHandler($WEB_FORM_ID, &$arFields, &$arrVALUES)
     {
         global $APPLICATION;
         
@@ -561,7 +560,7 @@ class CleantalkAntispam {
      * @param &array Comment fields to check
      * @return null|boolean NULL when success or FALSE when spam detected
      */
-    function OnBeforePrmediaCommentAddHandler(&$arFields) {
+    static function OnBeforePrmediaCommentAddHandler(&$arFields) {
         global $APPLICATION, $USER;
         
         $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
@@ -663,7 +662,7 @@ class CleantalkAntispam {
      * @param &array Comment fields to check
      * @return null|boolean NULL when success or FALSE when spam detected
      */
-    function OnBeforeCommentAddHandler(&$arFields) {
+    static function OnBeforeCommentAddHandler(&$arFields) {
         global $APPLICATION, $USER;
 
         $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
@@ -777,7 +776,7 @@ class CleantalkAntispam {
      * @param &array Comment fields to check
      * @return null|boolean NULL when success or FALSE when spam detected
      */
-    function OnBeforeMessageAddHandler(&$arFields) {
+    static function OnBeforeMessageAddHandler(&$arFields) {
         // works
         global $APPLICATION, $USER;
         $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
@@ -872,7 +871,7 @@ class CleantalkAntispam {
      * @param int ID of added comment
      * @param array Comment fields
      */
-    function OnAfterMessageAddHandler($id, $arFields) {
+    static function OnAfterMessageAddHandler($id, $arFields) {
         // works
         $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
         $ct_comment_forum = COption::GetOptionInt('cleantalk.antispam', 'form_comment_forum', 0);
@@ -887,7 +886,7 @@ class CleantalkAntispam {
      * @param string Type of action - must be 'SHOW' or 'HIDE' only
      * @param array Comment fields
      */
-    function OnMessageModerateHandler( $id, $type, $arFields){
+    static function OnMessageModerateHandler( $id, $type, $arFields){
         // works
         $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
         $ct_comment_forum = COption::GetOptionInt('cleantalk.antispam', 'form_comment_forum', 0);
@@ -907,7 +906,7 @@ class CleantalkAntispam {
      * @param int ID of added comment
      * @param array Comment fields
      */
-    function OnBeforeMessageDeleteHandler($id, $arFields) {
+    static function OnBeforeMessageDeleteHandler($id, $arFields) {
         // works
         $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
         $ct_comment_forum = COption::GetOptionInt('cleantalk.antispam', 'form_comment_forum', 0);
@@ -921,7 +920,7 @@ class CleantalkAntispam {
      * Check forum private messages
      * @param array Comment fields
      */
-    function onBeforePMSendHandler($arFields) {
+    static function onBeforePMSendHandler($arFields) {
         
         global $APPLICATION, $USER;
         $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
@@ -969,7 +968,7 @@ class CleantalkAntispam {
      * @param &array New user fields to check
      * @return null|boolean NULL when success or FALSE when spammer/bot detected
      */
-    function OnBeforeUserRegisterHandler(&$arFields) {
+    static function OnBeforeUserRegisterHandler(&$arFields) {
         global $APPLICATION;
         
         $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
@@ -1039,7 +1038,7 @@ class CleantalkAntispam {
     /**
      * CleanTalk additions to logging types
      */
-    function OnEventLogGetAuditTypesHandler(){
+    static function OnEventLogGetAuditTypesHandler(){
         return array(
             'CLEANTALK_EVENT' => '[CLEANTALK_EVENT] ' . GetMessage('CLEANTALK_EVENT'),
             'CLEANTALK_E_SERVER' => '[CLEANTALK_E_SERVER] ' . GetMessage('CLEANTALK_E_SERVER'),
