@@ -35,7 +35,7 @@ class cleantalk_antispam extends CModule {
     var $messages;
     var $template_messages;
 
-    function cleantalk_antispam() {
+    function __construct() {
         global $DOCUMENT_ROOT;
         $arModuleVersion = array();
 
