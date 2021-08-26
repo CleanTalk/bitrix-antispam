@@ -22,7 +22,7 @@ use Cleantalk\Common\Variables\Server;
 use Cleantalk\Common\Firewall\Modules\SFW;
 
 if ( ! defined( 'CLEANTALK_USER_AGENT' ) )
-    define( 'CLEANTALK_USER_AGENT', 'bitrix-31117' );
+    define( 'CLEANTALK_USER_AGENT', 'bitrix-31118' );
 
 define('APBCT_TBL_FIREWALL_DATA', 'cleantalk_sfw');      // Table with firewall data.
 define('APBCT_TBL_FIREWALL_LOG',  'cleantalk_sfw_logs'); // Table with firewall logs.
