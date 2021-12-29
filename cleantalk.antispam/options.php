@@ -32,7 +32,8 @@ $cleantalk_antispam_default_settings = array(
     'site_exclusions' => '',
     'form_exclusions_url' => '',
     'form_exclusions_fields' => '',
-    'form_exclusions_webform' => ''
+    'form_exclusions_webform' => '',
+    'complete_deactivation' => 0,
 );
 
 if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
@@ -374,6 +375,20 @@ $oTabControl->Begin();
         <td  valign="top">
             <input type="text" name="form_exclusions_webform" id="form_exclusions_webform" value="<?php echo COption::GetOptionString( $sModuleId, 'form_exclusions_webform', '' ); ?>" />
             <div><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_WEBFORM_DESCRIPTION' ); ?></div>
+        </td>
+    </tr>
+    <tr class="heading">
+        <td colspan="2"><?=GetMessage( 'CLEANTALK_MISC' )?></td>
+    </tr>
+    <tr>
+        <td width="50%" valign="top"><label for="complete_deactivation"><?php echo GetMessage( 'CLEANTALK_LABEL_COMPLETE_DEACTIVATION' ); ?>:</td>
+        <td valign="top">
+            <input
+                type="checkbox"
+                name="form_order"
+                id="complete_deactivation"
+                <?php if ( COption::GetOptionInt( $sModuleId, 'complete_deactivation', $cleantalk_antispam_default_settings['complete_deactivation'] ) == 1) :?> checked="checked"<?php endif; ?>
+                value="1" />
         </td>
     </tr>
     <?php $oTabControl->Buttons(); ?>
