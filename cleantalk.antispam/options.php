@@ -170,6 +170,60 @@ $oTabControl->Begin();
         }
     </script>
     <tr class="heading">
+        <td colspan="2"><?=GetMessage( 'CLEANTALK_KEY' )?></td>
+    </tr>
+    <tr>
+        <?php
+        $moderate_ip=COption::GetOptionInt( $sModuleId, 'moderate_ip', 0 );
+
+        if($moderate_ip == 1){
+            print '<td width="100%" valign="top" colspan="2">';
+            print "The anti-spam service is paid by your hosting provider. License #".COption::GetOptionInt( $sModuleId, 'ip_license', 0 ).".";
+            print '</td>';
+        }else{
+            $key_is_ok = COption::GetOptionInt( $sModuleId, 'key_is_ok', 0);
+            ?>
+            <td width="50%" valign="top"><label for="key"><?echo GetMessage( 'CLEANTALK_LABEL_KEY' );?>:</td>
+            <td  valign="top">
+                <input type="text" name="key" id="key" value="<?php echo COption::GetOptionString( $sModuleId, 'key', '' ) ?>" /> <span><?php
+                    if ($key_is_ok == 0) {
+                        echo "<span style='color: red'>".GetMessage( 'CLEANTALK_KEY_NOT_VALID' )."</span>";
+                    }
+                    ?></span>
+                <input type="hidden" name="is_paid" value="<?php echo COption::GetOptionInt( $sModuleId, 'is_paid', 0 ) ?>" />
+                <input type="hidden" name="last_checked" value="0" />
+                <input type="hidden" name="moderate_ip" value="<?php echo COption::GetOptionInt( $sModuleId, 'moderate_ip', 0 ) ?>" />
+                <input type="hidden" name="ip_license" value="<?php echo COption::GetOptionInt( $sModuleId, 'ip_license', 0 ) ?>" />
+            </td>
+            <?php
+        }
+        ?>
+    </tr>
+    <?php if($key_is_ok == 0){ ?>
+        <tr>
+            <td width="50%" valign="top">
+                <a target="_blank" href="https://cleantalk.org/register?platform=bitrix&email=<?php echo COption::GetOptionString("main", "email_from"); ?>&website=<?php echo $_SERVER["SERVER_NAME"]; ?>">
+                    <input type="button" name="getmanualkey" value="<?php echo GetMessage( 'CLEANTALK_GET_MANUAL_KEY' ) ?>" />
+                </a>
+            </td>
+            <td  valign="top">
+                <input type="submit" name="getautokey" value="<?php echo GetMessage( 'CLEANTALK_GET_AUTO_KEY' ) ?>" />
+            </td>
+        </tr>
+        <tr>
+            <td colspan='2' style='text-align: center;'><?php echo GetMessage( 'CLEANTALK_EMAIL_REGISTRATION_WARNING' )."(". COption::GetOptionString("main", "email_from"); ?>).<br> <a target="_blank" href="https://cleantalk.org/publicoffer"><?php echo GetMessage( 'CLEANTALK_LICENSE_AGREEMENT' ); ?></a></td>
+        </tr>
+    <?php }else{ ?>
+        <tr>
+            <td width="50%"></td>
+            <td valign="top">
+                <a target="_blank" href="https://cleantalk.org/my?user_token=<?php echo COption::GetOptionString( $sModuleId, "user_token"); ?>">
+                    <input type="button" name="getmanualkey" value="<?php echo GetMessage( 'CLEANTALK_GET_TO_CP' ) ?>" />
+                </a>
+            </td>
+        </tr>
+    <?php } ?>
+    <tr class="heading">
         <td colspan="2"><?=GetMessage( 'CLEANTALK_TITLE' )?></td>
     </tr>
     <tr>
@@ -298,63 +352,7 @@ $oTabControl->Begin();
             <div><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_WEBFORM_DESCRIPTION' ); ?></div>
         </td>
     </tr>
-    <tr class="heading">
-        <td colspan="2"><?=GetMessage( 'CLEANTALK_KEY' )?></td>
-    </tr>
-    <tr>
-        <?php
-            $moderate_ip=COption::GetOptionInt( $sModuleId, 'moderate_ip', 0 );
-
-            if($moderate_ip == 1){
-                print '<td width="100%" valign="top" colspan="2">';
-                print "The anti-spam service is paid by your hosting provider. License #".COption::GetOptionInt( $sModuleId, 'ip_license', 0 ).".";
-                print '</td>';
-            }else{
-                $key_is_ok = COption::GetOptionInt( $sModuleId, 'key_is_ok', 0);
-        ?>
-        <td width="50%" valign="top"><label for="key"><?echo GetMessage( 'CLEANTALK_LABEL_KEY' );?>:</td>
-        <td  valign="top">
-            <input type="text" name="key" id="key" value="<?php echo COption::GetOptionString( $sModuleId, 'key', '' ) ?>" /> <span><?php 
-                if ($key_is_ok == 0) {
-                    echo "<span style='color: red'>".GetMessage( 'CLEANTALK_KEY_NOT_VALID' )."</span>";
-                }
-                ?></span>
-            <input type="hidden" name="is_paid" value="<?php echo COption::GetOptionInt( $sModuleId, 'is_paid', 0 ) ?>" />
-            <input type="hidden" name="last_checked" value="0" />
-            <input type="hidden" name="moderate_ip" value="<?php echo COption::GetOptionInt( $sModuleId, 'moderate_ip', 0 ) ?>" />
-            <input type="hidden" name="ip_license" value="<?php echo COption::GetOptionInt( $sModuleId, 'ip_license', 0 ) ?>" />
-        </td>
-        <?php
-            }
-        ?>
-    </tr>
-    <?php if($key_is_ok == 0){ ?>
-    <tr>
-        <td width="50%" valign="top">
-            <a target="_blank" href="https://cleantalk.org/register?platform=bitrix&email=<?php echo COption::GetOptionString("main", "email_from"); ?>&website=<?php echo $_SERVER["SERVER_NAME"]; ?>">
-                <input type="button" name="getmanualkey" value="<?php echo GetMessage( 'CLEANTALK_GET_MANUAL_KEY' ) ?>" />
-            </a>
-        </td>
-        <td  valign="top">
-            <input type="submit" name="getautokey" value="<?php echo GetMessage( 'CLEANTALK_GET_AUTO_KEY' ) ?>" />
-        </td>
-    </tr>
-    <tr>
-        <td colspan='2' style='text-align: center;'><?php echo GetMessage( 'CLEANTALK_EMAIL_REGISTRATION_WARNING' )."(". COption::GetOptionString("main", "email_from"); ?>).<br> <a target="_blank" href="https://cleantalk.org/publicoffer"><?php echo GetMessage( 'CLEANTALK_LICENSE_AGREEMENT' ); ?></a></td>
-    </tr>
-    <?php }else{ ?>
-    <tr>
-        <td width="50%"></td>
-        <td valign="top">
-            <a target="_blank" href="https://cleantalk.org/my?user_token=<?php echo COption::GetOptionString( $sModuleId, "user_token"); ?>">
-                <input type="button" name="getmanualkey" value="<?php echo GetMessage( 'CLEANTALK_GET_TO_CP' ) ?>" />
-            </a>
-        </td>
-    </tr>
-    <?php 
-        } 
-        $oTabControl->Buttons();
-    ?>
+    <?php $oTabControl->Buttons(); ?>
     <input type="submit" name="Update" value="<?php echo GetMessage( 'CLEANTALK_BUTTON_SAVE' ) ?>" />
     <input type="reset" name="reset" value="<?php echo GetMessage( 'CLEANTALK_BUTTON_RESET' ) ?>" />
     <input type="hidden" name="Update" value="Y" />
