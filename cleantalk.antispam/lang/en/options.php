@@ -37,3 +37,5 @@ $MESS['CLEANTALK_EXCLUSIONS_SITES'] = 'Sites exclusions';
 $MESS['CLEANTALK_EXCLUSIONS_SITES_DESCRIPTION'] = 'Exclude sites from spam checking. You can select many';
 $MESS['CLEANTALK_TRIAL_NOTIFY']= "<b>Anti-spam by CleanTalk</b> trial period ends, please, upgrade to <a href='https://cleantalk.org/my/bill/recharge?utm_source=bitrix-backend&utm_medium=cpc&utm_campaign=bitrix-backend-trial&user_token=".COption::GetOptionString('cleantalk.antispam', 'user_token', '')."&cp_mode=antispam' target='_blank'><b>premium version.</b></a>.";
 $MESS['CLEANTALK_RENEW_NOTIFY']= "Please, <a href='https://cleantalk.org/my/bill/recharge?utm_source=bitrix-backend&utm_medium=cpc&utm_campaign=bitrix-backend-renew&user_token=".COption::GetOptionString('cleantalk.antispam', 'user_token', '')."&cp_mode=antispam' target='_blank'><b>renew</b></a> your anti-spam license for <b>Anti-spam by CleanTalk</b>!";
+$MESS['CLEANTALK_MISC'] = 'Miscellaneous';
+$MESS['CLEANTALK_LABEL_COMPLETE_DEACTIVATION'] = 'Complete deactivation';
