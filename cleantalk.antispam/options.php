@@ -32,6 +32,7 @@ $cleantalk_antispam_default_settings = array(
     'site_exclusions' => '',
     'form_exclusions_url' => '',
     'form_exclusions_fields' => '',
+    'form_exclusions_fields__regexp' => 0,
     'form_exclusions_webform' => '',
     'complete_deactivation' => 0,
 );
@@ -133,6 +134,7 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
         }
         COption::SetOptionString( $sModuleId, 'form_exclusions_url',             isset($_POST['form_exclusions_url'])     ? $_POST['form_exclusions_url']     : $cleantalk_antispam_default_settings['form_exclusions_url'] );
         COption::SetOptionString( $sModuleId, 'form_exclusions_fields',          isset($_POST['form_exclusions_fields'])  ? $_POST['form_exclusions_fields']  : $cleantalk_antispam_default_settings['form_exclusions_fields'] );
+        COption::SetOptionInt( $sModuleId, 'form_exclusions_fields__regexp',     isset($_POST['form_exclusions_fields__regexp'])  ? $_POST['form_exclusions_fields__regexp']  : $cleantalk_antispam_default_settings['form_exclusions_fields__regexp'] );
         COption::SetOptionString( $sModuleId, 'form_exclusions_webform',         isset($_POST['form_exclusions_webform']) ? $_POST['form_exclusions_webform'] : $cleantalk_antispam_default_settings['form_exclusions_webform'] );
 
         COption::SetOptionString( $sModuleId, 'key', $new_key );
@@ -367,6 +369,8 @@ $oTabControl->Begin();
         <td width="50%" valign="top"><label for="form_exclusions_fields"><?echo GetMessage( 'CLEANTALK_EXCLUSIONS_FIELDS' );?>:</td>
         <td  valign="top">
             <input type="text" name="form_exclusions_fields" id="form_exclusions_fields" value="<?php echo COption::GetOptionString( $sModuleId, 'form_exclusions_fields', '' ); ?>" />
+            <input type="checkbox" name="form_exclusions_fields__regexp" id="form_exclusions_fields__regexp" value="1" <?php if ( COption::GetOptionInt( $sModuleId, 'form_exclusions_fields__regexp', $cleantalk_antispam_default_settings['form_exclusions_fields__regexp'] ) == 1): ?> checked="checked" <?php endif; ?> />
+            <label for="form_exclusions_fields__regexp"><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_FIELDS_REGEXP_DESCRIPTION' ); ?></label>
             <div><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_FIELDS_DESCRIPTION' ); ?></div>
         </td>
     </tr>

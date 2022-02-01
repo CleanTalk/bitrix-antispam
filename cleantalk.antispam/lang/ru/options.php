@@ -31,6 +31,7 @@ $MESS['CLEANTALK_EXCLUSIONS_URL']                = 'URL исключения';
 $MESS['CLEANTALK_EXCLUSIONS_URL_DESCRIPTION']    = 'Исключение URL из спам-проверки. Перечислите через запятую.';
 $MESS['CLEANTALK_EXCLUSIONS_FIELDS']             = 'Исключение полей форм';
 $MESS['CLEANTALK_EXCLUSIONS_FIELDS_DESCRIPTION'] = 'Исключение полей форм из спам-проверки. Перечислите через запятую. Это работает на формах, кроме форм регистрации и комментирования.';
+$MESS['CLEANTALK_EXCLUSIONS_FIELDS_REGEXP_DESCRIPTION'] = 'Использовать регулярные выражения в исключении полей';
 $MESS['CLEANTALK_EXCLUSIONS_WEBFORM']            = 'Исключение Веб-форм по ID';
 $MESS['CLEANTALK_EXCLUSIONS_WEBFORM_DESCRIPTION']= 'Исключение форм (модуль Веб-формы) из спам-проверки по ID. Перечислите через запятую.';
 $MESS['CLEANTALK_EXCLUSIONS_SITES'] = 'Исключение сайтов';

@@ -31,6 +31,7 @@ $MESS['CLEANTALK_EXCLUSIONS_URL']                = 'URL exclusions';
 $MESS['CLEANTALK_EXCLUSIONS_URL_DESCRIPTION']    = 'Exclude urls from spam check. List them separated by commas.';
 $MESS['CLEANTALK_EXCLUSIONS_FIELDS']             = 'Fields exclusions';
 $MESS['CLEANTALK_EXCLUSIONS_FIELDS_DESCRIPTION'] = 'Exclude fields from spam check. List them separated by commas. Works on forms except for registration and comment forms.';
+$MESS['CLEANTALK_EXCLUSIONS_FIELDS_REGEXP_DESCRIPTION'] = 'Use Regular Expression in Field Exclusions';
 $MESS['CLEANTALK_EXCLUSIONS_WEBFORM']            = 'Web-form ID exclusion';
 $MESS['CLEANTALK_EXCLUSIONS_WEBFORM_DESCRIPTION']= 'Exclude forms (Web-forms module) by provided IDs. List them separated by commas.';
 $MESS['CLEANTALK_EXCLUSIONS_SITES'] = 'Sites exclusions';
