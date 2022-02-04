@@ -31,6 +31,7 @@ $cleantalk_antispam_default_settings = array(
     'form_sfw' => 1,
     'site_exclusions' => '',
     'form_exclusions_url' => '',
+    'form_exclusions_url__regexp' => 0,
     'form_exclusions_fields' => '',
     'form_exclusions_fields__regexp' => 0,
     'form_exclusions_webform' => '',
@@ -38,6 +39,7 @@ $cleantalk_antispam_default_settings = array(
 );
 
 $cleantalk_is_wrong_regexp = false;
+$cleantalk_is_wrong_url_regexp = false;
 
 if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
 
@@ -135,6 +137,21 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
             COption::SetOptionString( $sModuleId, 'site_exclusions', $cleantalk_antispam_default_settings['site_exclusions']);
         }
         COption::SetOptionString( $sModuleId, 'form_exclusions_url',             isset($_POST['form_exclusions_url'])     ? $_POST['form_exclusions_url']     : $cleantalk_antispam_default_settings['form_exclusions_url'] );
+
+        if (
+            isset($_POST['form_exclusions_url']) &&
+            ! empty($_POST['form_exclusions_url']) &&
+            isset($_POST['form_exclusions_url__regexp']) &&
+            ct_is_valid_regexp($_POST['form_exclusions_url'])
+        ) {
+            COption::SetOptionInt( $sModuleId, 'form_exclusions_url__regexp',     isset($_POST['form_exclusions_url__regexp'])  ? $_POST['form_exclusions_url__regexp']  : $cleantalk_antispam_default_settings['form_exclusions_url__regexp'] );
+        } else {
+            if ( ! empty($_POST['form_exclusions_url']) && isset($_POST['form_exclusions_url__regexp']) ) {
+                $cleantalk_is_wrong_url_regexp = true;
+            }
+            COption::SetOptionInt( $sModuleId, 'form_exclusions_url__regexp',     0 );
+        }
+
         COption::SetOptionString( $sModuleId, 'form_exclusions_fields',          isset($_POST['form_exclusions_fields'])  ? $_POST['form_exclusions_fields']  : $cleantalk_antispam_default_settings['form_exclusions_fields'] );
 
         if (
@@ -400,8 +417,13 @@ $oTabControl->Begin();
         <td width="50%" valign="top"><label for="form_exclusions_check"><?echo GetMessage( 'CLEANTALK_EXCLUSIONS_URL' );?>:</td>
         <td  valign="top">
             <div class="ui-ctl ui-ctl-textarea">
-                <textarea class="ui-ctl-element" name = "form_exclusions_url" id = "form_exclusions_url" cols = "45" rows = "10"><?php echo COption::GetOptionString( $sModuleId, 'form_exclusions_url', '' ); ?></textarea>
+                <textarea class="ui-ctl-element" name="form_exclusions_url" id="form_exclusions_url" cols="45" rows="10"><?php echo COption::GetOptionString( $sModuleId, 'form_exclusions_url', '' ); ?></textarea>
             </div>
+            <input type="checkbox" name="form_exclusions_url__regexp" id="form_exclusions_url__regexp" value="1" <?php if ( COption::GetOptionInt( $sModuleId, 'form_exclusions_url__regexp', $cleantalk_antispam_default_settings['form_exclusions_url__regexp'] ) == 1): ?> checked="checked" <?php endif; ?> />
+            <label for="form_exclusions_url__regexp"><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_FIELDS_REGEXP_DESCRIPTION' ); ?></label>
+            <?php if ( $cleantalk_is_wrong_url_regexp ) : ?>
+                <div style="color:red"><?php echo GetMessage( 'CLEANTALK_WRONG_REGEXP_NOTIFY' ); ?></div>
+            <?php endif; ?>
             <div><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_URL_DESCRIPTION' ); ?></div>
         </td>
     </tr>
