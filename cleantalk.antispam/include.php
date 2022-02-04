@@ -160,8 +160,6 @@ class CleantalkAntispam {
                 if (strpos($_SERVER['REQUEST_URI'],$value) !== false)
                     return;         
         }
-        $cleantalk_fields_exclusions   = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' );
-        $cleantalk_webforms_checking   = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_webform', '' );
 
         if (!is_object($USER)) $USER = new CUser;
         $ct_status               = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
@@ -242,9 +240,8 @@ class CleantalkAntispam {
                         return;
                 }
 
-                // @todo Make form_exclusions_fields!!
-//              $ct_temp_msg_data = CleantalkHelper::get_fields_any($_POST, COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' )); // @todo Works via links need to be fixed
-                $ct_temp_msg_data = CleantalkHelper::get_fields_any($_POST); // @todo Works via links need to be fixed
+                $form_data = apbct__filter_form_data($_POST);
+                $ct_temp_msg_data = CleantalkHelper::get_fields_any($form_data); // @todo Works via links need to be fixed
 
                 // SLAM Easyform ajax integration
                 if( isset( $_POST['FIELDS'] ) && IsModuleInstalled('slam.easyform') ) {
@@ -255,10 +252,10 @@ class CleantalkAntispam {
                     $ct_temp_msg_data = CleantalkHelper::get_fields_any( $_POST['FIELDS'], '', array(), null, array( 'nick' => $nickname, 'first' => '', 'last' => '' ) );
                 }
               
-                if ($ct_temp_msg_data === null)
-                    // @todo Make form_exclusions_fields!!
-//                  CleantalkHelper::get_fields_any($_GET, COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' ));
-                    CleantalkHelper::get_fields_any($_GET);
+                if ($ct_temp_msg_data === null) {
+                    $form_data = apbct__filter_form_data($_GET);
+                    $ct_temp_msg_data = CleantalkHelper::get_fields_any($form_data);
+                }
 
                 $arUser = array();
                 $arUser["type"]                 = "feedback_general_contact_form";
@@ -281,7 +278,8 @@ class CleantalkAntispam {
                 if( $arUser["sender_email"] == '' && $arUser['type'] === 'feedback_general_contact_form' && isset( $_POST['data'] ) && is_string( $_POST['data'] ) ) {
 
                     parse_str( urldecode($_POST['data']),$second_chance);
-                    $ct_temp_msg_data = CleantalkHelper::get_fields_any($second_chance);
+                    $form_data = apbct__filter_form_data($second_chance);
+                    $ct_temp_msg_data = CleantalkHelper::get_fields_any($form_data);
                     $arUser["sender_email"] = ($ct_temp_msg_data['email'] ? $ct_temp_msg_data['email'] : '');
 
                 }
@@ -1942,4 +1940,92 @@ class CleantalkAntispam {
             return null;
         }
     }
+}
+
+function apbct__filter_form_data($form_data)
+{
+    // It is a service field. Need to be deleted before the processing.
+    if ( isset($form_data['apbct_visible_fields']) ) {
+        unset($form_data['apbct_visible_fields']);
+    }
+
+    $exclusions = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' );
+    if ( $exclusions ) {
+
+        $excluded_fields = explode(',', $exclusions);
+
+        // regular expression exception
+        if (COption::GetOptionInt( 'cleantalk.antispam', 'form_exclusions_fields__regexp', 0 )) {
+
+            foreach (array_keys($form_data) as $key) {
+                foreach ($excluded_fields as $exclusion_regexp) {
+                    if (preg_match('/' . $exclusion_regexp . '/', $key) === 1) {
+                        unset($form_data[$key]);
+                    }
+                }
+            }
+
+            return $form_data;
+        }
+
+        foreach ($excluded_fields as $excluded_field) {
+            preg_match_all('/\[(\S*?)\]/', $excluded_field, $matches);
+
+            if (!empty($matches[1])) {
+                $excluded_matches = $matches[1];
+                $first_el = strstr($excluded_field, '[', true);
+                array_unshift($excluded_matches, $first_el);
+                foreach ($excluded_matches as $k => $v) {
+                    if ($v === '') {
+                        unset($excluded_matches[$k]);
+                    }
+                }
+
+                $form_data = apbct__filter_array_recursive($form_data, $excluded_matches);
+            } else {
+                $form_data = apbct__filter_array_recursive($form_data, array($excluded_field));
+            }
+        }
+    }
+
+    return $form_data;
+}
+
+/**
+ * Filtering array to exclude another array
+ * Example: delete fields from $_POST
+ *
+ * @param $array
+ * @param array $excluded_matches
+ * @param int $level
+ *
+ * @return array|mixed
+ */
+function apbct__filter_array_recursive(&$array, $excluded_matches, $level = 0)
+{
+    if (! is_array($array) || empty($array)) {
+        return $array;
+    }
+
+    foreach ($array as $key => $value) {
+        if ((string) $key !== (string) $excluded_matches[$level]) {
+            continue;
+        }
+
+        if (is_array($value)) {
+            $level++;
+
+            if ($level === count($excluded_matches)) {
+                unset($array[$key]);
+                return $array;
+            }
+
+            $array[$key] = apbct__filter_array_recursive($value, $excluded_matches, $level);
+        } else {
+            unset($array[$key]);
+            return $array;
+        }
+    }
+
+    return $array;
 }
