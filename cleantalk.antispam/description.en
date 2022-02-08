@@ -1,3 +1,9 @@
-Fix: SFW updating.
-Fix: composite template.
-Other minor improvements.
+Fix. Settings. API key fieldset moved to the top of the section.
+Fix. Settings. Reset settings button implemented.
+Fix. Settings. Init default setting on installation.
+New. Settings. Complete deactivation option added.
+New. Settings. Complete deactivation implemented.
+New. Settings. Regexp for fields exclusions.
+New. Settings. Saving exclusion regexp implemented.
+Fix. Exclusion. Fields exclusions fixed.
+New. Exclusion. Url exclusions by regexp.
