@@ -156,9 +156,17 @@ class CleantalkAntispam {
         $cleantalk_url_exclusions      = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_url', '' );
         if (!empty($cleantalk_url_exclusions)) {
           $cleantalk_url_exclusions = explode(',', $cleantalk_url_exclusions);
-            foreach ($cleantalk_url_exclusions as $key=>$value)
-                if (strpos($_SERVER['REQUEST_URI'],$value) !== false)
-                    return;         
+            foreach ($cleantalk_url_exclusions as $key => $exclusion) {
+                if (
+                    (
+                        COption::GetOptionInt( 'cleantalk.antispam', 'form_exclusions_url__regexp', 0 ) &&
+                        preg_match('@' . stripslashes($exclusion) . '@', $_SERVER['REQUEST_URI']) === 1
+                    ) ||
+                    stripos($_SERVER['REQUEST_URI'], $exclusion) !== false
+                ) {
+                    return;
+                }
+            }
         }
 
         if (!is_object($USER)) $USER = new CUser;
