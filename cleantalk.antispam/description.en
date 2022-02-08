@@ -1,9 +1,9 @@
-Fix: skip empty email requests.
-Fix: prevent double check request.
-Fix: update cron class.
-Update version. Add site exclusions.
-Fix: set OnEndBufferContentHandler and OnPageStartHandler static.
-Fix: rc_check type.
-Upd: set url exclusion textarea. Disable module for excluded urls.
-Fix: added isset in /Common/Helper.php in http__get_headers()
-Added compatible with PHP 8
+Fix. Settings. API key fieldset moved to the top of the section.
+Fix. Settings. Reset settings button implemented.
+Fix. Settings. Init default setting on installation.
+New. Settings. Complete deactivation option added.
+New. Settings. Complete deactivation implemented.
+New. Settings. Regexp for fields exclusions.
+New. Settings. Saving exclusion regexp implemented.
+Fix. Exclusion. Fields exclusions fixed.
+New. Exclusion. Url exclusions by regexp.

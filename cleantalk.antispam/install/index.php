@@ -158,6 +158,9 @@ class cleantalk_antispam extends CModule {
         $GLOBALS["errors"] = $this->errors;
         $GLOBALS["messages"] = $this->messages;
         $APPLICATION->IncludeAdminFile(GetMessage('CLEANTALK_UNINSTALL_TITLE'), $DOCUMENT_ROOT.'/bitrix/modules/cleantalk.antispam/install/unstep.php');
+        if ( COption::GetOptionInt( 'cleantalk.antispam', 'complete_deactivation', 0 ) == 1 ) {
+            COption::RemoveOption('cleantalk.antispam');
+        }
     }
 
     function InstallFiles() {

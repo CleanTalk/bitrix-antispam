@@ -16,117 +16,201 @@ IncludeModuleLangFile( __FILE__ );
 use Cleantalk\Common\API as CleantalkAPI;
 use Cleantalk\Common\Helper as CleantalkHelper;
 
+$cleantalk_antispam_default_settings = array(
+    'status' => 1,
+    'form_new_user' => 1,
+    'form_comment_blog' => 1,
+    'form_comment_forum' => 1,
+    'form_forum_private_messages' => 1,
+    'form_comment_treelike' => 1,
+    'form_send_example' => 1,
+    'form_order' => 1,
+    'web_form' => 1,
+    'form_global_check' => 0,
+    'form_global_check_without_email' => 0,
+    'form_sfw' => 1,
+    'site_exclusions' => '',
+    'form_exclusions_url' => '',
+    'form_exclusions_url__regexp' => 0,
+    'form_exclusions_fields' => '',
+    'form_exclusions_fields__regexp' => 0,
+    'form_exclusions_webform' => '',
+    'complete_deactivation' => 0,
+);
+
+$cleantalk_is_wrong_regexp = false;
+$cleantalk_is_wrong_url_regexp = false;
+
 if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
 
-    $old_key = COption::GetOptionString( $sModuleId, 'key', '' );    
-
-    //Getting key automatically
-    if(isset($_POST['getautokey'])){
-        
-        $result = CleantalkAPI::method__get_api_key('antispam', COption::GetOptionString("main", "email_from"), $_SERVER["HTTP_HOST"], 'bitrix');
-        
-        if (empty($result['error'])){
-        
-            if(isset($result['user_token'])){
-                COption::SetOptionString( $sModuleId, 'user_token', $result['user_token']);
+    if ( isset($_POST['reset']) ) {
+        foreach ( $cleantalk_antispam_default_settings as $setting => $value ) {
+            if ( is_string( $value ) ) {
+                COption::SetOptionString($sModuleId, $setting, $value);
             }
-            
-            if(isset($result['auth_key'])){
-                COption::SetOptionString( $sModuleId, 'key', $result['auth_key']);
-                $new_key = $result['auth_key'];
+            if ( is_int( $value ) ) {
+                COption::SetOptionInt($sModuleId, $setting, $value);
             }
         }
-        
-    }else{
-        $new_key = $_POST['key'];
-    }
-    
-    // Send empty feedback for version comparison in Dashboard
-    $result = CleantalkAPI::method__send_empty_feedback($new_key, CLEANTALK_USER_AGENT);
-    
-    /**
-     * Set settings when submit
-     */
-    //Validating key
-    if (CleantalkHelper::key_is_correct($new_key)) {
-        $result = CleantalkAPI::method__notice_paid_till($new_key, preg_replace('/http[s]?:\/\//', '', $_SERVER['HTTP_HOST'], 1));
-
-        COption::SetOptionInt($sModuleId, 'key_is_ok', (empty($result['error']) && isset($result['valid']) && $result['valid'] == 1) ? 1 : 0);
-        COption::SetOptionString($sModuleId, 'user_token', (empty($result['error']) && isset($result['user_token'])) ? $result['user_token'] : '');           
-        COption::SetOptionInt($sModuleId, 'moderate_ip', (empty($result['error']) && isset($result['moderate_ip']) && $result['moderate_ip'] == 1) ? 1 : 0);
-        COption::SetOptionInt($sModuleId, 'ip_license', (empty($result['error']) && isset($result['moderate_ip'], $result['ip_license']) && $result['moderate_ip'] == 1) ? $result['ip_license'] : 0);  
-
-        if (empty($result['error'])) {
-            if (isset($result['show_notice'], $result['trial']) && $result['show_notice'] == 1 && $result['trial'] == 1) {
-                CAdminNotify::Add(array(          
-                    'MESSAGE' => GetMessage( 'CLEANTALK_TRIAL_NOTIFY' ),          
-                    'TAG' => 'trial_notify',          
-                    'MODULE_ID' => 'main',          
-                'ENABLE_CLOSE' => 'Y'));         
-            } else {
-                CAdminNotify::DeleteByTag('trial_notify'); 
-            }
-            if (isset($result['show_notice'], $result['renew']) && $result['show_notice'] == 1 && $result['renew'] == 1) {
-                CAdminNotify::Add(array(          
-                    'MESSAGE' => GetMessage( 'CLEANTALK_RENEW_NOTIFY' ),          
-                    'TAG' => 'renew_notify',          
-                    'MODULE_ID' => 'main',          
-                'ENABLE_CLOSE' => 'Y'));         
-            } else {
-                CAdminNotify::DeleteByTag('renew_notify'); 
-            }
-        }                
     } else {
-        COption::SetOptionInt($sModuleId, 'key_is_ok', 0);
-        COption::SetOptionString($sModuleId, 'user_token','');           
-        COption::SetOptionInt($sModuleId, 'moderate_ip', 0);
-        COption::SetOptionInt($sModuleId, 'ip_license', 0);        
-    }
+        $old_key = COption::GetOptionString( $sModuleId, 'key', '' );
 
+        //Getting key automatically
+        if(isset($_POST['getautokey'])){
 
-    COption::SetOptionInt( $sModuleId, 'status',                          $_POST['status'] == '1'                          ? 1 : 0 );
-    COption::SetOptionInt( $sModuleId, 'form_new_user',                   $_POST['form_new_user'] == '1'                   ? 1 : 0 );
-    COption::SetOptionInt( $sModuleId, 'form_comment_blog',               $_POST['form_comment_blog'] == '1'               ? 1 : 0 );
-    COption::SetOptionInt( $sModuleId, 'form_comment_forum',              $_POST['form_comment_forum'] == '1'              ? 1 : 0 );
-    COption::SetOptionInt( $sModuleId, 'form_forum_private_messages',     $_POST['form_forum_private_messages'] == '1'     ? 1 : 0 );
-    COption::SetOptionInt( $sModuleId, 'form_comment_treelike',           $_POST['form_comment_treelike'] == '1'           ? 1 : 0 );
-    COption::SetOptionInt( $sModuleId, 'form_send_example',               $_POST['form_send_example'] == '1'               ? 1 : 0 );
-    COption::SetOptionInt( $sModuleId, 'form_order',                      $_POST['form_order'] == '1'                      ? 1 : 0 );
-    COption::SetOptionInt( $sModuleId, 'web_form',                        $_POST['web_form'] == '1'                        ? 1 : 0 );
-    COption::SetOptionInt( $sModuleId, 'is_paid',                         $_POST['is_paid'] == '1'                         ? 1 : 0 );
-    COption::SetOptionInt( $sModuleId, 'last_checked',                    $_POST['last_checked'] == '1'                    ? 1 : 0 );
-    COption::SetOptionInt( $sModuleId, 'form_global_check',               $_POST['form_global_check'] == '1'               ? 1 : 0 );
-    COption::SetOptionInt( $sModuleId, 'form_global_check_without_email', $_POST['form_global_check_without_email'] == '1' ? 1 : 0 );
-    COption::SetOptionInt( $sModuleId, 'form_sfw',                        $_POST['form_sfw'] == '1'                        ? 1 : 0 );
+            $result = CleantalkAPI::method__get_api_key('antispam', COption::GetOptionString("main", "email_from"), $_SERVER["HTTP_HOST"], 'bitrix');
 
-    if (isset($_POST['form_exclusions_sites']) && is_array($_POST['form_exclusions_sites'])) {
-        $exclusion_sites = array();
-        foreach ($_POST['form_exclusions_sites'] as $value) {
-            $exclusion_sites[] = $value;
+            if (empty($result['error'])){
+
+                if(isset($result['user_token'])){
+                    COption::SetOptionString( $sModuleId, 'user_token', $result['user_token']);
+                }
+
+                if(isset($result['auth_key'])){
+                    COption::SetOptionString( $sModuleId, 'key', $result['auth_key']);
+                    $new_key = $result['auth_key'];
+                }
+            }
+
+        }else{
+            $new_key = $_POST['key'];
         }
-        COption::SetOptionString( $sModuleId, 'site_exclusions', implode(',', $exclusion_sites));
-    } else {
-        COption::SetOptionString( $sModuleId, 'site_exclusions', '');
-    }
-    COption::SetOptionString( $sModuleId, 'form_exclusions_url',             isset($_POST['form_exclusions_url'])     ? $_POST['form_exclusions_url']     : '' );
-    COption::SetOptionString( $sModuleId, 'form_exclusions_fields',          isset($_POST['form_exclusions_fields'])  ? $_POST['form_exclusions_fields']  : '' );
-    COption::SetOptionString( $sModuleId, 'form_exclusions_webform',         isset($_POST['form_exclusions_webform']) ? $_POST['form_exclusions_webform'] : '' );
 
-    COption::SetOptionString( $sModuleId, 'key', $new_key );
-    
-    // URL host
-    COption::SetOptionString( $sModuleId, 'host_url', ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ? "https" : "http" ) . "://" . $_SERVER['HTTP_HOST'] );
-    
-    // SFW scheduled actions
-    if($_POST['form_sfw'] == 1) {
-    
-        CAgent::RemoveModuleAgents( 'cleantalk.antispam' );     
-        CleantalkAntispam::apbct_sfw_update( $new_key );
-        CleantalkAntispam::apbct_sfw_send_logs( $new_key );
-        
-    // Remove it if SFW is disabled
-    }else
-        CAgent::RemoveModuleAgents("cleantalk.antispam"); 
+        // Send empty feedback for version comparison in Dashboard
+        $result = CleantalkAPI::method__send_empty_feedback($new_key, CLEANTALK_USER_AGENT);
+
+        /**
+         * Set settings when submit
+         */
+        //Validating key
+        if (CleantalkHelper::key_is_correct($new_key)) {
+            $result = CleantalkAPI::method__notice_paid_till($new_key, preg_replace('/http[s]?:\/\//', '', $_SERVER['HTTP_HOST'], 1));
+
+            COption::SetOptionInt($sModuleId, 'key_is_ok', (empty($result['error']) && isset($result['valid']) && $result['valid'] == 1) ? 1 : 0);
+            COption::SetOptionString($sModuleId, 'user_token', (empty($result['error']) && isset($result['user_token'])) ? $result['user_token'] : '');
+            COption::SetOptionInt($sModuleId, 'moderate_ip', (empty($result['error']) && isset($result['moderate_ip']) && $result['moderate_ip'] == 1) ? 1 : 0);
+            COption::SetOptionInt($sModuleId, 'ip_license', (empty($result['error']) && isset($result['moderate_ip'], $result['ip_license']) && $result['moderate_ip'] == 1) ? $result['ip_license'] : 0);
+
+            if (empty($result['error'])) {
+                if (isset($result['show_notice'], $result['trial']) && $result['show_notice'] == 1 && $result['trial'] == 1) {
+                    CAdminNotify::Add(array(
+                        'MESSAGE' => GetMessage( 'CLEANTALK_TRIAL_NOTIFY' ),
+                        'TAG' => 'trial_notify',
+                        'MODULE_ID' => 'main',
+                        'ENABLE_CLOSE' => 'Y'));
+                } else {
+                    CAdminNotify::DeleteByTag('trial_notify');
+                }
+                if (isset($result['show_notice'], $result['renew']) && $result['show_notice'] == 1 && $result['renew'] == 1) {
+                    CAdminNotify::Add(array(
+                        'MESSAGE' => GetMessage( 'CLEANTALK_RENEW_NOTIFY' ),
+                        'TAG' => 'renew_notify',
+                        'MODULE_ID' => 'main',
+                        'ENABLE_CLOSE' => 'Y'));
+                } else {
+                    CAdminNotify::DeleteByTag('renew_notify');
+                }
+            }
+        } else {
+            COption::SetOptionInt($sModuleId, 'key_is_ok', 0);
+            COption::SetOptionString($sModuleId, 'user_token','');
+            COption::SetOptionInt($sModuleId, 'moderate_ip', 0);
+            COption::SetOptionInt($sModuleId, 'ip_license', 0);
+        }
+
+        foreach ( $cleantalk_antispam_default_settings as $setting => $value ) {
+            if ( is_int( $value ) ) {
+                COption::SetOptionInt($sModuleId, $setting, $_POST[$setting] == '1' ? 1 : $value);
+            }
+        }
+
+        COption::SetOptionInt( $sModuleId, 'is_paid',                         $_POST['is_paid'] == '1'                         ? 1 : 0 );
+        COption::SetOptionInt( $sModuleId, 'last_checked',                    $_POST['last_checked'] == '1'                    ? 1 : 0 );
+
+        if (isset($_POST['form_exclusions_sites']) && is_array($_POST['form_exclusions_sites'])) {
+            $exclusion_sites = array();
+            foreach ($_POST['form_exclusions_sites'] as $value) {
+                $exclusion_sites[] = $value;
+            }
+            COption::SetOptionString( $sModuleId, 'site_exclusions', implode(',', $exclusion_sites));
+        } else {
+            COption::SetOptionString( $sModuleId, 'site_exclusions', $cleantalk_antispam_default_settings['site_exclusions']);
+        }
+        COption::SetOptionString( $sModuleId, 'form_exclusions_url',             isset($_POST['form_exclusions_url'])     ? $_POST['form_exclusions_url']     : $cleantalk_antispam_default_settings['form_exclusions_url'] );
+
+        if (
+            isset($_POST['form_exclusions_url']) &&
+            ! empty($_POST['form_exclusions_url']) &&
+            isset($_POST['form_exclusions_url__regexp']) &&
+            ct_is_valid_regexp($_POST['form_exclusions_url'])
+        ) {
+            COption::SetOptionInt( $sModuleId, 'form_exclusions_url__regexp',     isset($_POST['form_exclusions_url__regexp'])  ? $_POST['form_exclusions_url__regexp']  : $cleantalk_antispam_default_settings['form_exclusions_url__regexp'] );
+        } else {
+            if ( ! empty($_POST['form_exclusions_url']) && isset($_POST['form_exclusions_url__regexp']) ) {
+                $cleantalk_is_wrong_url_regexp = true;
+            }
+            COption::SetOptionInt( $sModuleId, 'form_exclusions_url__regexp',     0 );
+        }
+
+        COption::SetOptionString( $sModuleId, 'form_exclusions_fields',          isset($_POST['form_exclusions_fields'])  ? $_POST['form_exclusions_fields']  : $cleantalk_antispam_default_settings['form_exclusions_fields'] );
+
+        if (
+            isset($_POST['form_exclusions_fields']) &&
+            ! empty($_POST['form_exclusions_fields']) &&
+            isset($_POST['form_exclusions_fields__regexp']) &&
+            ct_is_valid_regexp($_POST['form_exclusions_fields'])
+        ) {
+            COption::SetOptionInt( $sModuleId, 'form_exclusions_fields__regexp',     isset($_POST['form_exclusions_fields__regexp'])  ? $_POST['form_exclusions_fields__regexp']  : $cleantalk_antispam_default_settings['form_exclusions_fields__regexp'] );
+        } else {
+            if ( ! empty($_POST['form_exclusions_fields']) && isset($_POST['form_exclusions_fields__regexp']) ) {
+                $cleantalk_is_wrong_regexp = true;
+            }
+            COption::SetOptionInt( $sModuleId, 'form_exclusions_fields__regexp',     0 );
+        }
+        COption::SetOptionString( $sModuleId, 'form_exclusions_webform',         isset($_POST['form_exclusions_webform']) ? $_POST['form_exclusions_webform'] : $cleantalk_antispam_default_settings['form_exclusions_webform'] );
+
+        COption::SetOptionString( $sModuleId, 'key', $new_key );
+
+        // URL host
+        COption::SetOptionString( $sModuleId, 'host_url', ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ? "https" : "http" ) . "://" . $_SERVER['HTTP_HOST'] );
+
+        // SFW scheduled actions
+        if($_POST['form_sfw'] == 1) {
+
+            CAgent::RemoveModuleAgents( 'cleantalk.antispam' );
+            CleantalkAntispam::apbct_sfw_update( $new_key );
+            CleantalkAntispam::apbct_sfw_send_logs( $new_key );
+
+            // Remove it if SFW is disabled
+        } else {
+            CAgent::RemoveModuleAgents("cleantalk.antispam");
+        }
+    }
+}
+
+function ct_is_valid_regexp($exclusion_string)
+{
+    if ( ! empty($exclusion_string) ) {
+        $exclusions = explode(',', $exclusion_string);
+        foreach ( $exclusions as $exclusion ) {
+            if ( ! ct_is_regexp($exclusion) ) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+/**
+ * Checks if given string is valid regular expression
+ *
+ * @param string $regexp
+ *
+ * @return bool
+ */
+function ct_is_regexp($regexp)
+{
+    return @preg_match('/' . $regexp . '/', '') !== false;
 }
 
 /**
@@ -169,6 +253,60 @@ $oTabControl->Begin();
             }
         }
     </script>
+    <tr class="heading">
+        <td colspan="2"><?=GetMessage( 'CLEANTALK_KEY' )?></td>
+    </tr>
+    <tr>
+        <?php
+        $moderate_ip=COption::GetOptionInt( $sModuleId, 'moderate_ip', 0 );
+
+        if($moderate_ip == 1){
+            print '<td width="100%" valign="top" colspan="2">';
+            print "The anti-spam service is paid by your hosting provider. License #".COption::GetOptionInt( $sModuleId, 'ip_license', 0 ).".";
+            print '</td>';
+        }else{
+            $key_is_ok = COption::GetOptionInt( $sModuleId, 'key_is_ok', 0);
+            ?>
+            <td width="50%" valign="top"><label for="key"><?echo GetMessage( 'CLEANTALK_LABEL_KEY' );?>:</td>
+            <td  valign="top">
+                <input type="text" name="key" id="key" value="<?php echo COption::GetOptionString( $sModuleId, 'key', '' ) ?>" /> <span><?php
+                    if ($key_is_ok == 0) {
+                        echo "<span style='color: red'>".GetMessage( 'CLEANTALK_KEY_NOT_VALID' )."</span>";
+                    }
+                    ?></span>
+                <input type="hidden" name="is_paid" value="<?php echo COption::GetOptionInt( $sModuleId, 'is_paid', 0 ) ?>" />
+                <input type="hidden" name="last_checked" value="0" />
+                <input type="hidden" name="moderate_ip" value="<?php echo COption::GetOptionInt( $sModuleId, 'moderate_ip', 0 ) ?>" />
+                <input type="hidden" name="ip_license" value="<?php echo COption::GetOptionInt( $sModuleId, 'ip_license', 0 ) ?>" />
+            </td>
+            <?php
+        }
+        ?>
+    </tr>
+    <?php if($key_is_ok == 0){ ?>
+        <tr>
+            <td width="50%" valign="top">
+                <a target="_blank" href="https://cleantalk.org/register?platform=bitrix&email=<?php echo COption::GetOptionString("main", "email_from"); ?>&website=<?php echo $_SERVER["SERVER_NAME"]; ?>">
+                    <input type="button" name="getmanualkey" value="<?php echo GetMessage( 'CLEANTALK_GET_MANUAL_KEY' ) ?>" />
+                </a>
+            </td>
+            <td  valign="top">
+                <input type="submit" name="getautokey" value="<?php echo GetMessage( 'CLEANTALK_GET_AUTO_KEY' ) ?>" />
+            </td>
+        </tr>
+        <tr>
+            <td colspan='2' style='text-align: center;'><?php echo GetMessage( 'CLEANTALK_EMAIL_REGISTRATION_WARNING' )."(". COption::GetOptionString("main", "email_from"); ?>).<br> <a target="_blank" href="https://cleantalk.org/publicoffer"><?php echo GetMessage( 'CLEANTALK_LICENSE_AGREEMENT' ); ?></a></td>
+        </tr>
+    <?php }else{ ?>
+        <tr>
+            <td width="50%"></td>
+            <td valign="top">
+                <a target="_blank" href="https://cleantalk.org/my?user_token=<?php echo COption::GetOptionString( $sModuleId, "user_token"); ?>">
+                    <input type="button" name="getmanualkey" value="<?php echo GetMessage( 'CLEANTALK_GET_TO_CP' ) ?>" />
+                </a>
+            </td>
+        </tr>
+    <?php } ?>
     <tr class="heading">
         <td colspan="2"><?=GetMessage( 'CLEANTALK_TITLE' )?></td>
     </tr>
@@ -279,8 +417,13 @@ $oTabControl->Begin();
         <td width="50%" valign="top"><label for="form_exclusions_check"><?echo GetMessage( 'CLEANTALK_EXCLUSIONS_URL' );?>:</td>
         <td  valign="top">
             <div class="ui-ctl ui-ctl-textarea">
-                <textarea class="ui-ctl-element" name = "form_exclusions_url" id = "form_exclusions_url" cols = "45" rows = "10"><?php echo COption::GetOptionString( $sModuleId, 'form_exclusions_url', '' ); ?></textarea>
+                <textarea class="ui-ctl-element" name="form_exclusions_url" id="form_exclusions_url" cols="45" rows="10"><?php echo COption::GetOptionString( $sModuleId, 'form_exclusions_url', '' ); ?></textarea>
             </div>
+            <input type="checkbox" name="form_exclusions_url__regexp" id="form_exclusions_url__regexp" value="1" <?php if ( COption::GetOptionInt( $sModuleId, 'form_exclusions_url__regexp', $cleantalk_antispam_default_settings['form_exclusions_url__regexp'] ) == 1): ?> checked="checked" <?php endif; ?> />
+            <label for="form_exclusions_url__regexp"><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_FIELDS_REGEXP_DESCRIPTION' ); ?></label>
+            <?php if ( $cleantalk_is_wrong_url_regexp ) : ?>
+                <div style="color:red"><?php echo GetMessage( 'CLEANTALK_WRONG_REGEXP_NOTIFY' ); ?></div>
+            <?php endif; ?>
             <div><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_URL_DESCRIPTION' ); ?></div>
         </td>
     </tr>
@@ -288,6 +431,11 @@ $oTabControl->Begin();
         <td width="50%" valign="top"><label for="form_exclusions_fields"><?echo GetMessage( 'CLEANTALK_EXCLUSIONS_FIELDS' );?>:</td>
         <td  valign="top">
             <input type="text" name="form_exclusions_fields" id="form_exclusions_fields" value="<?php echo COption::GetOptionString( $sModuleId, 'form_exclusions_fields', '' ); ?>" />
+            <input type="checkbox" name="form_exclusions_fields__regexp" id="form_exclusions_fields__regexp" value="1" <?php if ( COption::GetOptionInt( $sModuleId, 'form_exclusions_fields__regexp', $cleantalk_antispam_default_settings['form_exclusions_fields__regexp'] ) == 1): ?> checked="checked" <?php endif; ?> />
+            <label for="form_exclusions_fields__regexp"><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_FIELDS_REGEXP_DESCRIPTION' ); ?></label>
+            <?php if ( $cleantalk_is_wrong_regexp ) : ?>
+                <div style="color:red"><?php echo GetMessage( 'CLEANTALK_WRONG_REGEXP_NOTIFY' ); ?></div>
+            <?php endif; ?>
             <div><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_FIELDS_DESCRIPTION' ); ?></div>
         </td>
     </tr>
@@ -299,64 +447,22 @@ $oTabControl->Begin();
         </td>
     </tr>
     <tr class="heading">
-        <td colspan="2"><?=GetMessage( 'CLEANTALK_KEY' )?></td>
+        <td colspan="2"><?=GetMessage( 'CLEANTALK_MISC' )?></td>
     </tr>
     <tr>
-        <?php
-            $moderate_ip=COption::GetOptionInt( $sModuleId, 'moderate_ip', 0 );
-
-            if($moderate_ip == 1){
-                print '<td width="100%" valign="top" colspan="2">';
-                print "The anti-spam service is paid by your hosting provider. License #".COption::GetOptionInt( $sModuleId, 'ip_license', 0 ).".";
-                print '</td>';
-            }else{
-                $key_is_ok = COption::GetOptionInt( $sModuleId, 'key_is_ok', 0);
-        ?>
-        <td width="50%" valign="top"><label for="key"><?echo GetMessage( 'CLEANTALK_LABEL_KEY' );?>:</td>
-        <td  valign="top">
-            <input type="text" name="key" id="key" value="<?php echo COption::GetOptionString( $sModuleId, 'key', '' ) ?>" /> <span><?php 
-                if ($key_is_ok == 0) {
-                    echo "<span style='color: red'>".GetMessage( 'CLEANTALK_KEY_NOT_VALID' )."</span>";
-                }
-                ?></span>
-            <input type="hidden" name="is_paid" value="<?php echo COption::GetOptionInt( $sModuleId, 'is_paid', 0 ) ?>" />
-            <input type="hidden" name="last_checked" value="0" />
-            <input type="hidden" name="moderate_ip" value="<?php echo COption::GetOptionInt( $sModuleId, 'moderate_ip', 0 ) ?>" />
-            <input type="hidden" name="ip_license" value="<?php echo COption::GetOptionInt( $sModuleId, 'ip_license', 0 ) ?>" />
-        </td>
-        <?php
-            }
-        ?>
-    </tr>
-    <?php if($key_is_ok == 0){ ?>
-    <tr>
-        <td width="50%" valign="top">
-            <a target="_blank" href="https://cleantalk.org/register?platform=bitrix&email=<?php echo COption::GetOptionString("main", "email_from"); ?>&website=<?php echo $_SERVER["SERVER_NAME"]; ?>">
-                <input type="button" name="getmanualkey" value="<?php echo GetMessage( 'CLEANTALK_GET_MANUAL_KEY' ) ?>" />
-            </a>
-        </td>
-        <td  valign="top">
-            <input type="submit" name="getautokey" value="<?php echo GetMessage( 'CLEANTALK_GET_AUTO_KEY' ) ?>" />
-        </td>
-    </tr>
-    <tr>
-        <td colspan='2' style='text-align: center;'><?php echo GetMessage( 'CLEANTALK_EMAIL_REGISTRATION_WARNING' )."(". COption::GetOptionString("main", "email_from"); ?>).<br> <a target="_blank" href="https://cleantalk.org/publicoffer"><?php echo GetMessage( 'CLEANTALK_LICENSE_AGREEMENT' ); ?></a></td>
-    </tr>
-    <?php }else{ ?>
-    <tr>
-        <td width="50%"></td>
+        <td width="50%" valign="top"><label for="complete_deactivation"><?php echo GetMessage( 'CLEANTALK_LABEL_COMPLETE_DEACTIVATION' ); ?>:</td>
         <td valign="top">
-            <a target="_blank" href="https://cleantalk.org/my?user_token=<?php echo COption::GetOptionString( $sModuleId, "user_token"); ?>">
-                <input type="button" name="getmanualkey" value="<?php echo GetMessage( 'CLEANTALK_GET_TO_CP' ) ?>" />
-            </a>
+            <input
+                type="checkbox"
+                name="form_order"
+                id="complete_deactivation"
+                <?php if ( COption::GetOptionInt( $sModuleId, 'complete_deactivation', $cleantalk_antispam_default_settings['complete_deactivation'] ) == 1) :?> checked="checked"<?php endif; ?>
+                value="1" />
         </td>
     </tr>
-    <?php 
-        } 
-        $oTabControl->Buttons();
-    ?>
+    <?php $oTabControl->Buttons(); ?>
     <input type="submit" name="Update" value="<?php echo GetMessage( 'CLEANTALK_BUTTON_SAVE' ) ?>" />
-    <input type="reset" name="reset" value="<?php echo GetMessage( 'CLEANTALK_BUTTON_RESET' ) ?>" />
+    <input type="submit" name="reset" value="<?php echo GetMessage( 'CLEANTALK_BUTTON_RESET' ) ?>" />
     <input type="hidden" name="Update" value="Y" />
     <?php $oTabControl->End();?>
 </form>
