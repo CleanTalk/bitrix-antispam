@@ -474,7 +474,23 @@ class CleantalkAntispam {
           if (in_array($WEB_FORM_ID, $webforms_id_checking))
             return;    
         }
-  
+
+        // Set exclusions to the class
+        $cleantalk_url_exclusions      = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_url', '' );
+        if (!empty($cleantalk_url_exclusions)) {
+            $cleantalk_url_exclusions = explode(',', $cleantalk_url_exclusions);
+            foreach ($cleantalk_url_exclusions as $key => $exclusion) {
+                if (
+                    (
+                        COption::GetOptionInt( 'cleantalk.antispam', 'form_exclusions_url__regexp', 0 ) &&
+                        preg_match('@' . stripslashes($exclusion) . '@', $_SERVER['REQUEST_URI']) === 1
+                    ) ||
+                    stripos($_SERVER['REQUEST_URI'], $exclusion) !== false
+                ) {
+                    return;
+                }
+            }
+        }
 
         if ($ct_status == 1 && $ct_webform == 1){
             
@@ -491,6 +507,12 @@ class CleantalkAntispam {
                 'AJAX_CALL',
                 'bxajaxid',
             );
+
+            $fields_exclusions = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' );
+            if ( $fields_exclusions ) {
+                $excluded_fields = explode(',', $fields_exclusions);
+                $skip_keys = array_merge($skip_keys, $excluded_fields);
+            }
             
             foreach ($arrVALUES as $key => $value){
                 
@@ -1958,6 +1980,7 @@ function apbct__filter_form_data($form_data)
     }
 
     $exclusions = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_fields', '' );
+
     if ( $exclusions ) {
 
         $excluded_fields = explode(',', $exclusions);
