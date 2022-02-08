@@ -31,6 +31,7 @@ $MESS['CLEANTALK_EXCLUSIONS_URL']                = 'URL exclusions';
 $MESS['CLEANTALK_EXCLUSIONS_URL_DESCRIPTION']    = 'Exclude urls from spam check. List them separated by commas.';
 $MESS['CLEANTALK_EXCLUSIONS_FIELDS']             = 'Fields exclusions';
 $MESS['CLEANTALK_EXCLUSIONS_FIELDS_DESCRIPTION'] = 'Exclude fields from spam check. List them separated by commas. Works on forms except for registration and comment forms.';
+$MESS['CLEANTALK_EXCLUSIONS_FIELDS_REGEXP_DESCRIPTION'] = 'Use Regular Expression in Field Exclusions';
 $MESS['CLEANTALK_EXCLUSIONS_WEBFORM']            = 'Web-form ID exclusion';
 $MESS['CLEANTALK_EXCLUSIONS_WEBFORM_DESCRIPTION']= 'Exclude forms (Web-forms module) by provided IDs. List them separated by commas.';
 $MESS['CLEANTALK_EXCLUSIONS_SITES'] = 'Sites exclusions';
@@ -39,3 +40,4 @@ $MESS['CLEANTALK_TRIAL_NOTIFY']= "<b>Anti-spam by CleanTalk</b> trial period end
 $MESS['CLEANTALK_RENEW_NOTIFY']= "Please, <a href='https://cleantalk.org/my/bill/recharge?utm_source=bitrix-backend&utm_medium=cpc&utm_campaign=bitrix-backend-renew&user_token=".COption::GetOptionString('cleantalk.antispam', 'user_token', '')."&cp_mode=antispam' target='_blank'><b>renew</b></a> your anti-spam license for <b>Anti-spam by CleanTalk</b>!";
 $MESS['CLEANTALK_MISC'] = 'Miscellaneous';
 $MESS['CLEANTALK_LABEL_COMPLETE_DEACTIVATION'] = 'Complete deactivation';
+$MESS['CLEANTALK_WRONG_REGEXP_NOTIFY'] = 'Field Exclusions is not a valid regular expression.';

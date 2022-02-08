@@ -31,6 +31,7 @@ $MESS['CLEANTALK_EXCLUSIONS_URL']                = 'URL исключения';
 $MESS['CLEANTALK_EXCLUSIONS_URL_DESCRIPTION']    = 'Исключение URL из спам-проверки. Перечислите через запятую.';
 $MESS['CLEANTALK_EXCLUSIONS_FIELDS']             = 'Исключение полей форм';
 $MESS['CLEANTALK_EXCLUSIONS_FIELDS_DESCRIPTION'] = 'Исключение полей форм из спам-проверки. Перечислите через запятую. Это работает на формах, кроме форм регистрации и комментирования.';
+$MESS['CLEANTALK_EXCLUSIONS_FIELDS_REGEXP_DESCRIPTION'] = 'Использовать регулярные выражения в исключении полей';
 $MESS['CLEANTALK_EXCLUSIONS_WEBFORM']            = 'Исключение Веб-форм по ID';
 $MESS['CLEANTALK_EXCLUSIONS_WEBFORM_DESCRIPTION']= 'Исключение форм (модуль Веб-формы) из спам-проверки по ID. Перечислите через запятую.';
 $MESS['CLEANTALK_EXCLUSIONS_SITES'] = 'Исключение сайтов';
@@ -39,3 +40,4 @@ $MESS['CLEANTALK_TRIAL_NOTIFY']= "Заканчивается ознакомит�
 $MESS['CLEANTALK_RENEW_NOTIFY']= "Пожалуйста, <a href='https://cleantalk.org/my/bill/recharge?utm_source=bitrix-backend&utm_medium=cpc&utm_campaign=bitrix-backend-renew&user_token=".COption::GetOptionString('cleantalk.antispam', 'user_token', '')."&cp_mode=antispam' target='_blank'><b>обновите</b></a> вашу анти-спам лицензию для <b>Антиспам без CAPTCHA от CleanTalk</b>!";
 $MESS['CLEANTALK_MISC'] = 'Прочее';
 $MESS['CLEANTALK_LABEL_COMPLETE_DEACTIVATION'] = 'Полная деактивация';
+$MESS['CLEANTALK_WRONG_REGEXP_NOTIFY'] = 'Исключение полей форм является не корректным регулярным выражением.';
