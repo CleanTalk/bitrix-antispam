@@ -118,14 +118,20 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
             COption::SetOptionInt($sModuleId, 'ip_license', 0);
         }
 
-        foreach ( $cleantalk_antispam_default_settings as $setting => $value ) {
-            if ( is_int( $value ) ) {
-                COption::SetOptionInt($sModuleId, $setting, $_POST[$setting] == '1' ? 1 : $value);
-            }
-        }
-
+        COption::SetOptionInt( $sModuleId, 'status',                          $_POST['status'] == '1'                          ? 1 : 0 );
+        COption::SetOptionInt( $sModuleId, 'form_new_user',                   $_POST['form_new_user'] == '1'                   ? 1 : 0 );
+        COption::SetOptionInt( $sModuleId, 'form_comment_blog',               $_POST['form_comment_blog'] == '1'               ? 1 : 0 );
+        COption::SetOptionInt( $sModuleId, 'form_comment_forum',              $_POST['form_comment_forum'] == '1'              ? 1 : 0 );
+        COption::SetOptionInt( $sModuleId, 'form_forum_private_messages',     $_POST['form_forum_private_messages'] == '1'     ? 1 : 0 );
+        COption::SetOptionInt( $sModuleId, 'form_comment_treelike',           $_POST['form_comment_treelike'] == '1'           ? 1 : 0 );
+        COption::SetOptionInt( $sModuleId, 'form_send_example',               $_POST['form_send_example'] == '1'               ? 1 : 0 );
+        COption::SetOptionInt( $sModuleId, 'form_order',                      $_POST['form_order'] == '1'                      ? 1 : 0 );
+        COption::SetOptionInt( $sModuleId, 'web_form',                        $_POST['web_form'] == '1'                        ? 1 : 0 );
         COption::SetOptionInt( $sModuleId, 'is_paid',                         $_POST['is_paid'] == '1'                         ? 1 : 0 );
         COption::SetOptionInt( $sModuleId, 'last_checked',                    $_POST['last_checked'] == '1'                    ? 1 : 0 );
+        COption::SetOptionInt( $sModuleId, 'form_global_check',               $_POST['form_global_check'] == '1'               ? 1 : 0 );
+        COption::SetOptionInt( $sModuleId, 'form_global_check_without_email', $_POST['form_global_check_without_email'] == '1' ? 1 : 0 );
+        COption::SetOptionInt( $sModuleId, 'form_sfw',                        $_POST['form_sfw'] == '1'                        ? 1 : 0 );
 
         if (isset($_POST['form_exclusions_sites']) && is_array($_POST['form_exclusions_sites'])) {
             $exclusion_sites = array();
