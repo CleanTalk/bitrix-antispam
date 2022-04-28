@@ -29,6 +29,7 @@ $MESS['CLEANTALK_KEY']                           = 'Access key';
 $MESS['CLEANTALK_EXCLUSIONS']                    = 'Exclusions';
 $MESS['CLEANTALK_EXCLUSIONS_URL']                = 'URL exclusions';
 $MESS['CLEANTALK_EXCLUSIONS_URL_DESCRIPTION']    = 'Exclude urls from spam check. List them separated by commas.';
+$MESS['CLEANTALK_EXCLUSIONS_URLS_REGEXP_DESCRIPTION'] = 'Use Regular Expression in URLs Exclusions';
 $MESS['CLEANTALK_EXCLUSIONS_FIELDS']             = 'Fields exclusions';
 $MESS['CLEANTALK_EXCLUSIONS_FIELDS_DESCRIPTION'] = 'Exclude fields from spam check. List them separated by commas. Works on forms except for registration and comment forms.';
 $MESS['CLEANTALK_EXCLUSIONS_FIELDS_REGEXP_DESCRIPTION'] = 'Use Regular Expression in Field Exclusions';
@@ -41,3 +42,6 @@ $MESS['CLEANTALK_RENEW_NOTIFY']= "Please, <a href='https://cleantalk.org/my/bill
 $MESS['CLEANTALK_MISC'] = 'Miscellaneous';
 $MESS['CLEANTALK_LABEL_COMPLETE_DEACTIVATION'] = 'Complete deactivation';
 $MESS['CLEANTALK_WRONG_REGEXP_NOTIFY'] = 'Field Exclusions is not a valid regular expression.';
+$MESS['CLEANTALK_WRONG_DEFAULT_SETTINGS'] = 'Can not load default options.';
+$MESS['CLEANTALK_WRONG_CURRENT_SETTINGS'] = 'Can not load current options.';
+$MESS['CLEANTALK_RESET_OPTIONS_FAILED'] = 'Can not reset options to defaults.';

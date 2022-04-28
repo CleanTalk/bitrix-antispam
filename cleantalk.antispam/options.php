@@ -24,11 +24,35 @@ global $DEBUG;
 $DEBUG = '$REQUEST_METHOD:' .  $REQUEST_METHOD . ' * ';
 
 if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
-    var_dump($_POST);
+
     $current_options = ct_get_options($sModuleId);
+
+    if ( !$current_options ){
+        CAdminNotify::Add(array(
+            'MESSAGE' => GetMessage( 'CLEANTALK_WRONG_CURRENT_SETTINGS' ),
+            'TAG' => 'cur_options_failed',
+            'MODULE_ID' => 'main',
+            'ENABLE_CLOSE' => 'Y'));
+    }
+
     $default_options = ct_get_default_options($sModuleId);
+    if ( !$default_options ){
+        CAdminNotify::Add(array(
+            'MESSAGE' => GetMessage( 'CLEANTALK_WRONG_DEFAULT_SETTINGS' ),
+            'TAG' => 'def_options_failed',
+            'MODULE_ID' => 'main',
+            'ENABLE_CLOSE' => 'Y'));
+    }
+
     if ( isset($_POST['reset']) ) {
-        ct_reset_options($sModuleId);
+//        ct_reset_options($sModuleId);
+        if ( ct_reset_options($sModuleId) ){
+            CAdminNotify::Add(array(
+                'MESSAGE' => GetMessage( 'CLEANTALK_RESET_OPTIONS_FAILED' ),
+                'TAG' => 'def_options_failed',
+                'MODULE_ID' => 'main',
+                'ENABLE_CLOSE' => 'Y'));
+        }
         $current_options = ct_get_options($sModuleId);
     } else {
         $old_key = $current_options['key'];
@@ -172,7 +196,6 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
             CAgent::RemoveModuleAgents("cleantalk.antispam");
         }
     }
-    ct_options_legacy_c_option($sModuleId);
 }
 
 function ct_is_valid_regexp($exclusion_string)
@@ -235,12 +258,6 @@ function ct_get_options($sModuleId){
     return $result;
 }
 
-function ct_options_legacy_c_option($sModuleId){
-    foreach ( ct_get_options($sModuleId) as $option => $value){
-        COption::SetOptionString($sModuleId, $option, $value);
-    }
-}
-
 /**
  * Describe tabs
  */
@@ -293,7 +310,6 @@ $oTabControl->Begin();
         <?php
         //Start options construct
         $current_options = ct_get_options($sModuleId);
-        var_dump($current_options);
 
         if ( $current_options['moderate_ip'] === '1' ){
             print '<td width="100%" valign="top" colspan="2">';
@@ -516,7 +532,7 @@ $oTabControl->Begin();
                     value="1"
                 <?php if ( $current_options['form_exclusions_url__regexp'] === '1' ): ?> checked="checked" <?php endif; ?> />
             <label for="form_exclusions_url__regexp">
-                <?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_FIELDS_REGEXP_DESCRIPTION' ); ?>
+                <?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_URLS_REGEXP_DESCRIPTION' ); ?>
             </label>
             <?php if ( $cleantalk_is_wrong_url_regexp ) : ?>
                 <div style="color:red"><?php echo GetMessage( 'CLEANTALK_WRONG_REGEXP_NOTIFY' ); ?></div>

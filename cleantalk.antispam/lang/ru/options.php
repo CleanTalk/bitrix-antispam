@@ -29,6 +29,7 @@ $MESS['CLEANTALK_KEY']                           = 'Ключ доступа';
 $MESS['CLEANTALK_EXCLUSIONS']                    = 'Исключения';
 $MESS['CLEANTALK_EXCLUSIONS_URL']                = 'URL исключения';
 $MESS['CLEANTALK_EXCLUSIONS_URL_DESCRIPTION']    = 'Исключение URL из спам-проверки. Перечислите через запятую.';
+$MESS['CLEANTALK_EXCLUSIONS_URLS_REGEXP_DESCRIPTION'] = 'Использовать регулярные выражения в исключении по URL';
 $MESS['CLEANTALK_EXCLUSIONS_FIELDS']             = 'Исключение полей форм';
 $MESS['CLEANTALK_EXCLUSIONS_FIELDS_DESCRIPTION'] = 'Исключение полей форм из спам-проверки. Перечислите через запятую. Это работает на формах, кроме форм регистрации и комментирования.';
 $MESS['CLEANTALK_EXCLUSIONS_FIELDS_REGEXP_DESCRIPTION'] = 'Использовать регулярные выражения в исключении полей';
@@ -41,3 +42,6 @@ $MESS['CLEANTALK_RENEW_NOTIFY']= "Пожалуйста, <a href='https://cleanta
 $MESS['CLEANTALK_MISC'] = 'Прочее';
 $MESS['CLEANTALK_LABEL_COMPLETE_DEACTIVATION'] = 'Полная деактивация';
 $MESS['CLEANTALK_WRONG_REGEXP_NOTIFY'] = 'Исключение полей форм является не корректным регулярным выражением.';
+$MESS['CLEANTALK_WRONG_DEFAULT_SETTINGS'] = 'Невоможно загрузить опции по умолчанию.';
+$MESS['CLEANTALK_WRONG_CURRENT_SETTINGS'] = 'Невоможно загрузить текущие опции.';
+$MESS['CLEANTALK_RESET_OPTIONS_FAILED'] = 'Невоможно сбросить опции.';
