@@ -211,7 +211,6 @@ function ct_is_regexp($regexp)
  * @return array|false
  */
 function ct_get_default_options($sModuleId){
-    var_dump($sModuleId);
     try {
         return Option::getDefaults($sModuleId);
     } catch (\Bitrix\Main\ArgumentOutOfRangeException $ex) {
