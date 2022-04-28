@@ -42,6 +42,6 @@ $MESS['CLEANTALK_RENEW_NOTIFY']= "Please, <a href='https://cleantalk.org/my/bill
 $MESS['CLEANTALK_MISC'] = 'Miscellaneous';
 $MESS['CLEANTALK_LABEL_COMPLETE_DEACTIVATION'] = 'Complete deactivation';
 $MESS['CLEANTALK_WRONG_REGEXP_NOTIFY'] = 'Field Exclusions is not a valid regular expression.';
-$MESS['CLEANTALK_WRONG_DEFAULT_SETTINGS'] = 'Can not load default options.';
+$MESS['CLEANTALK_WRONG_DEFAULT_SETTINGS'] = 'Can not load default options. Module name is incorrect.';
 $MESS['CLEANTALK_WRONG_CURRENT_SETTINGS'] = 'Can not load current options.';
 $MESS['CLEANTALK_RESET_OPTIONS_FAILED'] = 'Can not reset options to defaults.';

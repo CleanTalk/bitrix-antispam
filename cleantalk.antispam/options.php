@@ -20,42 +20,24 @@ use Cleantalk\Common\Helper as CleantalkHelper;
 $cleantalk_is_wrong_regexp = false;
 $cleantalk_is_wrong_url_regexp = false;
 
-global $DEBUG;
-$DEBUG = '$REQUEST_METHOD:' .  $REQUEST_METHOD . ' * ';
-
-if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
-
-    $current_options = ct_get_options($sModuleId);
-
-    if ( !$current_options ){
-        CAdminNotify::Add(array(
-            'MESSAGE' => GetMessage( 'CLEANTALK_WRONG_CURRENT_SETTINGS' ),
-            'TAG' => 'cur_options_failed',
-            'MODULE_ID' => 'main',
-            'ENABLE_CLOSE' => 'Y'));
-    }
-
+if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
+    //try to get default options
     $default_options = ct_get_default_options($sModuleId);
-    if ( !$default_options ){
-        CAdminNotify::Add(array(
-            'MESSAGE' => GetMessage( 'CLEANTALK_WRONG_DEFAULT_SETTINGS' ),
-            'TAG' => 'def_options_failed',
-            'MODULE_ID' => 'main',
-            'ENABLE_CLOSE' => 'Y'));
+
+    if ( ! $default_options ){
+        //if failed - get current instead
+        $default_options = ct_get_options($sModuleId);
     }
 
+    //reset options to defaults if reset in post
     if ( isset($_POST['reset']) ) {
-//        ct_reset_options($sModuleId);
-        if ( ct_reset_options($sModuleId) ){
-            CAdminNotify::Add(array(
-                'MESSAGE' => GetMessage( 'CLEANTALK_RESET_OPTIONS_FAILED' ),
-                'TAG' => 'def_options_failed',
-                'MODULE_ID' => 'main',
-                'ENABLE_CLOSE' => 'Y'));
-        }
+        //try to reset options to defaults
+        ct_reset_options($sModuleId);
+        // if failed anyway it will be rewrote by current options
         $current_options = ct_get_options($sModuleId);
     } else {
-        $old_key = $current_options['key'];
+        //save current key
+        $old_key = Option::get($sModuleId,'key');
 
         //Getting key automatically
         if(isset($_POST['getautokey'])){
@@ -120,7 +102,7 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
             Option::set($sModuleId, 'moderate_ip', 0);
             Option::set($sModuleId, 'ip_license', 0);
         }
-
+        //set non-key options
         Option::set( $sModuleId, 'status',                          $_POST['status'] == '1'                          ? 1 : 0 );
         Option::set( $sModuleId, 'form_new_user',                   $_POST['form_new_user'] == '1'                   ? 1 : 0 );
         Option::set( $sModuleId, 'form_comment_blog',               $_POST['form_comment_blog'] == '1'               ? 1 : 0 );
@@ -149,9 +131,8 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
         Option::set( $sModuleId, 'form_exclusions_url',             isset($_POST['form_exclusions_url'])     ? $_POST['form_exclusions_url']     : $default_options['form_exclusions_url'] );
 
         if (
-            isset($_POST['form_exclusions_url']) &&
+            isset($_POST['form_exclusions_url'], $_POST['form_exclusions_url__regexp']) &&
             ! empty($_POST['form_exclusions_url']) &&
-            isset($_POST['form_exclusions_url__regexp']) &&
             ct_is_valid_regexp($_POST['form_exclusions_url'])
         ) {
             Option::set( $sModuleId, 'form_exclusions_url__regexp',     isset($_POST['form_exclusions_url__regexp'])  ? $_POST['form_exclusions_url__regexp']  : $default_options['form_exclusions_url__regexp'] );
@@ -165,9 +146,8 @@ if( $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
         Option::set( $sModuleId, 'form_exclusions_fields',          isset($_POST['form_exclusions_fields'])  ? $_POST['form_exclusions_fields']  : $default_options['form_exclusions_fields'] );
 
         if (
-            isset($_POST['form_exclusions_fields']) &&
+            isset($_POST['form_exclusions_fields'], $_POST['form_exclusions_fields__regexp']) &&
             ! empty($_POST['form_exclusions_fields']) &&
-            isset($_POST['form_exclusions_fields__regexp']) &&
             ct_is_valid_regexp($_POST['form_exclusions_fields'])
         ) {
             Option::set( $sModuleId, 'form_exclusions_fields__regexp',     isset($_POST['form_exclusions_fields__regexp'])  ? $_POST['form_exclusions_fields__regexp']  : $default_options['form_exclusions_fields__regexp'] );
@@ -223,36 +203,63 @@ function ct_is_regexp($regexp)
     return @preg_match('/' . $regexp . '/', '') !== false;
 }
 
+/**
+ * Reads option set for the cleantalk module.
+ *
+ * @param $sModuleId
+ *
+ * @return array|false
+ */
 function ct_get_default_options($sModuleId){
+    var_dump($sModuleId);
     try {
-        $result =  Option::getDefaults($sModuleId);
-    } catch (\Bitrix\Main\ArgumentOutOfRangeException $ex){
-        return false;
+        return Option::getDefaults($sModuleId);
+    } catch (\Bitrix\Main\ArgumentOutOfRangeException $ex) {
+        CAdminNotify::Add(array(
+            'MESSAGE' => GetMessage('CLEANTALK_WRONG_DEFAULT_SETTINGS'),
+            'TAG' => 'def_options_failed',
+            'MODULE_ID' => 'main',
+            'ENABLE_CLOSE' => 'Y'));
     }
-    return $result;
+    return false;
 }
 
+/**
+ * Reset cleantalk options to defaults. If some option reset fails throw admin notice
+ * @param $sModuleId
+ */
 function ct_reset_options($sModuleId){
-
-    $default_settings = ct_get_default_options($sModuleId);
-    if ( $default_settings ) {
-        foreach ( $default_settings as $setting => $value ) {
+    $default_options = ct_get_default_options($sModuleId);
+    if ( $default_options !== false ) {
+        foreach ( $default_options as $setting => $value ) {
             try {
                 Option::set($sModuleId, $setting, $value);
             } catch (\Bitrix\Main\ArgumentOutOfRangeException $ex) {
-                return false;
+                CAdminNotify::Add(array(
+                    'MESSAGE' => GetMessage( 'CLEANTALK_RESET_OPTIONS_FAILED' ),
+                    'TAG' => 'current_options_failed',
+                    'MODULE_ID' => 'main',
+                    'ENABLE_CLOSE' => 'Y'));
             }
         }
-    } else {
-        return false;
     }
-    return true;
 }
 
+
+/**
+ * Return current cleantalk options or false if exception.
+ * @param $sModuleId
+ * @return array|false
+ */
 function ct_get_options($sModuleId){
     try {
         $result =  Option::getForModule($sModuleId);
     } catch (\Bitrix\Main\ArgumentNullException $ex){
+        CAdminNotify::Add(array(
+            'MESSAGE' => GetMessage( 'CLEANTALK_WRONG_CURRENT_SETTINGS' ),
+            'TAG' => 'cur_options_failed',
+            'MODULE_ID' => 'main',
+            'ENABLE_CLOSE' => 'Y'));
         return false;
     }
     return $result;
@@ -277,7 +284,7 @@ $oTabControl = new CAdmintabControl( 'tabControl', $aTabs );
 $oTabControl->Begin();
 
 /**
- * Settings form
+ * Settings form HTML
  */
 ?><form method="POST" enctype="multipart/form-data" action="<?php echo $APPLICATION->GetCurPage()?>?mid=<?=htmlspecialchars( $sModuleId )?>&lang=<?php echo LANG?>">
     <?=bitrix_sessid_post()?>
@@ -298,11 +305,6 @@ $oTabControl->Begin();
             }
         }
     </script>
-    <p>DEBUG:
-        <?php
-        echo($DEBUG)
-        ?>
-    </p>
     <tr class="heading">
         <td colspan="2"><?=GetMessage( 'CLEANTALK_KEY' )?></td>
     </tr>
@@ -310,7 +312,6 @@ $oTabControl->Begin();
         <?php
         //Start options construct
         $current_options = ct_get_options($sModuleId);
-
         if ( $current_options['moderate_ip'] === '1' ){
             print '<td width="100%" valign="top" colspan="2">';
             print "The anti-spam service is paid by your hosting provider. License #".Option::get( $sModuleId, 'ip_license', 0 ).".";

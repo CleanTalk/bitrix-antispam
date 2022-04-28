@@ -42,6 +42,6 @@ $MESS['CLEANTALK_RENEW_NOTIFY']= "Пожалуйста, <a href='https://cleanta
 $MESS['CLEANTALK_MISC'] = 'Прочее';
 $MESS['CLEANTALK_LABEL_COMPLETE_DEACTIVATION'] = 'Полная деактивация';
 $MESS['CLEANTALK_WRONG_REGEXP_NOTIFY'] = 'Исключение полей форм является не корректным регулярным выражением.';
-$MESS['CLEANTALK_WRONG_DEFAULT_SETTINGS'] = 'Невоможно загрузить опции по умолчанию.';
+$MESS['CLEANTALK_WRONG_DEFAULT_SETTINGS'] = 'Невоможно загрузить опции по умолчанию. Ошибка в имени модуля.';
 $MESS['CLEANTALK_WRONG_CURRENT_SETTINGS'] = 'Невоможно загрузить текущие опции.';
 $MESS['CLEANTALK_RESET_OPTIONS_FAILED'] = 'Невоможно сбросить опции.';
