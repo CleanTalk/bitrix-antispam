@@ -105,10 +105,19 @@ class cleantalk_antispam extends CModule {
 				RegisterModuleDependences('form', 'OnBeforeResultAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeResultAddHandler');
 			} 
 		}
-		
-		//Checking API key if already set
+
+        //init default options if no options set
+        $current_options = Option::getForModule('cleantalk.antispam');
+        if ( empty( $current_options ) ) {
+            $default_options = Option::getDefaults('cleantalk.antispam');
+            foreach ($default_options as $option => $value) {
+                Option::set('cleantalk.antispam', $option, $value);
+            }
+        }
+
+        //Checking API key if already set
 		$api_key = COption::GetOptionString( 'cleantalk.antispam', 'key', '');
-		$form_sfw = COption::GetOptionInt( 'cleantalk.antispam', 'form_sfw', 0 );
+		$form_sfw = COption::GetOptionInt( 'cleantalk.antispam', 'form_sfw', 0 ); //TODO For what is it?
 		
 		$result = CleantalkAPI::method__notice_paid_till($api_key, preg_replace('/http[s]?:\/\//', '', $_SERVER['HTTP_HOST'], 1));
 		COption::SetOptionInt( 'cleantalk.antispam', 'key_is_ok', isset($result['valid']) && $result['valid'] == '1' ? 1 : 0);
