@@ -6,6 +6,7 @@ IncludeModuleLangFile(__FILE__);
 require_once(dirname(__FILE__) . '/../lib/autoload.php');
 
 use Cleantalk\Common\API as CleantalkAPI;
+use Bitrix\Main\Config\Option;
 
 /**
  * Installer for CleanTalk module
@@ -125,6 +126,11 @@ class cleantalk_antispam extends CModule {
 
     function DoUninstall() {
         global $DOCUMENT_ROOT, $APPLICATION;
+        //Complete deactivation removes all the options
+        if ( Option::get( 'cleantalk.antispam', 'complete_deactivation') == 1 ) {
+            $ct_option_names = array_keys(Option::getForModule('cleantalk.antispam'));
+            Option::delete('cleantalk.antispam',$ct_option_names);
+        }
 
         if (IsModuleInstalled('blog')){
           UnRegisterModuleDependences('blog', 'OnBeforeCommentAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeCommentAddHandler');
@@ -158,9 +164,6 @@ class cleantalk_antispam extends CModule {
         $GLOBALS["errors"] = $this->errors;
         $GLOBALS["messages"] = $this->messages;
         $APPLICATION->IncludeAdminFile(GetMessage('CLEANTALK_UNINSTALL_TITLE'), $DOCUMENT_ROOT.'/bitrix/modules/cleantalk.antispam/install/unstep.php');
-        if ( COption::GetOptionInt( 'cleantalk.antispam', 'complete_deactivation', 0 ) == 1 ) {
-            COption::RemoveOption('cleantalk.antispam');
-        }
     }
 
     function InstallFiles() {
