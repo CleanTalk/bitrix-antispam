@@ -113,7 +113,7 @@ class cleantalk_antispam extends CModule {
 
         if ( ! empty ($current_options) ) {
             foreach ($current_options as $key) {
-                if ( in_array($key, $set_of_default_keys) ) {
+                if (in_array($key, $set_of_default_keys, false)) {
                     $is_empty_options = false;
                     break;
                 }
