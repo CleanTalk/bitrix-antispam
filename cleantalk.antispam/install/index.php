@@ -107,8 +107,20 @@ class cleantalk_antispam extends CModule {
 		}
 
         //init default options if no options set
+        $is_empty_options = true;
+        $set_of_default_keys = array_keys(Option::getDefaults('cleantalk.antispam'));
         $current_options = Option::getForModule('cleantalk.antispam');
-        if ( empty( $current_options ) ) {
+
+        if ( ! empty ($current_options) ) {
+            foreach ($current_options as $key) {
+                if ( in_array($key, $set_of_default_keys) ) {
+                    $is_empty_options = false;
+                    break;
+                }
+            }
+        }
+
+        if ( $is_empty_options ) {
             $default_options = Option::getDefaults('cleantalk.antispam');
             foreach ($default_options as $option => $value) {
                 Option::set('cleantalk.antispam', $option, $value);
