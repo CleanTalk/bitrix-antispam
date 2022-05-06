@@ -6,6 +6,7 @@ IncludeModuleLangFile(__FILE__);
 require_once(dirname(__FILE__) . '/../lib/autoload.php');
 
 use Cleantalk\Common\API as CleantalkAPI;
+use Bitrix\Main\Config\Option;
 
 /**
  * Installer for CleanTalk module
@@ -104,10 +105,31 @@ class cleantalk_antispam extends CModule {
 				RegisterModuleDependences('form', 'OnBeforeResultAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeResultAddHandler');
 			} 
 		}
-		
-		//Checking API key if already set
+
+        //init default options if no options set
+        $is_empty_options = true;
+        $set_of_default_keys = array_keys(Option::getDefaults('cleantalk.antispam'));
+        $current_options = Option::getForModule('cleantalk.antispam');
+
+        if ( ! empty ($current_options) ) {
+            foreach ($current_options as $key) {
+                if (in_array($key, $set_of_default_keys, false)) {
+                    $is_empty_options = false;
+                    break;
+                }
+            }
+        }
+
+        if ( $is_empty_options ) {
+            $default_options = Option::getDefaults('cleantalk.antispam');
+            foreach ($default_options as $option => $value) {
+                Option::set('cleantalk.antispam', $option, $value);
+            }
+        }
+
+        //Checking API key if already set
 		$api_key = COption::GetOptionString( 'cleantalk.antispam', 'key', '');
-		$form_sfw = COption::GetOptionInt( 'cleantalk.antispam', 'form_sfw', 0 );
+		$form_sfw = COption::GetOptionInt( 'cleantalk.antispam', 'form_sfw', 0 ); //TODO For what is it?
 		
 		$result = CleantalkAPI::method__notice_paid_till($api_key, preg_replace('/http[s]?:\/\//', '', $_SERVER['HTTP_HOST'], 1));
 		COption::SetOptionInt( 'cleantalk.antispam', 'key_is_ok', isset($result['valid']) && $result['valid'] == '1' ? 1 : 0);
@@ -125,6 +147,11 @@ class cleantalk_antispam extends CModule {
 
     function DoUninstall() {
         global $DOCUMENT_ROOT, $APPLICATION;
+        //Complete deactivation removes all the options
+        if ( Option::get( 'cleantalk.antispam', 'complete_deactivation') == 1 ) {
+            $ct_option_names = array_keys(Option::getForModule('cleantalk.antispam'));
+            Option::delete('cleantalk.antispam',$ct_option_names);
+        }
 
         if (IsModuleInstalled('blog')){
           UnRegisterModuleDependences('blog', 'OnBeforeCommentAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeCommentAddHandler');
@@ -158,9 +185,6 @@ class cleantalk_antispam extends CModule {
         $GLOBALS["errors"] = $this->errors;
         $GLOBALS["messages"] = $this->messages;
         $APPLICATION->IncludeAdminFile(GetMessage('CLEANTALK_UNINSTALL_TITLE'), $DOCUMENT_ROOT.'/bitrix/modules/cleantalk.antispam/install/unstep.php');
-        if ( COption::GetOptionInt( 'cleantalk.antispam', 'complete_deactivation', 0 ) == 1 ) {
-            COption::RemoveOption('cleantalk.antispam');
-        }
     }
 
     function InstallFiles() {

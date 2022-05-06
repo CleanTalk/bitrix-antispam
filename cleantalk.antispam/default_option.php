@@ -1,0 +1,22 @@
+<?php
+$cleantalk_antispam_default_option = array(
+    'status' => 1,
+    'form_new_user' => 1,
+    'form_comment_blog' => 1,
+    'form_comment_forum' => 1,
+    'form_forum_private_messages' => 1,
+    'form_comment_treelike' => 1,
+    'form_send_example' => 1,
+    'form_order' => 1,
+    'web_form' => 1,
+    'form_global_check' => 0,
+    'form_global_check_without_email' => 0,
+    'form_sfw' => 1,
+    'site_exclusions' => '',
+    'form_exclusions_url' => '',
+    'form_exclusions_url__regexp' => 0,
+    'form_exclusions_fields' => '',
+    'form_exclusions_fields__regexp' => 0,
+    'form_exclusions_webform' => '',
+    'complete_deactivation' => 0,
+);
