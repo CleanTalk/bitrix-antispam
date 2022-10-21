@@ -43,11 +43,19 @@ class SFW extends FirewallModule {
     {
 		$results = array();
         $status = 0;
+
+        if ( $this->test ) {
+            unset($_COOKIE['ct_sfw_pass_key']);
+            \Cleantalk\Common\Helper::apbct_cookie__set('ct_sfw_pass_key', '0');
+            $ct_sfw_pass_key = $_COOKIE[ 'ct_sfw_pass_key'];
+        } else {
+            $ct_sfw_pass_key = Cookie::get( 'ct_sfw_pass_key');
+        }
 		
 		// Skip by cookie
 		foreach( $this->ip_array as $current_ip ){
 
-			if( substr( Cookie::get( 'ct_sfw_pass_key' ), 0, 32 ) == md5( $current_ip . $this->api_key ) ){
+			if( substr( $ct_sfw_pass_key, 0, 32 ) == md5( $current_ip . $this->api_key ) ){
 
                 if( Cookie::get( 'ct_sfw_passed' ) ){
 
@@ -66,7 +74,7 @@ class SFW extends FirewallModule {
 
                 }
 
-                if( strlen( Cookie::get( 'ct_sfw_pass_key' ) ) > 32 ) {
+                if( strlen($ct_sfw_pass_key) > 32 ) {
                     $status = substr( Cookie::get( 'ct_sfw_pass_key' ), -1 );
                 }
 
@@ -105,17 +113,20 @@ class SFW extends FirewallModule {
                         $results[] = array('ip' => $current_ip, 'is_personal' => false, 'status' => 'PASS_SFW__BY_WHITELIST',);
                         break;
                     }
-					else
-						$results[] = array('ip' => $current_ip, 'is_personal' => false, 'status' => 'DENY_SFW',);
+					else {
+                        $results[] = array('ip' => $current_ip, 'is_personal' => false, 'status' => 'DENY_SFW',);
+                        if ($this->test){
+                            $test_data = array('ip' => $current_ip, 'is_personal' => false, 'status' => 'DENY_SFW');
+                        }
+                    }
 				}
-
 			}else{
-				
 				$results[] = array( 'ip' => $current_ip, 'is_personal' => false, 'status' => 'PASS_SFW' );
-				
 			}
 		}
-
+		if ($this->test && isset($test_data)){
+		    return array($test_data);
+        }
 		return $results;
 	}
 	
