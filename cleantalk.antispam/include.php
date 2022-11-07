@@ -142,31 +142,8 @@ class CleantalkAntispam {
     {
         global $USER;
 
-        $cleantalk_site_exclusions = COption::GetOptionString('cleantalk.antispam', 'site_exclusions', '');
-
-        if (!empty($cleantalk_site_exclusions)) {
-            $context = \Bitrix\Main\Application::getInstance()->getContext();
-            $siteId = $context->getSite();  
-            $cleantalk_site_exclusions = explode(',', $cleantalk_site_exclusions);
-            if (in_array($siteId, $cleantalk_site_exclusions)) {
-                return;
-            }
-        }
-        // Set exclusions to the class
-        $cleantalk_url_exclusions      = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_url', '' );
-        if (!empty($cleantalk_url_exclusions)) {
-          $cleantalk_url_exclusions = explode(',', $cleantalk_url_exclusions);
-            foreach ($cleantalk_url_exclusions as $key => $exclusion) {
-                if (
-                    (
-                        COption::GetOptionInt( 'cleantalk.antispam', 'form_exclusions_url__regexp', 0 ) &&
-                        preg_match('@' . stripslashes($exclusion) . '@', $_SERVER['REQUEST_URI']) === 1
-                    ) ||
-                    stripos($_SERVER['REQUEST_URI'], $exclusion) !== false
-                ) {
-                    return;
-                }
-            }
+        if ( siteIsExclusion() || urlIsExclusion() ){
+            return;
         }
 
         if (!is_object($USER)) $USER = new CUser;
@@ -463,7 +440,11 @@ class CleantalkAntispam {
     static function OnBeforeResultAddHandler($WEB_FORM_ID, &$arFields, &$arrVALUES)
     {
         global $APPLICATION;
-        
+
+        if ( urlIsExclusion() ){
+            return;
+        }
+
         $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
         $ct_webform= COption::GetOptionInt('cleantalk.antispam', 'web_form', 0);
 
@@ -472,23 +453,6 @@ class CleantalkAntispam {
           $webforms_id_checking = explode(',', $webforms_id_checking);
           if (in_array($WEB_FORM_ID, $webforms_id_checking))
             return;    
-        }
-
-        // Set exclusions to the class
-        $cleantalk_url_exclusions      = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_url', '' );
-        if (!empty($cleantalk_url_exclusions)) {
-            $cleantalk_url_exclusions = explode(',', $cleantalk_url_exclusions);
-            foreach ($cleantalk_url_exclusions as $key => $exclusion) {
-                if (
-                    (
-                        COption::GetOptionInt( 'cleantalk.antispam', 'form_exclusions_url__regexp', 0 ) &&
-                        preg_match('@' . stripslashes($exclusion) . '@', $_SERVER['REQUEST_URI']) === 1
-                    ) ||
-                    stripos($_SERVER['REQUEST_URI'], $exclusion) !== false
-                ) {
-                    return;
-                }
-            }
         }
 
         if ($ct_status == 1 && $ct_webform == 1){
@@ -1075,20 +1039,14 @@ class CleantalkAntispam {
     static function FormAddon() {
 
         if(!defined("ADMIN_SECTION") && COption::GetOptionInt( 'cleantalk.antispam', 'status', 0 ) == 1 )
-            {
-                $cleantalk_site_exclusions = COption::GetOptionString('cleantalk.antispam', 'site_exclusions', '');
+        {
+            if ( siteIsExclusion() || urlIsExclusion() ){
+                return;
+            }
 
-                if (!empty($cleantalk_site_exclusions)) {
-                    $context = \Bitrix\Main\Application::getInstance()->getContext();
-                    $siteId = $context->getSite();  
-                    $cleantalk_site_exclusions = explode(',', $cleantalk_site_exclusions);
-                    if (in_array($siteId, $cleantalk_site_exclusions)) {
-                        return;
-                    }
-                }                
-                $field_name = 'ct_checkjs';
-                $ct_check_def = '0';
-                if (!isset($_COOKIE[$field_name])) setcookie($field_name, $ct_check_def, 0, '/');
+            $field_name = 'ct_checkjs';
+            $ct_check_def = '0';
+            if (!isset($_COOKIE[$field_name])) setcookie($field_name, $ct_check_def, 0, '/');
 
                 $ct_check_values = self::SetCheckJSValues();  
                 
@@ -1345,25 +1303,9 @@ class CleantalkAntispam {
             if (isset($arEntity['sender_email']) && empty($arEntity['sender_email']) && COption::GetOptionInt('cleantalk.antispam', 'form_global_check_without_email', 0) != 1) {
                 return;
             }
-            $cleantalk_site_exclusions = COption::GetOptionString('cleantalk.antispam', 'site_exclusions', '');
 
-            if (!empty($cleantalk_site_exclusions)) {
-                $context = \Bitrix\Main\Application::getInstance()->getContext();
-                $siteId = $context->getSite();  
-                          
-                $cleantalk_site_exclusions = explode(',', $cleantalk_site_exclusions);
-                if (in_array($siteId, $cleantalk_site_exclusions)) {
-                    return;
-                }
-            }
-
-            $url_exclusion = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_url', '' );
-            if (!empty($url_exclusion))
-            {
-              $url_exclusion = explode(',', $url_exclusion);
-                foreach ($url_exclusion as $key=>$value)
-                    if (strpos($_SERVER['REQUEST_URI'],$value) !== false)
-                        return;         
+            if ( siteIsExclusion() || urlIsExclusion() ){
+                return;
             }
 
             $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '');
@@ -2058,4 +2000,42 @@ function apbct__filter_array_recursive(&$array, $excluded_matches, $level = 0)
     }
 
     return $array;
+}
+
+function siteIsExclusion(){
+    $cleantalk_site_exclusions = COption::GetOptionString('cleantalk.antispam', 'site_exclusions', '');
+    if (!empty($cleantalk_site_exclusions)) {
+        $context = \Bitrix\Main\Application::getInstance()->getContext();
+        $siteId = $context->getSite();
+
+        $cleantalk_site_exclusions = explode(',', $cleantalk_site_exclusions);
+        if (in_array($siteId, $cleantalk_site_exclusions)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function urlIsExclusion(){
+    $url_exclusion = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_url', '' );
+    if (!empty($url_exclusion))
+    {
+        $url_exclusion = explode(',', $url_exclusion);
+        error_log('CTDEBUG: $url_exclusion* ' . var_export($url_exclusion,true));
+        error_log('CTDEBUG: $_SERVER_REQUEST_URI* ' . var_export($_SERVER['REQUEST_URI'],true));
+        foreach ($url_exclusion as $key=>$value){
+
+            if (
+                stripos($_SERVER['REQUEST_URI'], $value) !== false
+                ||
+                (//regexp check
+                    COption::GetOptionInt( 'cleantalk.antispam', 'form_exclusions_url__regexp', 0 ) &&
+                    preg_match('@' . stripslashes($value) . '@', $_SERVER['REQUEST_URI']) === 1
+                )
+            ) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
