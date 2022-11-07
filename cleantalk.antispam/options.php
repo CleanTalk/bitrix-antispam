@@ -521,9 +521,11 @@ $oTabControl->Begin();
             <label for="form_exclusions_check"><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_URL' );?>:</td>
         <td  valign="top">
             <div class="ui-ctl ui-ctl-textarea">
-                <textarea class="ui-ctl-element" name="form_exclusions_url" id="form_exclusions_url" cols="45" rows="10">
-                    <?php echo $current_options['form_exclusions_url']; ?>
-                </textarea>
+                    <?php
+                    echo ('<textarea class="ui-ctl-element" name="form_exclusions_url" id="form_exclusions_url" cols="45" rows="10">');
+                    echo ($current_options['form_exclusions_url']);
+                    echo ('</textarea>');
+                    ?>
             </div>
             <input
                     type="checkbox"
