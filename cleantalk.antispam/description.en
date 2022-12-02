@@ -1,9 +1,11 @@
-Fix. Settings. API key fieldset moved to the top of the section.
-Fix. Settings. Reset settings button implemented.
-Fix. Settings. Init default setting on installation.
-New. Settings. Complete deactivation option added.
-New. Settings. Complete deactivation implemented.
-New. Settings. Regexp for fields exclusions.
-New. Settings. Saving exclusion regexp implemented.
-Fix. Exclusion. Fields exclusions fixed.
-New. Exclusion. Url exclusions by regexp.
+<ul>
+    <li>Fix. Settings. API key fieldset moved to the top of the section.</li>
+    <li>Fix. Settings. Reset settings button implemented.</li>
+    <li>Fix. Settings. Init default setting on installation.</li>
+    <li>New. Settings. Complete deactivation option added.</li>
+    <li>New. Settings. Complete deactivation implemented.</li>
+    <li>New. Settings. Regexp for fields exclusions.</li>
+    <li>New. Settings. Saving exclusion regexp implemented.</li>
+    <li>Fix. Exclusion. Fields exclusions fixed.</li>
+    <li>New. Exclusion. Url exclusions by regexp.</li>
+</ul>
