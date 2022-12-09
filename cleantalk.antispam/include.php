@@ -2022,8 +2022,6 @@ class CleantalkAntispam {
         if (!empty($url_exclusion))
         {
             $url_exclusion = explode(',', $url_exclusion);
-            error_log('CTDEBUG: $url_exclusion* ' . var_export($url_exclusion,true));
-            error_log('CTDEBUG: $_SERVER_REQUEST_URI* ' . var_export($_SERVER['REQUEST_URI'],true));
             foreach ($url_exclusion as $key=>$value){
 
                 if (
