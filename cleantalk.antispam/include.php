@@ -486,7 +486,7 @@ class CleantalkAntispam {
                         continue 2;
                 }
 
-                if ($sender_email === null && preg_match("/^\S+@\S+\.\S+$/", $value))
+                if ($sender_email === null && is_array($value) && preg_match("/^\S+@\S+\.\S+$/", $value))
                     $sender_email = $value;
                 else
                     $message[] = $value;
