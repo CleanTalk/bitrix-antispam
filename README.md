@@ -11,3 +11,7 @@ http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/
 
 Support,
 https://cleantalk.org/forum/viewforum.php?f=17
+
+## Requirements
+
+* CleanTalk account https://cleantalk.org/register?product=anti-spam
