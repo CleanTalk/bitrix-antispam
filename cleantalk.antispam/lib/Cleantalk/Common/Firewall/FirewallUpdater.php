@@ -94,9 +94,11 @@ class FirewallUpdater
         }
 
         // Check if the update performs right now. Blocks remote calls with different ID
-        if( Get::get('spbc_remote_call_action') == 'sfw_update__write_base' &&
+        if(
+            Get::get('spbc_remote_call_action') == 'sfw_update__write_base' &&
             Get::get('firewall_updating_id') &&
-            Get::get('firewall_updating_id') !== $fw_stats['firewall_updating_id']
+            Get::get('firewall_updating_id') !== $fw_stats['firewall_updating_id'] &&
+            time() - $fw_stats['firewall_updating_last_start'] < 8600
         ) {
             return array( 'error' => 'FIREWALL_IS_UPDATING' );
         }
