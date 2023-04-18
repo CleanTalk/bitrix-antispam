@@ -142,6 +142,15 @@ class CleantalkAntispam {
     {
         global $USER;
 
+        // Skip service request - iblock.vode component ajax loading
+        if (
+            defined('PUBLIC_AJAX_MODE') &&
+            $_POST['checkVote'] === 'Y' &&
+            ( isset($_REQUEST['vote_id']) && is_string($_REQUEST['vote_id']) && ! empty($_REQUEST['vote_id']) )
+        ) {
+            return;
+        }
+
         if ( self::siteIsExclusion() || self::urlIsExclusion() ){
             return;
         }
