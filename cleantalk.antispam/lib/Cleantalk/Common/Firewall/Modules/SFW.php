@@ -97,30 +97,27 @@ class SFW extends FirewallModule {
 			}
 			$needles = array_unique( $needles );
 			
-			$db_results = $this->db->fetch_all("SELECT
-				network, mask, status
-				FROM " . $this->db_data_table_name . "
+			$db_results = $this->db->fetch_all("SELECT * FROM " . $this->db_data_table_name . "
 				WHERE network IN (". implode( ',', $needles ) .")
 				AND	network = " . $current_ip_v4 . " & mask 
 				AND " . rand( 1, 100000 ) . "  
 				ORDER BY status DESC");
 
-			if( ! empty( $db_results ) ){
+			if ( ! empty( $db_results ) ) {
 				
 				foreach( $db_results as $db_result ){
-
-					if( $db_result['status'] == 1 ) {
-                        $results[] = array('ip' => $current_ip, 'is_personal' => false, 'status' => 'PASS_SFW__BY_WHITELIST',);
+					$is_personal = isset($db_result['source']) && $db_result['source'] == 1 ? true : false;
+					if ( $db_result['status'] == 1 ) {
+                        $results[] = array('ip' => $current_ip, 'is_personal' => $is_personal, 'status' => 'PASS_SFW__BY_WHITELIST',);
                         break;
-                    }
-					else {
-                        $results[] = array('ip' => $current_ip, 'is_personal' => false, 'status' => 'DENY_SFW',);
+                    } else {
+                        $results[] = array('ip' => $current_ip, 'is_personal' => $is_personal, 'status' => 'DENY_SFW',);
                         if ($this->test){
-                            $test_data = array('ip' => $current_ip, 'is_personal' => false, 'status' => 'DENY_SFW');
+                            $test_data = array('ip' => $current_ip, 'is_personal' => $is_personal, 'status' => 'DENY_SFW');
                         }
                     }
 				}
-			}else{
+			} else {
 				$results[] = array( 'ip' => $current_ip, 'is_personal' => false, 'status' => 'PASS_SFW' );
 			}
 		}
@@ -137,7 +134,7 @@ class SFW extends FirewallModule {
 	 * @param string $ip
 	 * @param string $status
 	 */
-	public function update_log( $ip, $status )
+	public function update_log( $ip, $status, $is_personal )
     {
 
 		$id   = md5( $ip . $this->module_name );
@@ -151,14 +148,21 @@ class SFW extends FirewallModule {
 			all_entries = 1,
 			blocked_entries = " . ( strpos( $status, 'DENY' ) !== false ? 1 : 0 ) . ",
 			entries_timestamp = '" . $time . "',
-			ua_name = '" . addslashes(Server::get('HTTP_USER_AGENT')) . "'
+			ua_name = '" . addslashes(Server::get('HTTP_USER_AGENT')) . "'%s
 		ON DUPLICATE KEY
 		UPDATE
 			status = '$status',
 			all_entries = all_entries + 1,
 			blocked_entries = blocked_entries" . ( strpos( $status, 'DENY' ) !== false ? ' + 1' : '' ) . ",
 			entries_timestamp = '" . intval( $time ) . "',
-			ua_name = '" . addslashes(Server::get('HTTP_USER_AGENT')) . "'";
+			ua_name = '" . addslashes(Server::get('HTTP_USER_AGENT')) . "'%s";
+
+		if ( $is_personal ) {
+			$is_personal_sql = ", source = '" . $is_personal . "'";
+			$query = sprintf( $query, $is_personal_sql, $is_personal_sql);
+		} else {
+			$query = sprintf( $query, '', '');
+		}
 
 		$this->db->execute( $query );
 	}

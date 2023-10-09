@@ -213,7 +213,7 @@ class Firewall
                     if( in_array( $result['status'], array( 'PASS_SFW__BY_WHITELIST', 'PASS_SFW', 'PASS_ANTIFLOOD', 'PASS_ANTICRAWLER', 'PASS_ANTICRAWLER_UA' ) ) ){
                         continue;
                     }
-                    $module->update_log( $result['ip'], $result['status'] );
+                    $module->update_log( $result['ip'], $result['status'], $result['is_personal'] );
                 }
             }
         }
@@ -347,6 +347,8 @@ class Firewall
                 $value['status'] = $value['status'] === 'PASS_SFW'            ? null               : $value['status'];
                 $value['status'] = $value['status'] === 'DENY_SFW'            ? null               : $value['status'];
 
+                $value['status'] = $value['source'] ? 'PERSONAL_LIST_MATCH' : $value['status'];
+
                 $data[] = array(
                     trim( $value['ip'] ),                                      // IP
                     $value['blocked_entries'],                                 // Count showing of block pages
@@ -367,6 +369,11 @@ class Firewall
             //Checking answer and deleting all lines from the table
             if( empty( $result['error'] ) ){
                 if( $result['rows'] == count( $data ) ){
+                    $is_source_column_exist = $this->db->fetch( 'SHOW COLUMNS FROM `' . $this->log_table_name . '` LIKE "source";' );
+                    if( ! $is_source_column_exist ) {
+                        $sql = 'ALTER TABLE `' . $this->log_table_name . '` ADD `source` TINYINT NULL DEFAULT NULL AFTER `ua_name`;';
+                        $this->db->execute( $sql );
+                    }
                     $this->db->execute( "TRUNCATE TABLE " . $this->log_table_name . ";" );
                     return $result;
                 }
