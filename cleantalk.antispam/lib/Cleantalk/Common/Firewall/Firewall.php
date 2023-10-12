@@ -343,9 +343,9 @@ class Firewall
                 $value['status'] = $value['status'] === 'DENY_ANTIFLOOD'      ? 'FLOOD_PROTECTION' : $value['status'];
                 $value['status'] = $value['status'] === 'PASS_ANTIFLOOD'      ? 'FLOOD_PROTECTION' : $value['status'];
 
-                $value['status'] = $value['status'] === 'PASS_SFW__BY_COOKIE' ? null               : $value['status'];
-                $value['status'] = $value['status'] === 'PASS_SFW'            ? null               : $value['status'];
-                $value['status'] = $value['status'] === 'DENY_SFW'            ? null               : $value['status'];
+                $value['status'] = $value['status'] === 'PASS_SFW__BY_COOKIE' ? 'DB_MATCH'         : $value['status'];
+                $value['status'] = $value['status'] === 'PASS_SFW'            ? 'DB_MATCH'         : $value['status'];
+                $value['status'] = $value['status'] === 'DENY_SFW'            ? 'DB_MATCH'         : $value['status'];
 
                 $data[] = array(
                     trim( $value['ip'] ),                                      // IP
