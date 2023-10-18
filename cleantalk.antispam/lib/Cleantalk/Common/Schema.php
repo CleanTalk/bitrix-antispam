@@ -13,6 +13,7 @@ class Schema
 			`network` int(11) unsigned NOT NULL,
 			`mask` int(11) unsigned NOT NULL,
 			`status` TINYINT(1) NOT NULL DEFAULT 0,
+            `source` => TINYINT NULL DEFAULT NULL,
 			PRIMARY KEY (`id`),
 			INDEX (  `network` ,  `mask` )
 		    );',
@@ -32,6 +33,7 @@ class Schema
             `entries_timestamp` INT NOT NULL,
             `ua_id` INT(11) NULL DEFAULT NULL,
             `ua_name` VARCHAR(1024) NOT NULL, 
+            `source` => TINYINT NULL DEFAULT NULL,
             PRIMARY KEY (`id`));',
         'ac_logs' => 'CREATE TABLE IF NOT EXISTS `%scleantalk_ac_log` (
             `id` VARCHAR(40) NOT NULL,

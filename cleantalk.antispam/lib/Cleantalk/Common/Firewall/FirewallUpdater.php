@@ -94,9 +94,11 @@ class FirewallUpdater
         }
 
         // Check if the update performs right now. Blocks remote calls with different ID
-        if( Get::get('spbc_remote_call_action') == 'sfw_update__write_base' &&
+        if(
+            Get::get('spbc_remote_call_action') == 'sfw_update__write_base' &&
             Get::get('firewall_updating_id') &&
-            Get::get('firewall_updating_id') !== $fw_stats['firewall_updating_id']
+            Get::get('firewall_updating_id') !== $fw_stats['firewall_updating_id'] &&
+            time() - $fw_stats['firewall_updating_last_start'] < 8600
         ) {
             return array( 'error' => 'FIREWALL_IS_UPDATING' );
         }
@@ -168,7 +170,7 @@ class FirewallUpdater
                     // Do writing to the DB
                     reset( $lines );
                     for( $count_result = 0; current($lines) !== false; ) {
-                        $query = "INSERT INTO ".$this->fw_data_table_name."_temp (network, mask, status) VALUES ";
+                        $query = "INSERT INTO ".$this->fw_data_table_name."_temp (network, mask, status, source) VALUES ";
                         for( $i = 0, $values = array(); self::WRITE_LIMIT !== $i && current( $lines ) !== false; $i ++, $count_result ++, next( $lines ) ){
                             $entry = current($lines);
                             if(empty($entry)) {
@@ -179,8 +181,9 @@ class FirewallUpdater
                                 $ip   = preg_replace('/[^\d]*/', '', $entry[0]);
                                 $mask = preg_replace('/[^\d]*/', '', $entry[1]);
                                 $private = isset($entry[2]) ? $entry[2] : 0;
+                                $source = isset($entry[3]) ? $entry[3] : 0;
                             }
-                            $values[] = '('. $ip .','. $mask .','. $private .')';
+                            $values[] = '('. $ip .','. $mask .','. $private .','. $source .')';
                         }
                         if( ! empty( $values ) ){
                             $query = $query . implode( ',', $values ) . ';';
@@ -359,6 +362,12 @@ class FirewallUpdater
             $sql = sprintf( Schema::getSchema('sfw'), $this->db->prefix );
             $this->db->execute( $sql );
         }
+        $is_source_column_exist = $this->db->fetch( 'SHOW COLUMNS FROM `' . APBCT_TBL_FIREWALL_DATA . '` LIKE "source";' );
+        if( ! $is_source_column_exist ) {
+            $sql = 'ALTER TABLE `' . APBCT_TBL_FIREWALL_DATA . '` ADD `source` TINYINT NULL DEFAULT NULL AFTER `status`;';
+            $this->db->execute( $sql );
+        }
+
         $this->db->execute( 'CREATE TABLE IF NOT EXISTS `' . APBCT_TBL_FIREWALL_DATA . '_temp` LIKE `' . APBCT_TBL_FIREWALL_DATA . '`;' );
         $this->db->execute( 'TRUNCATE TABLE `' . APBCT_TBL_FIREWALL_DATA . '_temp`;' );
     }

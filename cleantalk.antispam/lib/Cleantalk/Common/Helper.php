@@ -675,10 +675,9 @@ class Helper
 					}
 					unset($needle);
 
-
+                    $value_for_email = trim( $value );    // Removes shortcodes to do better spam filtration on server side.
 					// Removes whitespaces
 					$value = urldecode( trim( $value ) ); // Fully cleaned message
-					$value_for_email = trim( $value );    // Removes shortcodes to do better spam filtration on server side.
 
 					// Email
 					if ( ! $email && preg_match( "/^\S+@\S+\.\S+$/", $value_for_email ) ) {
