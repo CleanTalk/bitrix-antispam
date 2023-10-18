@@ -19,4 +19,5 @@
     <li>* Fix. Skip service request - iblock.vode component ajax loading.</li>
     <li>* Fix. SFW. Updating process fixed.</li>
     <li>* Mod: SFW send logs is fixed</li>
+    <li>* Upd. SFW. Implemented personal list.</li>
 </ul>
