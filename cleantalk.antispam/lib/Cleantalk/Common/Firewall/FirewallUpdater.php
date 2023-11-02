@@ -355,21 +355,27 @@ class FirewallUpdater
      */
     private function createTempTables()
     {
+        //drop current temp table to prevent any keys mismatches with the main table
+        $this->db->execute('DROP TABLE IF EXISTS `' . $this->db->prefix . APBCT_TBL_FIREWALL_DATA . '_temp`');
+
+        //check if main table exists
         $sql = 'SHOW TABLES LIKE "%scleantalk_sfw";';
         $sql = sprintf( $sql, $this->db->prefix ); // Adding current blog prefix
         $result = $this->db->fetch( $sql );
+        // create the main table if not
         if( ! $result ){
             $sql = sprintf( Schema::getSchema('sfw'), $this->db->prefix );
             $this->db->execute( $sql );
         }
-        $is_source_column_exist = $this->db->fetch( 'SHOW COLUMNS FROM `' . APBCT_TBL_FIREWALL_DATA . '` LIKE "source";' );
+        //hardcode for new "source" column
+        $is_source_column_exist = $this->db->fetch( 'SHOW COLUMNS FROM `' . $this->db->prefix . APBCT_TBL_FIREWALL_DATA . '` LIKE "source";' );
         if( ! $is_source_column_exist ) {
-            $sql = 'ALTER TABLE `' . APBCT_TBL_FIREWALL_DATA . '` ADD `source` TINYINT NULL DEFAULT NULL AFTER `status`;';
+            $sql = 'ALTER TABLE `' . $this->db->prefix . APBCT_TBL_FIREWALL_DATA . '` ADD `source` TINYINT NULL DEFAULT NULL AFTER `status`;';
             $this->db->execute( $sql );
         }
 
-        $this->db->execute( 'CREATE TABLE IF NOT EXISTS `' . APBCT_TBL_FIREWALL_DATA . '_temp` LIKE `' . APBCT_TBL_FIREWALL_DATA . '`;' );
-        $this->db->execute( 'TRUNCATE TABLE `' . APBCT_TBL_FIREWALL_DATA . '_temp`;' );
+        $this->db->execute( 'CREATE TABLE IF NOT EXISTS `' . $this->db->prefix . APBCT_TBL_FIREWALL_DATA . '_temp` LIKE `' . $this->db->prefix . APBCT_TBL_FIREWALL_DATA . '`;' );
+        $this->db->execute( 'TRUNCATE TABLE `' . $this->db->prefix . APBCT_TBL_FIREWALL_DATA . '_temp`;' );
     }
 
     /**
