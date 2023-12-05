@@ -19,6 +19,7 @@ use Cleantalk\Common\Helper as CleantalkHelper;
 
 $cleantalk_is_wrong_regexp = false;
 $cleantalk_is_wrong_url_regexp = false;
+$is_account_exists = false;
 
 if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     //try to get default options
@@ -43,6 +44,10 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
         if(isset($_POST['getautokey'])){
 
             $result = CleantalkAPI::method__get_api_key('antispam', COption::GetOptionString("main", "email_from"), $_SERVER["HTTP_HOST"], 'bitrix');
+
+            if ( isset($result['account_exists']) && $result['account_exists'] == 1 ) {
+                $is_account_exists = true;
+            }
 
             if (empty($result['error'])){
 
@@ -354,6 +359,11 @@ $oTabControl->Begin();
                         value="<?php echo GetMessage( 'CLEANTALK_GET_AUTO_KEY' ) ?>" />
             </td>
         </tr>
+        <?php if ( $is_account_exists )  { ?>
+        <tr>
+            <td colspan='2' style='text-align: center; color: red;'><?php echo GetMessage( 'CLEANTALK_API_KEY_GETTING_WARNING' );?><br></td>
+        </tr>
+        <?php } ?>
         <tr>
             <td colspan='2' style='text-align: center;'><?php echo GetMessage( 'CLEANTALK_EMAIL_REGISTRATION_WARNING' )."(". Option::get("main", "email_from"); ?>).<br> <a target="_blank" href="https://cleantalk.org/publicoffer"><?php echo GetMessage( 'CLEANTALK_LICENSE_AGREEMENT' ); ?></a></td>
         </tr>

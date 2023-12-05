@@ -24,6 +24,11 @@ $MESS['CLEANTALK_ENTER_KEY']        = 'Enter the access key';
 $MESS['CLEANTALK_KEY_VALID']        = 'Key is valid';
 $MESS['CLEANTALK_KEY_NOT_VALID']    = 'Key is not valid';
 $MESS['CLEANTALK_EMAIL_REGISTRATION_WARNING']	= "Administrator's e-mail will be used for registration";
+$MESS['CLEANTALK_API_KEY_GETTING_WARNING']	= sprintf(
+    'Please, get the Access Key from %s CleanTalk Control Panel %s and insert it in the Access Key field',
+    '<a href="https://cleantalk.org/my/?cp_mode=antispam" target="_blank">',
+    '</a>'
+);
 $MESS['CLEANTALK_LICENSE_AGREEMENT'] = 'License agreement';
 $MESS['CLEANTALK_KEY']                           = 'Access key';
 $MESS['CLEANTALK_EXCLUSIONS']                    = 'Exclusions';

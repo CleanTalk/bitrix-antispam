@@ -24,6 +24,11 @@ $MESS['CLEANTALK_ENTER_KEY']        = 'Введите ключ';
 $MESS['CLEANTALK_KEY_VALID']        = 'Ключ активен';
 $MESS['CLEANTALK_KEY_NOT_VALID']    = 'Ключ не активен';
 $MESS['CLEANTALK_EMAIL_REGISTRATION_WARNING']	= 'Для регистрации будет использована почта администратора';
+$MESS['CLEANTALK_API_KEY_GETTING_WARNING']	= sprintf(
+    'Пожалуйста, используйте ключ доступа из вашей %s панели управления CleanTalk %s',
+    '<a href="https://cleantalk.org/my/?cp_mode=antispam" target="_blank">',
+    '</a>'
+);
 $MESS['CLEANTALK_LICENSE_AGREEMENT'] = 'Лицензионное соглашение';
 $MESS['CLEANTALK_KEY']                           = 'Ключ доступа';
 $MESS['CLEANTALK_EXCLUSIONS']                    = 'Исключения';
