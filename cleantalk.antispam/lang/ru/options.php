@@ -19,6 +19,8 @@ $MESS['CLEANTALK_LABEL_GLOBAL_CHECK']        = 'Защита любых форм
 $MESS['CLEANTALK_LABEL_GLOBAL_CHECK_WITHOUT_EMAIL'] = 'Проверять все POST данные';
 $MESS['CLEANTALK_WARNING_GLOBAL_CHECK_WITHOUT_EMAIL'] = '- Внимание, возможны конфликты!';
 $MESS['CLEANTALK_LABEL_SFW']        = 'Spam FireWall';
+$MESS['CLEANTALK_LABEL_UNIQ_GET_OPTION']        = 'Добавление уникального гет параметра';
+$MESS['CLEANTALK_LABEL_UNIQ_GET_OPTION_DESC']        = 'Если посетитель попадает на страницу файервола, плагин помещает уникальный GET параметр в URL-адрес, чтобы избежать проблем с кэшированием.';
 $MESS['CLEANTALK_LABEL_NOTIFY']        = "Нравится антиспам от CleanTalk? Помогите другим узнать о нас! <a target='_blank' href='http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/#rating'>Оставьте отзыв на Битрикс.Маркетплейс</a>";
 $MESS['CLEANTALK_ENTER_KEY']        = 'Введите ключ';
 $MESS['CLEANTALK_KEY_VALID']        = 'Ключ активен';

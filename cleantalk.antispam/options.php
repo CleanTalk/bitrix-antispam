@@ -122,6 +122,7 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
         Option::set( $sModuleId, 'form_global_check',               $_POST['form_global_check'] == '1'               ? 1 : 0 );
         Option::set( $sModuleId, 'form_global_check_without_email', $_POST['form_global_check_without_email'] == '1' ? 1 : 0 );
         Option::set( $sModuleId, 'form_sfw',                        $_POST['form_sfw'] == '1'                        ? 1 : 0 );
+        Option::set( $sModuleId, 'form_sfw_uniq_get_option',        $_POST['form_sfw_uniq_get_option'] == '1'        ? 1 : 0 );
         Option::set( $sModuleId, 'complete_deactivation',           $_POST['complete_deactivation'] == '1'           ? 1 : 0 );
 
         if (isset($_POST['form_exclusions_sites']) && is_array($_POST['form_exclusions_sites'])) {
@@ -496,13 +497,40 @@ $oTabControl->Begin();
     </tr>
     <tr>
         <td width="50%" valign="top">
-            <label for="form_global_check"><?php echo GetMessage( 'CLEANTALK_LABEL_SFW' );?>:</td>
+            <label for="form_sfw"><?php echo GetMessage( 'CLEANTALK_LABEL_SFW' );?>:</td>
         <td valign="top">
             <input
                     type="checkbox"
                     name="form_sfw"
                     id="form_sfw"
                 <?php if ( $current_options['form_sfw'] === '1' ):?> checked="checked"<?php endif; ?>value="1" />
+        </td>
+    </tr>
+    <tr>
+        <td width="50%" valign="top">
+            <label
+                    id="form_sfw_uniq_get_option_label"
+                    for="form_sfw_uniq_get_option"
+                <?php
+                if ($current_options['form_sfw'] === '0') {
+                    echo ("style='color: gray;'");
+                }
+                ?>
+            >
+                <?php echo GetMessage( 'CLEANTALK_LABEL_UNIQ_GET_OPTION' );?>:
+        </td>
+        <td  valign="top">
+            <input
+                    type="checkbox"
+                    name="form_sfw_uniq_get_option"
+                    id="form_sfw_uniq_get_option"
+                    <?php
+                    if ( $current_options['form_sfw'] === '0' ){
+                        echo "disabled";
+                    }
+                    ?>
+                <?php if ( $current_options['form_sfw_uniq_get_option'] === '1' ):?> checked="checked"<?php endif; ?>value="1" />
+                <?php echo GetMessage( 'CLEANTALK_LABEL_UNIQ_GET_OPTION_DESC' ); ?>
         </td>
     </tr>
     <tr class="heading">
@@ -612,4 +640,20 @@ $oTabControl->Begin();
     <input type="submit" name="reset" value="<?php echo GetMessage( 'CLEANTALK_BUTTON_RESET' ) ?>" />
     <input type="hidden" name="Update" value="Y" />
     <?php $oTabControl->End();?>
+    <script>
+        let form_sfw_checkbox = document.getElementById('form_sfw');
+        let form_sfw_uniq_get_option_checkbox = document.getElementById('form_sfw_uniq_get_option');
+        let form_sfw_uniq_get_option_checkbox_label = document.getElementById('form_sfw_uniq_get_option_label');
+        form_sfw_checkbox.addEventListener('change', (event) => {
+            if (event.currentTarget.checked) {
+                form_sfw_uniq_get_option_checkbox.disabled = false;
+                form_sfw_uniq_get_option_checkbox.checked = true;
+                form_sfw_uniq_get_option_checkbox_label.style.removeProperty('color');
+            } else {
+                form_sfw_uniq_get_option_checkbox.checked = false;
+                form_sfw_uniq_get_option_checkbox.disabled = true;
+                form_sfw_uniq_get_option_checkbox_label.style.color = 'gray';
+            }
+        });
+    </script>
 </form>

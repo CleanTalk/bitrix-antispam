@@ -12,6 +12,7 @@ $cleantalk_antispam_default_option = array(
     'form_global_check' => 0,
     'form_global_check_without_email' => 0,
     'form_sfw' => 1,
+    'form_sfw_uniq_get_option' => 1,
     'site_exclusions' => '',
     'form_exclusions_url' => '',
     'form_exclusions_url__regexp' => 0,

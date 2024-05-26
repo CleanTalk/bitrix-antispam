@@ -19,7 +19,7 @@ use Cleantalk\ApbctBitrix\RemoteCalls;
 use Cleantalk\ApbctBitrix\Cron;
 use Cleantalk\ApbctBitrix\DB;
 use Cleantalk\Common\Variables\Server;
-use Cleantalk\Common\Firewall\Modules\SFW;
+use Cleantalk\ApbctBitrix\SFW;
 
 if ( ! defined( 'CLEANTALK_USER_AGENT' ) )
     define( 'CLEANTALK_USER_AGENT', 'bitrix-3.12.0' );
