@@ -19,6 +19,8 @@ $MESS['CLEANTALK_LABEL_GLOBAL_CHECK']        = 'Any forms protection';
 $MESS['CLEANTALK_LABEL_GLOBAL_CHECK_WITHOUT_EMAIL'] = 'Check all POST data';
 $MESS['CLEANTALK_WARNING_GLOBAL_CHECK_WITHOUT_EMAIL'] = '- Warning, conflict possibility!';
 $MESS['CLEANTALK_LABEL_SFW']        = 'Spam FireWall';
+$MESS['CLEANTALK_LABEL_UNIQ_GET_OPTION']        = 'Uniq GET option';
+$MESS['CLEANTALK_LABEL_UNIQ_GET_OPTION_DESC']        = 'If a visitor gets the SpamFireWall page, the plugin will put a unique GET variable in the URL to avoid issues with caching plugins.';
 $MESS['CLEANTALK_LABEL_NOTIFY']        = "Like Anti-spam by CleanTalk? Help others learn about CleanTalk! <a  target='_blank' href='http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/#rating'>Leave a review at the Bitrix.Marketplace</a>";
 $MESS['CLEANTALK_ENTER_KEY']        = 'Enter the access key';
 $MESS['CLEANTALK_KEY_VALID']        = 'Key is valid';
