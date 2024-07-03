@@ -1032,6 +1032,8 @@ class CleantalkAntispam {
     public static function OnEndBufferContentHandler( &$content ) {
         global $USER, $APPLICATION;
 
+        if (!is_object($USER)) $USER = new CUser;
+
         if(
             ! $USER->IsAdmin() &&
             ! defined( "ADMIN_SECTION" ) &&
