@@ -136,11 +136,10 @@ class SFW extends FirewallModule {
 	 */
 	public function update_log( $ip, $status, $is_personal )
     {
+        $id   = md5( $ip . $this->module_name );
+        $time = time();
 
-		$id   = md5( $ip . $this->module_name );
-		$time = time();
-
-		$query = "INSERT INTO " . $this->db_log_table_name . "
+        $query = "INSERT INTO " . $this->db_log_table_name . "
 		SET
 			id = '$id',
 			ip = '$ip',
@@ -148,24 +147,17 @@ class SFW extends FirewallModule {
 			all_entries = 1,
 			blocked_entries = " . ( strpos( $status, 'DENY' ) !== false ? 1 : 0 ) . ",
 			entries_timestamp = '" . $time . "',
-			ua_name = '" . addslashes(Server::get('HTTP_USER_AGENT')) . "'%s
+			ua_name = '" . addslashes(Server::get('HTTP_USER_AGENT')) . "'
 		ON DUPLICATE KEY
 		UPDATE
 			status = '$status',
 			all_entries = all_entries + 1,
 			blocked_entries = blocked_entries" . ( strpos( $status, 'DENY' ) !== false ? ' + 1' : '' ) . ",
 			entries_timestamp = '" . intval( $time ) . "',
-			ua_name = '" . addslashes(Server::get('HTTP_USER_AGENT')) . "'%s";
+			ua_name = '" . addslashes(Server::get('HTTP_USER_AGENT')) . "'";
 
-		if ( $is_personal ) {
-			$is_personal_sql = ", source = '" . (int)$is_personal . "'";
-			$query = sprintf( $query, $is_personal_sql, $is_personal_sql);
-		} else {
-			$query = sprintf( $query, '', '');
-		}
-
-		$this->db->execute( $query );
-	}
+        $this->db->execute( $query );
+    }
 
     /**
      * @inheritdoc
