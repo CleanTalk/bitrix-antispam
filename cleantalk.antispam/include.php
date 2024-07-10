@@ -1063,11 +1063,7 @@ class CleantalkAntispam {
             $ct_check_values = self::SetCheckJSValues();
 
             $js_template = "<script data-skip-moving = 'true'>
-                    var ct_checkjs_val = '".$ct_check_values[0]."', ct_date = new Date(), 
-                    ctTimeMs = new Date().getTime(),
-                    ctMouseEventTimerFlag = true, //Reading interval flag
-                    ctMouseData = [],
-                    ctMouseDataCounter = 0;
+                    var ct_checkjs_val = '".$ct_check_values[0]."', ct_date = new Date();
 
                     function ctSetCookie(c_name, value) {
                         document.cookie = c_name + '=' + encodeURIComponent(value) + '; path=/';
@@ -1075,7 +1071,6 @@ class CleantalkAntispam {
 
                     ctSetCookie('ct_ps_timestamp', Math.floor(new Date().getTime()/1000));
                     ctSetCookie('ct_fkp_timestamp', '0');
-                    ctSetCookie('ct_pointer_data', '0');
                     ctSetCookie('ct_timezone', '0');
 
                     ct_attach_event_handler(window, 'DOMContentLoaded', ct_ready);
@@ -1092,45 +1087,6 @@ class CleantalkAntispam {
                         ctKeyStopStopListening();
                     }
 
-                    /* Reading interval */
-                    var ctMouseReadInterval = setInterval(function(){
-                        ctMouseEventTimerFlag = true;
-                    }, 150);
-                        
-                    /* Writting interval */
-                    var ctMouseWriteDataInterval = setInterval(function(){
-                        ctSetCookie('ct_pointer_data', JSON.stringify(ctMouseData));
-                    }, 1200);
-
-                    /* Logging mouse position each 150 ms */
-                    var ctFunctionMouseMove = function output(event){
-                        if(ctMouseEventTimerFlag == true){
-                            
-                            ctMouseData.push([
-                                Math.round(event.pageY),
-                                Math.round(event.pageX),
-                                Math.round(new Date().getTime() - ctTimeMs)
-                            ]);
-                            
-                            ctMouseDataCounter++;
-                            ctMouseEventTimerFlag = false;
-                            if(ctMouseDataCounter >= 100){
-                                ctMouseStopData();
-                            }
-                        }
-                    }
-
-                    /* Stop mouse observing function */
-                    function ctMouseStopData(){
-                        if(typeof window.addEventListener == 'function'){
-                            window.removeEventListener('mousemove', ctFunctionMouseMove);
-                        }else{
-                            window.detachEvent('onmousemove', ctFunctionMouseMove);
-                        }
-                        clearInterval(ctMouseReadInterval);
-                        clearInterval(ctMouseWriteDataInterval);                
-                    }
-
                     /* Stop key listening function */
                     function ctKeyStopStopListening(){
                         if(typeof window.addEventListener == 'function'){
@@ -1143,11 +1099,9 @@ class CleantalkAntispam {
                     }
 
                     if(typeof window.addEventListener == 'function'){
-                        window.addEventListener('mousemove', ctFunctionMouseMove);
                         window.addEventListener('mousedown', ctFunctionFirstKey);
                         window.addEventListener('keydown', ctFunctionFirstKey);
                     }else{
-                        window.attachEvent('onmousemove', ctFunctionMouseMove);
                         window.attachEvent('mousedown', ctFunctionFirstKey);
                         window.attachEvent('keydown', ctFunctionFirstKey);
                     }
@@ -1330,7 +1284,6 @@ class CleantalkAntispam {
             else
                 $checkjs = 0;
 
-            $pointer_data        = (isset($_COOKIE['ct_pointer_data'])  ? json_decode($_COOKIE['ct_pointer_data']) : '');
             $js_timezone         = (isset($_COOKIE['ct_timezone'])      ? $_COOKIE['ct_timezone']                  : 'none');
             $first_key_timestamp = (isset($_COOKIE['ct_fkp_timestamp']) ? $_COOKIE['ct_fkp_timestamp']             : 0);
             $page_set_timestamp  = (isset($_COOKIE['ct_ps_timestamp'])  ? $_COOKIE['ct_ps_timestamp']              : 0);
@@ -1366,7 +1319,6 @@ class CleantalkAntispam {
                 'post_url' => $refferrer,
                 'USER_AGENT' => $user_agent,
                 'js_timezone' => $js_timezone,
-                'mouse_cursor_positions' => $pointer_data,
                 'key_press_timestamp' => $first_key_timestamp,
                 'page_set_timestamp' => $page_set_timestamp,
                 'REFFERRER_PREVIOUS' => isset($_COOKIE['ct_prev_referer']) ? $_COOKIE['ct_prev_referer'] : null,
