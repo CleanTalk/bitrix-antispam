@@ -142,6 +142,10 @@ class CleantalkAntispam {
     {
         global $USER;
 
+        if (defined('SKIP_CLEANTALK') && SKIP_CLEANTALK === true) {
+            return;
+        }
+
         // Skip service request - iblock.vode component ajax loading
         if (
             defined('PUBLIC_AJAX_MODE') &&
@@ -387,6 +391,10 @@ class CleantalkAntispam {
 
     static function OnBeforeOrderAddHandler(&$arFields)
     {
+        if (defined('SKIP_CLEANTALK') && SKIP_CLEANTALK === true) {
+            return;
+        }
+
         global $APPLICATION, $USER;
         $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
         $ct_order= COption::GetOptionInt('cleantalk.antispam', 'form_order', 0);
@@ -450,6 +458,10 @@ class CleantalkAntispam {
     static function OnBeforeResultAddHandler($WEB_FORM_ID, &$arFields, &$arrVALUES)
     {
         global $APPLICATION;
+
+        if (defined('SKIP_CLEANTALK') && SKIP_CLEANTALK === true) {
+            return;
+        }
 
         if ( self::urlIsExclusion() ){
             return;
