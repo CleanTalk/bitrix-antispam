@@ -16,7 +16,7 @@ class SFW extends FirewallModule {
 	// Additional params
 	private $sfw_counter = false;
 	private $set_cookies = false;
-	private $cookie_domain = false;
+	protected $cookie_domain = false;
 
     /**
      * FireWall_module constructor.
