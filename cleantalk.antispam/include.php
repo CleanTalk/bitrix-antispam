@@ -7,6 +7,7 @@ IncludeModuleLangFile(__FILE__);
 require_once(dirname(__FILE__) . '/lib/autoload.php');
 
 //Antispam classes
+use Bitrix\Main\Page\Asset;
 use Cleantalk\Antispam\Cleantalk;
 use Cleantalk\Antispam\CleantalkRequest;
 use Cleantalk\Antispam\CleantalkResponse;
@@ -162,6 +163,7 @@ class CleantalkAntispam {
         $ct_key                  = COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
         $last_checked            = COption::GetOptionInt( 'cleantalk.antispam', 'last_checked', 0 );
         $show_review             = COption::GetOptionInt( 'cleantalk.antispam', 'show_review', 0 );
+        $bot_detector            = COption::GetOptionInt( 'cleantalk.antispam', 'bot_detector', 0 );
         $is_sfw                  = COption::GetOptionInt( 'cleantalk.antispam', 'form_sfw', 0 );
         $sfw_last_update         = COption::GetOptionInt( 'cleantalk.antispam',  'sfw_last_update', 0);
         $sfw_last_send_log       = COption::GetOptionInt( 'cleantalk.antispam',  'sfw_last_send_log', 0);
@@ -178,6 +180,10 @@ class CleantalkAntispam {
         }
 
         if( ! $USER->IsAdmin() ){
+
+            if ( $bot_detector ) {
+                Asset::getInstance()->addJs('https://moderate.cleantalk.org/ct-bot-detector-wrapper.js');
+            }
 
             // Set cookies
             if( ! headers_sent() )
