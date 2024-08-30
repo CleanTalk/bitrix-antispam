@@ -1361,6 +1361,7 @@ class CleantalkAntispam {
                 'js_on' => $checkjs,
                 'sender_info' => $sender_info,
                 'submit_time' => self::ct_cookies_test() == 1 ? time() - (int)$_COOKIE['ct_timestamp'] : null,
+                'event_token' => isset($_POST['ct_bot_detector_event_token']) ? $_POST['ct_bot_detector_event_token'] : null,
             );
 
             switch ($type) {

@@ -155,7 +155,12 @@ class CleantalkRequest {
     * Method name
     * @var string
     */
-    public $method_name = 'check_message'; 
+    public $method_name = 'check_message';
+
+    /**
+     * @var string|null
+     */
+    public $event_token = null;
 
     /**
      * Fill params with constructor
