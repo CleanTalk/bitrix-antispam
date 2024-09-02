@@ -122,6 +122,7 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
         Option::set( $sModuleId, 'form_global_check',               $_POST['form_global_check'] == '1'               ? 1 : 0 );
         Option::set( $sModuleId, 'form_global_check_without_email', $_POST['form_global_check_without_email'] == '1' ? 1 : 0 );
         Option::set( $sModuleId, 'form_sfw',                        $_POST['form_sfw'] == '1'                        ? 1 : 0 );
+        Option::set( $sModuleId, 'bot_detector',                    $_POST['bot_detector'] == '1'                        ? 1 : 0 );
         Option::set( $sModuleId, 'form_sfw_uniq_get_option',        $_POST['form_sfw_uniq_get_option'] == '1'        ? 1 : 0 );
         Option::set( $sModuleId, 'complete_deactivation',           $_POST['complete_deactivation'] == '1'           ? 1 : 0 );
 
@@ -493,6 +494,26 @@ $oTabControl->Begin();
                 }
                 ?>
                     value="1" /> <?php echo GetMessage( 'CLEANTALK_WARNING_GLOBAL_CHECK_WITHOUT_EMAIL' ); ?>
+        </td>
+    </tr>
+    <tr>
+        <td width="50%" valign="top">
+            <label for="bot_detector"
+                <?php
+                if ( $current_options['bot_detector'] === '0' ){
+                    echo ("style='color: gray;'");
+                }
+                ?>
+            >
+                <?php echo GetMessage( 'CLEANTALK_LABEL_BOT_DETECTOR' );?>:
+        </td>
+        <td  valign="top">
+            <input
+                    type="checkbox"
+                    name="bot_detector"
+                    id="bot_detector"
+                <?php if ( $current_options['bot_detector'] === '1' ):?> checked="checked"<?php endif; ?>value="1" />
+            <?php echo GetMessage( 'CLEANTALK_DESCRIPTION_BOT_DETECTOR' ); ?>
         </td>
     </tr>
     <tr>
