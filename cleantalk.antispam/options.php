@@ -656,6 +656,11 @@ $oTabControl->Begin();
                     value="1" />
         </td>
     </tr>
+    <!--HIDDEN FIELDSET-->
+    <input type="hidden" name="is_paid" value="<?php echo $current_options['is_paid'] ?>" />
+    <input type="hidden" name="last_checked" value="0" />
+    <input type="hidden" name="moderate_ip" value="<?php echo $current_options['moderate_ip'] ?>" />
+    <input type="hidden" name="ip_license" value="<?php echo $current_options['ip_license'] ?>" />
     <?php $oTabControl->Buttons(); ?>
     <input type="submit" name="Update" value="<?php echo GetMessage( 'CLEANTALK_BUTTON_SAVE' ) ?>" />
     <input type="submit" name="reset" value="<?php echo GetMessage( 'CLEANTALK_BUTTON_RESET' ) ?>" />
