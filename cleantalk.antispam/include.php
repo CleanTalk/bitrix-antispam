@@ -1235,7 +1235,7 @@ class CleantalkAntispam {
      * @return array|null Checking result or NULL when bad params
      */
     static function CheckAllBefore(&$arEntity, $bSendEmail = FALSE, $form_errors = null) {
-        global $DB, $USER;
+        global $DB, $USER, $site;
 
         static $executed_check = true;
 
@@ -1280,7 +1280,8 @@ class CleantalkAntispam {
                 return;
             }
 
-            $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '');
+            $ct_key_site = COption::GetOptionString('cleantalk.antispam', '_key', '', $site["LID"]);
+            $ct_key = empty($ct_key_site) ? COption::GetOptionString('cleantalk.antispam', 'key', '') : $ct_key_site;
             $ct_ws = self::GetWorkServer();
 
             if (!isset($_COOKIE['ct_checkjs']))
@@ -1649,7 +1650,7 @@ class CleantalkAntispam {
      * @param string Feedback type - 'Y' or 'N' only
      */
     static function SendFeedback($module, $id, $feedback) {
-        global $DB;
+        global $DB, $site;
         if(empty($module))
             return;
         if(empty($id) || intval($id) < 0)
@@ -1661,7 +1662,8 @@ class CleantalkAntispam {
         if($request_id !== FALSE){
             $DB->Query('DELETE FROM cleantalk_cids WHERE module=\''. $module .'\' AND cid=' . $id);
 
-            $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '');
+            $ct_key_site = COption::GetOptionString('cleantalk.antispam', '_key', '', $site["LID"]);
+            $ct_key = empty($ct_key_site) ? COption::GetOptionString('cleantalk.antispam', 'key', '') : $ct_key_site;
             $ct_ws = self::GetWorkServer();
 
             $ct = new Cleantalk();
