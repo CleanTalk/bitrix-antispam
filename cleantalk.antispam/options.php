@@ -296,10 +296,10 @@ $oTabControl->Begin();
     <?=bitrix_sessid_post()?>
     <?php $oTabControl->BeginNextTab();?>
     <script>
-        function ctDdisableInputLine(ct_input_line){
+        function ctDisableInputLine(ct_input_line){
 
-            ct_label = document.getElementById(ct_input_line+'_label');
-            ct_input = document.getElementById(ct_input_line);
+            let ct_label = document.getElementById(ct_input_line+'_label');
+            let ct_input = document.getElementById(ct_input_line);
 
             if(ct_input.hasAttribute('disabled')){
                 ct_input.removeAttribute('disabled');
@@ -463,7 +463,7 @@ $oTabControl->Begin();
         <td width="50%" valign="top">
             <label for="form_global_check"><?php echo GetMessage( 'CLEANTALK_LABEL_GLOBAL_CHECK' );?>:</td>
         <td  valign="top">
-            <input type="checkbox" name="form_global_check" id="form_global_check" onclick="ctDdisableInputLine('form_global_check_without_email');" <?php if ( $current_options['form_global_check'] === '1' ):?> checked="checked"<?php endif; ?>value="1" />
+            <input type="checkbox" name="form_global_check" id="form_global_check" onclick="ctDisableInputLine('form_global_check_without_email');" <?php if ( $current_options['form_global_check'] === '1' ):?> checked="checked"<?php endif; ?>value="1" />
         </td>
     </tr>
     <tr>
