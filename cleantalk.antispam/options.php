@@ -407,7 +407,7 @@ $oTabControl->Begin();
     <?php } ?>
 
 
-    <?php if ( $sites > 1 ) { ?>
+    <?php if ( count($sites) > 1 ) { ?>
     <!-- Multisite options -->
     <tr>
         <th colspan='2'><?php echo GetMessage('CLEANTALK_MULTISITE_TITLE') ?></th>
