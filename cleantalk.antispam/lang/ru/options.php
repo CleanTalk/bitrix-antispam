@@ -54,3 +54,4 @@ $MESS['CLEANTALK_WRONG_REGEXP_NOTIFY'] = 'Исключение полей фор
 $MESS['CLEANTALK_WRONG_DEFAULT_SETTINGS'] = 'Невоможно загрузить опции по умолчанию. Ошибка в имени модуля.';
 $MESS['CLEANTALK_WRONG_CURRENT_SETTINGS'] = 'Невоможно загрузить текущие опции.';
 $MESS['CLEANTALK_RESET_OPTIONS_FAILED'] = 'Невоможно сбросить опции.';
+$MESS['CLEANTALK_MULTISITE_LABEL_KEY'] = 'Если вы хотите использовать отдельный ключ доступа для этого сайта, вставьте его здесь. В противном случае оставьте поле пустым.';

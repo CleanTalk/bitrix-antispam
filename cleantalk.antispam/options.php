@@ -21,6 +21,20 @@ $cleantalk_is_wrong_regexp = false;
 $cleantalk_is_wrong_url_regexp = false;
 $is_account_exists = false;
 
+$sites_from_bd = CSite::GetList("", "", Array("ACTIVE" => "Y"));
+$sites = array();
+$sub_tabs = array();
+while( $site = $sites_from_bd->Fetch() ) {
+    $site["ID"] = htmlspecialcharsbx($site["ID"]);
+    $site["NAME"] = htmlspecialcharsbx($site["NAME"]);
+    $sites[] = $site;
+    $sub_tabs[] = array("DIV" => "opt_site_".$site["ID"], "TAB" => "(".$site["ID"].") ".$site["NAME"], 'TITLE' => '');
+}
+
+$subTabControl = new CAdminViewTabControl("subTabControl", $sub_tabs);
+
+$current_options = ct_get_options($sModuleId);
+
 if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     //try to get default options
     $default_options = ct_get_default_options($sModuleId);
@@ -181,6 +195,18 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
             // Remove it if SFW is disabled
         } else {
             CAgent::RemoveModuleAgents("cleantalk.antispam");
+        }
+    }
+
+    foreach( $sites as $site ) {
+        $key = "key_" . $site["LID"];
+        if ( isset($_POST[$key]) ) {
+            if ( empty($_POST[$key]) ) {
+                COption::RemoveOption($sModuleId, "_key", $site["LID"]);
+            } else {
+                // @ToDo add key_is_ok checking here and output error message
+                COption::SetOptionString($sModuleId, "_key", $_POST[$key], false, $site["LID"]);
+            }
         }
     }
 }
@@ -379,6 +405,31 @@ $oTabControl->Begin();
             </td>
         </tr>
     <?php } ?>
+
+
+    <?php if ( count($sites) > 1 ) { ?>
+    <!-- Multisite options -->
+    <tr>
+        <th colspan='2'><?php echo GetMessage('CLEANTALK_MULTISITE_TITLE') ?></th>
+    </tr>
+    <tr>
+        <td colspan='2'>
+            <?php
+                $subTabControl->Begin();
+                foreach ( $sites as $site )
+                {
+                    $subTabControl->BeginNextTab();
+                    $api_key_subsite = Option::get($sModuleId, '_key', '', $site["LID"]);
+                    ?>
+                    <?= GetMessage( 'CLEANTALK_MULTISITE_LABEL_KEY' ) ?>
+                    <input type="text" name="key_<?= $site["LID"] ?>" id="key_<?= $site["LID"] ?>" value="<?= $api_key_subsite ?>" />
+            <?php }
+                $subTabControl->End();
+            ?>
+        </td>
+    </tr>
+    <?php } ?>
+
     <tr class="heading">
         <td colspan="2">
             <?=GetMessage( 'CLEANTALK_TITLE' )?>
@@ -656,6 +707,11 @@ $oTabControl->Begin();
                     value="1" />
         </td>
     </tr>
+    <!--HIDDEN FIELDSET-->
+    <input type="hidden" name="is_paid" value="<?php echo $current_options['is_paid'] ?>" />
+    <input type="hidden" name="last_checked" value="0" />
+    <input type="hidden" name="moderate_ip" value="<?php echo $current_options['moderate_ip'] ?>" />
+    <input type="hidden" name="ip_license" value="<?php echo $current_options['ip_license'] ?>" />
     <?php $oTabControl->Buttons(); ?>
     <input type="submit" name="Update" value="<?php echo GetMessage( 'CLEANTALK_BUTTON_SAVE' ) ?>" />
     <input type="submit" name="reset" value="<?php echo GetMessage( 'CLEANTALK_BUTTON_RESET' ) ?>" />

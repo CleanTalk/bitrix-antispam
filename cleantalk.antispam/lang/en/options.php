@@ -54,3 +54,4 @@ $MESS['CLEANTALK_WRONG_REGEXP_NOTIFY'] = 'Field Exclusions is not a valid regula
 $MESS['CLEANTALK_WRONG_DEFAULT_SETTINGS'] = 'Can not load default options. Module name is incorrect.';
 $MESS['CLEANTALK_WRONG_CURRENT_SETTINGS'] = 'Can not load current options.';
 $MESS['CLEANTALK_RESET_OPTIONS_FAILED'] = 'Can not reset options to defaults.';
+$MESS['CLEANTALK_MULTISITE_LABEL_KEY'] = 'If you want to use specific Access Key for this website paste it here. Otherwise, leave it empty.';
