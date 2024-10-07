@@ -35,7 +35,7 @@ How it works.
 
 -- INSTALLATION --
 
-1. Get access key on http://CleanTalk.org.
+1. Get access key on https://cleantalk.org.
 2. Install CleanTalk module as usual and put access key into it's settings.
 
 

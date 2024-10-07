@@ -5,7 +5,7 @@
  * @author  Cleantalk
  * @since   29/08/2013
  *
- * @link    http://cleantalk.org
+ * @link    https://cleantalk.org
  */
 
 $sModuleId  = 'cleantalk.antispam';

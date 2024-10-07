@@ -37,7 +37,7 @@ define('APBCT_WRITE_LIMIT',       5000); // Write limit for firewall data.
 /**
  * CleanTalk module class
  *
- * @author  CleanTalk team <http://cleantalk.org>
+ * @author  CleanTalk team <https://cleantalk.org>
  */
 
 class CleantalkAntispam {
@@ -1757,8 +1757,8 @@ class CleantalkAntispam {
             );
         else
             return array(
-                'work_url' => 'http://moderate.cleantalk.org',
-                'server_url' => 'http://moderate.cleantalk.org',
+                'work_url' => 'https://moderate.cleantalk.org',
+                'server_url' => 'https://moderate.cleantalk.org',
                 'server_ttl' => 0,
                 'server_changed' => 0,
             );
@@ -1785,7 +1785,7 @@ class CleantalkAntispam {
     /**
      * CleanTalk inner function - sets working server.
      */
-    private static function SetWorkServer($work_url = 'http://moderate.cleantalk.org', $server_url = 'http://moderate.cleantalk.org', $server_ttl = 0, $server_changed = 0) {
+    private static function SetWorkServer($work_url = 'https://moderate.cleantalk.org', $server_url = 'https://moderate.cleantalk.org', $server_ttl = 0, $server_changed = 0) {
         global $DB;
         $result = $DB->Query('SELECT count(*) AS count FROM cleantalk_server')->Fetch();
         if($result['count'] == 0){
