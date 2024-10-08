@@ -71,6 +71,7 @@
 			  }
 		}
 	</style>
+		{SFWGETOPTION}
 	<script>
 		var ct_date = new Date;
 
@@ -82,7 +83,7 @@
 		}
 
 		function get_current_url() {
-			document.write(window.location.href);
+			document.write(window.location.origin + window.location.pathname);
 			return null;
 		}
 	</script>
@@ -123,7 +124,6 @@
     <div class='footer'>
 		<a href='https://cleantalk.org' target='_blank'>{CLEANTALK_TITLE}</a>
     </div>
-    {SFWGETOPTION}
     <script type='text/javascript'>
 		var reload_timeout = 3000;
 		document.getElementById('js_info').style.display = 'none';

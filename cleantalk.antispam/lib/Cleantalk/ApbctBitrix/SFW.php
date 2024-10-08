@@ -31,6 +31,12 @@ class SFW extends \Cleantalk\Common\Firewall\Modules\SFW
             $status = $result['status'] === 'PASS_SFW__BY_WHITELIST' ? '1' : '0';
             $cookie_val = md5( $result['ip'] . $this->api_key ) . $status;
 
+            $request_uri = Server::get('REQUEST_URI');
+            if ( $this->test ) {
+                // Remove "sfw_test_ip" get parameter from the uri
+                $request_uri = preg_replace('%sfw_test_ip=\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}&?%', '', $request_uri);
+            }
+
 			// Translation
 			$replaces = array(
 				'{SFW_DIE_NOTICE_IP}'              => $this->__('SpamFireWall is activated for your IP ', 'cleantalk-spam-protect'),
@@ -42,7 +48,7 @@ class SFW extends \Cleantalk\Common\Firewall\Modules\SFW
 				'{SERVICE_ID}'                     => $net_count['net_count'],
 				'{HOST}'                           => '',
 				'{GENERATED}'                      => '<p>The page was generated at&nbsp;' . date( 'D, d M Y H:i:s' ) . "</p>",
-				'{REQUEST_URI}'                    => Server::get( 'REQUEST_URI' ),
+				'{REQUEST_URI}'                    => $request_uri,
 				
 				// Cookie
 				'{COOKIE_PREFIX}'      => '',
