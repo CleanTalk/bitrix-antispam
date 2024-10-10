@@ -1348,12 +1348,16 @@ class Helper
     /**
      * Get site url for remote calls.
      *
-     * @return string@important This method can be overloaded in the CMS-based Helper class.
-     *
+     * @return string
+     * @important This method can be overloaded in the CMS-based Helper class.
      */
     private static function getSiteUrl()
     {
-        return ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . ( isset($_SERVER['SCRIPT_URL'] ) ? $_SERVER['SCRIPT_URL'] : '' );
+        return sprintf(
+            '%s://%s',
+            isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http',
+            $_SERVER['HTTP_HOST']
+        );
     }
 
     /**
