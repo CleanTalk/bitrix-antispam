@@ -1235,7 +1235,7 @@ class CleantalkAntispam {
      * @return array|null Checking result or NULL when bad params
      */
     static function CheckAllBefore(&$arEntity, $bSendEmail = FALSE, $form_errors = null) {
-        global $DB, $USER, $site;
+        global $DB, $USER;
 
         static $executed_check = true;
 
@@ -1280,7 +1280,7 @@ class CleantalkAntispam {
                 return;
             }
 
-            $ct_key_site = COption::GetOptionString('cleantalk.antispam', '_key', '', $site["LID"]);
+            $ct_key_site = COption::GetOptionString('cleantalk.antispam', '_key', '', SITE_ID);
             $ct_key = empty($ct_key_site) ? COption::GetOptionString('cleantalk.antispam', 'key', '') : $ct_key_site;
             $ct_ws = self::GetWorkServer();
 

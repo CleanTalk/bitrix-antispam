@@ -199,13 +199,13 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
     }
 
     foreach( $sites as $site ) {
-        $key = "key_" . $site["LID"];
+        $key = "key_" . $site["SITE_ID"];
         if ( isset($_POST[$key]) ) {
             if ( empty($_POST[$key]) ) {
-                COption::RemoveOption($sModuleId, "_key", $site["LID"]);
+                COption::RemoveOption($sModuleId, "_key", $site["SITE_ID"]);
             } else {
                 // @ToDo add key_is_ok checking here and output error message
-                COption::SetOptionString($sModuleId, "_key", $_POST[$key], false, $site["LID"]);
+                COption::SetOptionString($sModuleId, "_key", $_POST[$key], false, $site["SITE_ID"]);
             }
         }
     }
@@ -419,10 +419,10 @@ $oTabControl->Begin();
                 foreach ( $sites as $site )
                 {
                     $subTabControl->BeginNextTab();
-                    $api_key_subsite = Option::get($sModuleId, '_key', '', $site["LID"]);
+                    $api_key_subsite = Option::get($sModuleId, '_key', '', $site["SITE_ID"]);
                     ?>
                     <?= GetMessage( 'CLEANTALK_MULTISITE_LABEL_KEY' ) ?>
-                    <input type="text" name="key_<?= $site["LID"] ?>" id="key_<?= $site["LID"] ?>" value="<?= $api_key_subsite ?>" />
+                    <input type="text" name="key_<?= $site["SITE_ID"] ?>" id="key_<?= $site["SITE_ID"] ?>" value="<?= $api_key_subsite ?>" />
             <?php }
                 $subTabControl->End();
             ?>
