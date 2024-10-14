@@ -19,6 +19,21 @@ use Cleantalk\Common\Helper as CleantalkHelper;
 
 $cleantalk_is_wrong_regexp = false;
 $cleantalk_is_wrong_url_regexp = false;
+$is_account_exists = false;
+
+$sites_from_bd = CSite::GetList("", "", Array("ACTIVE" => "Y"));
+$sites = array();
+$sub_tabs = array();
+while( $site = $sites_from_bd->Fetch() ) {
+    $site["ID"] = htmlspecialcharsbx($site["ID"]);
+    $site["NAME"] = htmlspecialcharsbx($site["NAME"]);
+    $sites[] = $site;
+    $sub_tabs[] = array("DIV" => "opt_site_".$site["ID"], "TAB" => "(".$site["ID"].") ".$site["NAME"], 'TITLE' => '');
+}
+
+$subTabControl = new CAdminViewTabControl("subTabControl", $sub_tabs);
+
+$current_options = ct_get_options($sModuleId);
 
 if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
     //try to get default options
@@ -43,6 +58,10 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
         if(isset($_POST['getautokey'])){
 
             $result = CleantalkAPI::method__get_api_key('antispam', COption::GetOptionString("main", "email_from"), $_SERVER["HTTP_HOST"], 'bitrix');
+
+            if ( isset($result['account_exists']) && $result['account_exists'] == 1 ) {
+                $is_account_exists = true;
+            }
 
             if (empty($result['error'])){
 
@@ -117,6 +136,8 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
         Option::set( $sModuleId, 'form_global_check',               $_POST['form_global_check'] == '1'               ? 1 : 0 );
         Option::set( $sModuleId, 'form_global_check_without_email', $_POST['form_global_check_without_email'] == '1' ? 1 : 0 );
         Option::set( $sModuleId, 'form_sfw',                        $_POST['form_sfw'] == '1'                        ? 1 : 0 );
+        Option::set( $sModuleId, 'bot_detector',                    $_POST['bot_detector'] == '1'                        ? 1 : 0 );
+        Option::set( $sModuleId, 'form_sfw_uniq_get_option',        $_POST['form_sfw_uniq_get_option'] == '1'        ? 1 : 0 );
         Option::set( $sModuleId, 'complete_deactivation',           $_POST['complete_deactivation'] == '1'           ? 1 : 0 );
 
         if (isset($_POST['form_exclusions_sites']) && is_array($_POST['form_exclusions_sites'])) {
@@ -174,6 +195,18 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
             // Remove it if SFW is disabled
         } else {
             CAgent::RemoveModuleAgents("cleantalk.antispam");
+        }
+    }
+
+    foreach( $sites as $site ) {
+        $key = "key_" . $site["SITE_ID"];
+        if ( isset($_POST[$key]) ) {
+            if ( empty($_POST[$key]) ) {
+                COption::RemoveOption($sModuleId, "_key", $site["SITE_ID"]);
+            } else {
+                // @ToDo add key_is_ok checking here and output error message
+                COption::SetOptionString($sModuleId, "_key", $_POST[$key], false, $site["SITE_ID"]);
+            }
         }
     }
 }
@@ -289,10 +322,10 @@ $oTabControl->Begin();
     <?=bitrix_sessid_post()?>
     <?php $oTabControl->BeginNextTab();?>
     <script>
-        function ctDdisableInputLine(ct_input_line){
+        function ctDisableInputLine(ct_input_line){
 
-            ct_label = document.getElementById(ct_input_line+'_label');
-            ct_input = document.getElementById(ct_input_line);
+            let ct_label = document.getElementById(ct_input_line+'_label');
+            let ct_input = document.getElementById(ct_input_line);
 
             if(ct_input.hasAttribute('disabled')){
                 ct_input.removeAttribute('disabled');
@@ -354,6 +387,11 @@ $oTabControl->Begin();
                         value="<?php echo GetMessage( 'CLEANTALK_GET_AUTO_KEY' ) ?>" />
             </td>
         </tr>
+        <?php if ( $is_account_exists )  { ?>
+        <tr>
+            <td colspan='2' style='text-align: center; color: red;'><?php echo GetMessage( 'CLEANTALK_API_KEY_GETTING_WARNING' );?><br></td>
+        </tr>
+        <?php } ?>
         <tr>
             <td colspan='2' style='text-align: center;'><?php echo GetMessage( 'CLEANTALK_EMAIL_REGISTRATION_WARNING' )."(". Option::get("main", "email_from"); ?>).<br> <a target="_blank" href="https://cleantalk.org/publicoffer"><?php echo GetMessage( 'CLEANTALK_LICENSE_AGREEMENT' ); ?></a></td>
         </tr>
@@ -367,6 +405,31 @@ $oTabControl->Begin();
             </td>
         </tr>
     <?php } ?>
+
+
+    <?php if ( count($sites) > 1 ) { ?>
+    <!-- Multisite options -->
+    <tr>
+        <th colspan='2'><?php echo GetMessage('CLEANTALK_MULTISITE_TITLE') ?></th>
+    </tr>
+    <tr>
+        <td colspan='2'>
+            <?php
+                $subTabControl->Begin();
+                foreach ( $sites as $site )
+                {
+                    $subTabControl->BeginNextTab();
+                    $api_key_subsite = Option::get($sModuleId, '_key', '', $site["SITE_ID"]);
+                    ?>
+                    <?= GetMessage( 'CLEANTALK_MULTISITE_LABEL_KEY' ) ?>
+                    <input type="text" name="key_<?= $site["SITE_ID"] ?>" id="key_<?= $site["SITE_ID"] ?>" value="<?= $api_key_subsite ?>" />
+            <?php }
+                $subTabControl->End();
+            ?>
+        </td>
+    </tr>
+    <?php } ?>
+
     <tr class="heading">
         <td colspan="2">
             <?=GetMessage( 'CLEANTALK_TITLE' )?>
@@ -451,7 +514,7 @@ $oTabControl->Begin();
         <td width="50%" valign="top">
             <label for="form_global_check"><?php echo GetMessage( 'CLEANTALK_LABEL_GLOBAL_CHECK' );?>:</td>
         <td  valign="top">
-            <input type="checkbox" name="form_global_check" id="form_global_check" onclick="ctDdisableInputLine('form_global_check_without_email');" <?php if ( $current_options['form_global_check'] === '1' ):?> checked="checked"<?php endif; ?>value="1" />
+            <input type="checkbox" name="form_global_check" id="form_global_check" onclick="ctDisableInputLine('form_global_check_without_email');" <?php if ( $current_options['form_global_check'] === '1' ):?> checked="checked"<?php endif; ?>value="1" />
         </td>
     </tr>
     <tr>
@@ -486,13 +549,60 @@ $oTabControl->Begin();
     </tr>
     <tr>
         <td width="50%" valign="top">
-            <label for="form_global_check"><?php echo GetMessage( 'CLEANTALK_LABEL_SFW' );?>:</td>
+            <label for="bot_detector"
+                <?php
+                if ( $current_options['bot_detector'] === '0' ){
+                    echo ("style='color: gray;'");
+                }
+                ?>
+            >
+                <?php echo GetMessage( 'CLEANTALK_LABEL_BOT_DETECTOR' );?>:
+        </td>
+        <td  valign="top">
+            <input
+                    type="checkbox"
+                    name="bot_detector"
+                    id="bot_detector"
+                <?php if ( $current_options['bot_detector'] === '1' ):?> checked="checked"<?php endif; ?>value="1" />
+            <?php echo GetMessage( 'CLEANTALK_DESCRIPTION_BOT_DETECTOR' ); ?>
+        </td>
+    </tr>
+    <tr>
+        <td width="50%" valign="top">
+            <label for="form_sfw"><?php echo GetMessage( 'CLEANTALK_LABEL_SFW' );?>:</td>
         <td valign="top">
             <input
                     type="checkbox"
                     name="form_sfw"
                     id="form_sfw"
                 <?php if ( $current_options['form_sfw'] === '1' ):?> checked="checked"<?php endif; ?>value="1" />
+        </td>
+    </tr>
+    <tr>
+        <td width="50%" valign="top">
+            <label
+                    id="form_sfw_uniq_get_option_label"
+                    for="form_sfw_uniq_get_option"
+                <?php
+                if ($current_options['form_sfw'] === '0') {
+                    echo ("style='color: gray;'");
+                }
+                ?>
+            >
+                <?php echo GetMessage( 'CLEANTALK_LABEL_UNIQ_GET_OPTION' );?>:
+        </td>
+        <td  valign="top">
+            <input
+                    type="checkbox"
+                    name="form_sfw_uniq_get_option"
+                    id="form_sfw_uniq_get_option"
+                    <?php
+                    if ( $current_options['form_sfw'] === '0' ){
+                        echo "disabled";
+                    }
+                    ?>
+                <?php if ( $current_options['form_sfw_uniq_get_option'] === '1' ):?> checked="checked"<?php endif; ?>value="1" />
+                <?php echo GetMessage( 'CLEANTALK_LABEL_UNIQ_GET_OPTION_DESC' ); ?>
         </td>
     </tr>
     <tr class="heading">
@@ -597,9 +707,30 @@ $oTabControl->Begin();
                     value="1" />
         </td>
     </tr>
+    <!--HIDDEN FIELDSET-->
+    <input type="hidden" name="is_paid" value="<?php echo $current_options['is_paid'] ?>" />
+    <input type="hidden" name="last_checked" value="0" />
+    <input type="hidden" name="moderate_ip" value="<?php echo $current_options['moderate_ip'] ?>" />
+    <input type="hidden" name="ip_license" value="<?php echo $current_options['ip_license'] ?>" />
     <?php $oTabControl->Buttons(); ?>
     <input type="submit" name="Update" value="<?php echo GetMessage( 'CLEANTALK_BUTTON_SAVE' ) ?>" />
     <input type="submit" name="reset" value="<?php echo GetMessage( 'CLEANTALK_BUTTON_RESET' ) ?>" />
     <input type="hidden" name="Update" value="Y" />
     <?php $oTabControl->End();?>
+    <script>
+        let form_sfw_checkbox = document.getElementById('form_sfw');
+        let form_sfw_uniq_get_option_checkbox = document.getElementById('form_sfw_uniq_get_option');
+        let form_sfw_uniq_get_option_checkbox_label = document.getElementById('form_sfw_uniq_get_option_label');
+        form_sfw_checkbox.addEventListener('change', (event) => {
+            if (event.currentTarget.checked) {
+                form_sfw_uniq_get_option_checkbox.disabled = false;
+                form_sfw_uniq_get_option_checkbox.checked = true;
+                form_sfw_uniq_get_option_checkbox_label.style.removeProperty('color');
+            } else {
+                form_sfw_uniq_get_option_checkbox.checked = false;
+                form_sfw_uniq_get_option_checkbox.disabled = true;
+                form_sfw_uniq_get_option_checkbox_label.style.color = 'gray';
+            }
+        });
+    </script>
 </form>

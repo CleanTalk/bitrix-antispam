@@ -16,7 +16,7 @@ class SFW extends FirewallModule {
 	// Additional params
 	private $sfw_counter = false;
 	private $set_cookies = false;
-	private $cookie_domain = false;
+	protected $cookie_domain = false;
 
     /**
      * FireWall_module constructor.
@@ -28,12 +28,12 @@ class SFW extends FirewallModule {
 	public function __construct( $data_table, $params = array() )
     {
 		$this->db_data_table_name = $data_table ?: null;
-		
+
 		foreach( $params as $param_name => $param ){
 			$this->$param_name = isset( $this->$param_name ) ? $param : false;
 		}
 	}
-	
+
 	/**
 	 * Use this method to execute main logic of the module.
 	 *
@@ -51,7 +51,7 @@ class SFW extends FirewallModule {
         } else {
             $ct_sfw_pass_key = Cookie::get( 'ct_sfw_pass_key');
         }
-		
+
 		// Skip by cookie
 		foreach( $this->ip_array as $current_ip ){
 
@@ -66,7 +66,7 @@ class SFW extends FirewallModule {
                     }
 
                     // Do logging an one passed request
-                    $this->update_log( $current_ip, 'PASS_SFW' );
+                    $this->update_log( $current_ip, 'PASS_SFW', false );
 
                     if( $this->sfw_counter ){
                         // @ToDo have to implement the logic of incrementing and saving count of all handled requests.
@@ -81,11 +81,11 @@ class SFW extends FirewallModule {
                 if( $status ) {
                     $results[] = array('ip' => $current_ip, 'is_personal' => false, 'status' => 'PASS_SFW__BY_WHITELIST',);
                 }
-					
+
 				return $results;
 			}
 		}
-		
+
 		// Common check
 		foreach( $this->ip_array as $origin => $current_ip )
 		{
@@ -96,7 +96,7 @@ class SFW extends FirewallModule {
 				$needles[] = sprintf( "%u", bindec( $mask & base_convert( $current_ip_v4, 10, 2 ) ) );
 			}
 			$needles = array_unique( $needles );
-			
+
 			$db_results = $this->db->fetch_all("SELECT * FROM " . $this->db_data_table_name . "
 				WHERE network IN (". implode( ',', $needles ) .")
 				AND	network = " . $current_ip_v4 . " & mask 
@@ -104,7 +104,7 @@ class SFW extends FirewallModule {
 				ORDER BY status DESC");
 
 			if ( ! empty( $db_results ) ) {
-				
+
 				foreach( $db_results as $db_result ){
 					$is_personal = isset($db_result['source']) && $db_result['source'] == 1 ? true : false;
 					if ( $db_result['status'] == 1 ) {
@@ -126,7 +126,7 @@ class SFW extends FirewallModule {
         }
 		return $results;
 	}
-	
+
 	/**
 	 * Add entry to SFW log.
 	 * Writes to database.
@@ -136,11 +136,10 @@ class SFW extends FirewallModule {
 	 */
 	public function update_log( $ip, $status, $is_personal )
     {
+        $id   = md5( $ip . $this->module_name );
+        $time = time();
 
-		$id   = md5( $ip . $this->module_name );
-		$time = time();
-		
-		$query = "INSERT INTO " . $this->db_log_table_name . "
+        $query = "INSERT INTO " . $this->db_log_table_name . "
 		SET
 			id = '$id',
 			ip = '$ip',
@@ -148,24 +147,17 @@ class SFW extends FirewallModule {
 			all_entries = 1,
 			blocked_entries = " . ( strpos( $status, 'DENY' ) !== false ? 1 : 0 ) . ",
 			entries_timestamp = '" . $time . "',
-			ua_name = '" . addslashes(Server::get('HTTP_USER_AGENT')) . "'%s
+			ua_name = '" . addslashes(Server::get('HTTP_USER_AGENT')) . "'
 		ON DUPLICATE KEY
 		UPDATE
 			status = '$status',
 			all_entries = all_entries + 1,
 			blocked_entries = blocked_entries" . ( strpos( $status, 'DENY' ) !== false ? ' + 1' : '' ) . ",
 			entries_timestamp = '" . intval( $time ) . "',
-			ua_name = '" . addslashes(Server::get('HTTP_USER_AGENT')) . "'%s";
+			ua_name = '" . addslashes(Server::get('HTTP_USER_AGENT')) . "'";
 
-		if ( $is_personal ) {
-			$is_personal_sql = ", source = '" . $is_personal . "'";
-			$query = sprintf( $query, $is_personal_sql, $is_personal_sql);
-		} else {
-			$query = sprintf( $query, '', '');
-		}
-
-		$this->db->execute( $query );
-	}
+        $this->db->execute( $query );
+    }
 
     /**
      * @inheritdoc
@@ -195,9 +187,9 @@ class SFW extends FirewallModule {
      */
 	public function _die( $result )
     {
-		
+
 		parent::_die( $result );
-		
+
 		// Statistics
 		if( ! empty( $this->blocked_ips ) ){
 			reset($this->blocked_ips);
@@ -208,10 +200,10 @@ class SFW extends FirewallModule {
 			$this->apbct->save('stats');
 			*/
 		}
-		
+
 		// File exists?
 		if( file_exists( __DIR__ . "/die_page_sfw.html" ) ){
-			
+
 			$sfw_die_page = file_get_contents( __DIR__ . "/die_page_sfw.html" );
 
             $net_count = $this->db->fetch( 'SELECT COUNT(*) as net_count FROM ' . $this->db_data_table_name );
@@ -231,12 +223,12 @@ class SFW extends FirewallModule {
 				'{HOST}'                           => '',
 				'{GENERATED}'                      => '<p>The page was generated at&nbsp;' . date( 'D, d M Y H:i:s' ) . "</p>",
 				'{REQUEST_URI}'                    => Server::get( 'REQUEST_URI' ),
-				
+
 				// Cookie
 				'{COOKIE_PREFIX}'      => '',
 				'{COOKIE_DOMAIN}'      => $this->cookie_domain,
 				'{COOKIE_SFW}'         => $this->test ? $this->test_ip : $cookie_val,
-				
+
 				// Test
 				'{TEST_TITLE}'      => '',
 				'{REAL_IP__HEADER}' => '',
@@ -244,7 +236,7 @@ class SFW extends FirewallModule {
 				'{TEST_IP}'         => '',
 				'{REAL_IP}'         => '',
 			);
-			
+
 			// Test
 			if($this->test){
 				$replaces['{TEST_TITLE}']      = $this->__( 'This is the testing page for SpamFireWall', 'cleantalk-spam-protect' );
@@ -253,7 +245,7 @@ class SFW extends FirewallModule {
 				$replaces['{TEST_IP}']         = $this->test_ip;
 				$replaces['{REAL_IP}']         = $this->real_ip;
 			}
-			
+
 			// Debug
 			if($this->debug){
 				$debug = '<h1>Headers</h1>'
@@ -268,13 +260,13 @@ class SFW extends FirewallModule {
 				         . var_export( $this->debug_data, true );
 			}
 			$replaces['{DEBUG}'] = isset( $debug ) ? $debug : '';
-			
+
 			foreach( $replaces as $place_holder => $replace ){
 				$sfw_die_page = str_replace( $place_holder, $replace, $sfw_die_page );
 			}
-			
+
 			die( $sfw_die_page );
-			
+
 		}
 
         die( "IP BLACKLISTED. Blocked by SFW " . $result['ip'] );

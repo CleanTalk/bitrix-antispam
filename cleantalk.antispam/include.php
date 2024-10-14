@@ -7,6 +7,7 @@ IncludeModuleLangFile(__FILE__);
 require_once(dirname(__FILE__) . '/lib/autoload.php');
 
 //Antispam classes
+use Bitrix\Main\Page\Asset;
 use Cleantalk\Antispam\Cleantalk;
 use Cleantalk\Antispam\CleantalkRequest;
 use Cleantalk\Antispam\CleantalkResponse;
@@ -19,7 +20,7 @@ use Cleantalk\ApbctBitrix\RemoteCalls;
 use Cleantalk\ApbctBitrix\Cron;
 use Cleantalk\ApbctBitrix\DB;
 use Cleantalk\Common\Variables\Server;
-use Cleantalk\Common\Firewall\Modules\SFW;
+use Cleantalk\ApbctBitrix\SFW;
 
 if ( ! defined( 'CLEANTALK_USER_AGENT' ) )
     define( 'CLEANTALK_USER_AGENT', 'bitrix-3.12.0' );
@@ -162,6 +163,7 @@ class CleantalkAntispam {
         $ct_key                  = COption::GetOptionString( 'cleantalk.antispam', 'key', '' );
         $last_checked            = COption::GetOptionInt( 'cleantalk.antispam', 'last_checked', 0 );
         $show_review             = COption::GetOptionInt( 'cleantalk.antispam', 'show_review', 0 );
+        $bot_detector            = COption::GetOptionInt( 'cleantalk.antispam', 'bot_detector', 0 );
         $is_sfw                  = COption::GetOptionInt( 'cleantalk.antispam', 'form_sfw', 0 );
         $sfw_last_update         = COption::GetOptionInt( 'cleantalk.antispam',  'sfw_last_update', 0);
         $sfw_last_send_log       = COption::GetOptionInt( 'cleantalk.antispam',  'sfw_last_send_log', 0);
@@ -178,6 +180,10 @@ class CleantalkAntispam {
         }
 
         if( ! $USER->IsAdmin() ){
+
+            if ( $bot_detector ) {
+                Asset::getInstance()->addJs('https://moderate.cleantalk.org/ct-bot-detector-wrapper.js');
+            }
 
             // Set cookies
             if( ! headers_sent() )
@@ -1032,6 +1038,8 @@ class CleantalkAntispam {
     public static function OnEndBufferContentHandler( &$content ) {
         global $USER, $APPLICATION;
 
+        if (!is_object($USER)) $USER = new CUser;
+
         if(
             ! $USER->IsAdmin() &&
             ! defined( "ADMIN_SECTION" ) &&
@@ -1061,11 +1069,7 @@ class CleantalkAntispam {
             $ct_check_values = self::SetCheckJSValues();
 
             $js_template = "<script data-skip-moving = 'true'>
-                    var ct_checkjs_val = '".$ct_check_values[0]."', ct_date = new Date(), 
-                    ctTimeMs = new Date().getTime(),
-                    ctMouseEventTimerFlag = true, //Reading interval flag
-                    ctMouseData = [],
-                    ctMouseDataCounter = 0;
+                    var ct_checkjs_val = '".$ct_check_values[0]."', ct_date = new Date();
 
                     function ctSetCookie(c_name, value) {
                         document.cookie = c_name + '=' + encodeURIComponent(value) + '; path=/';
@@ -1073,7 +1077,6 @@ class CleantalkAntispam {
 
                     ctSetCookie('ct_ps_timestamp', Math.floor(new Date().getTime()/1000));
                     ctSetCookie('ct_fkp_timestamp', '0');
-                    ctSetCookie('ct_pointer_data', '0');
                     ctSetCookie('ct_timezone', '0');
 
                     ct_attach_event_handler(window, 'DOMContentLoaded', ct_ready);
@@ -1090,45 +1093,6 @@ class CleantalkAntispam {
                         ctKeyStopStopListening();
                     }
 
-                    /* Reading interval */
-                    var ctMouseReadInterval = setInterval(function(){
-                        ctMouseEventTimerFlag = true;
-                    }, 150);
-                        
-                    /* Writting interval */
-                    var ctMouseWriteDataInterval = setInterval(function(){
-                        ctSetCookie('ct_pointer_data', JSON.stringify(ctMouseData));
-                    }, 1200);
-
-                    /* Logging mouse position each 150 ms */
-                    var ctFunctionMouseMove = function output(event){
-                        if(ctMouseEventTimerFlag == true){
-                            
-                            ctMouseData.push([
-                                Math.round(event.pageY),
-                                Math.round(event.pageX),
-                                Math.round(new Date().getTime() - ctTimeMs)
-                            ]);
-                            
-                            ctMouseDataCounter++;
-                            ctMouseEventTimerFlag = false;
-                            if(ctMouseDataCounter >= 100){
-                                ctMouseStopData();
-                            }
-                        }
-                    }
-
-                    /* Stop mouse observing function */
-                    function ctMouseStopData(){
-                        if(typeof window.addEventListener == 'function'){
-                            window.removeEventListener('mousemove', ctFunctionMouseMove);
-                        }else{
-                            window.detachEvent('onmousemove', ctFunctionMouseMove);
-                        }
-                        clearInterval(ctMouseReadInterval);
-                        clearInterval(ctMouseWriteDataInterval);                
-                    }
-
                     /* Stop key listening function */
                     function ctKeyStopStopListening(){
                         if(typeof window.addEventListener == 'function'){
@@ -1141,11 +1105,9 @@ class CleantalkAntispam {
                     }
 
                     if(typeof window.addEventListener == 'function'){
-                        window.addEventListener('mousemove', ctFunctionMouseMove);
                         window.addEventListener('mousedown', ctFunctionFirstKey);
                         window.addEventListener('keydown', ctFunctionFirstKey);
                     }else{
-                        window.attachEvent('onmousemove', ctFunctionMouseMove);
                         window.attachEvent('mousedown', ctFunctionFirstKey);
                         window.attachEvent('keydown', ctFunctionFirstKey);
                     }
@@ -1318,7 +1280,8 @@ class CleantalkAntispam {
                 return;
             }
 
-            $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '');
+            $ct_key_site = COption::GetOptionString('cleantalk.antispam', '_key', '', SITE_ID);
+            $ct_key = empty($ct_key_site) ? COption::GetOptionString('cleantalk.antispam', 'key', '') : $ct_key_site;
             $ct_ws = self::GetWorkServer();
 
             if (!isset($_COOKIE['ct_checkjs']))
@@ -1328,7 +1291,6 @@ class CleantalkAntispam {
             else
                 $checkjs = 0;
 
-            $pointer_data        = (isset($_COOKIE['ct_pointer_data'])  ? json_decode($_COOKIE['ct_pointer_data']) : '');
             $js_timezone         = (isset($_COOKIE['ct_timezone'])      ? $_COOKIE['ct_timezone']                  : 'none');
             $first_key_timestamp = (isset($_COOKIE['ct_fkp_timestamp']) ? $_COOKIE['ct_fkp_timestamp']             : 0);
             $page_set_timestamp  = (isset($_COOKIE['ct_ps_timestamp'])  ? $_COOKIE['ct_ps_timestamp']              : 0);
@@ -1364,7 +1326,6 @@ class CleantalkAntispam {
                 'post_url' => $refferrer,
                 'USER_AGENT' => $user_agent,
                 'js_timezone' => $js_timezone,
-                'mouse_cursor_positions' => $pointer_data,
                 'key_press_timestamp' => $first_key_timestamp,
                 'page_set_timestamp' => $page_set_timestamp,
                 'REFFERRER_PREVIOUS' => isset($_COOKIE['ct_prev_referer']) ? $_COOKIE['ct_prev_referer'] : null,
@@ -1407,6 +1368,7 @@ class CleantalkAntispam {
                 'js_on' => $checkjs,
                 'sender_info' => $sender_info,
                 'submit_time' => self::ct_cookies_test() == 1 ? time() - (int)$_COOKIE['ct_timestamp'] : null,
+                'event_token' => isset($_POST['ct_bot_detector_event_token']) ? $_POST['ct_bot_detector_event_token'] : null,
             );
 
             switch ($type) {
@@ -1688,7 +1650,7 @@ class CleantalkAntispam {
      * @param string Feedback type - 'Y' or 'N' only
      */
     static function SendFeedback($module, $id, $feedback) {
-        global $DB;
+        global $DB, $site;
         if(empty($module))
             return;
         if(empty($id) || intval($id) < 0)
@@ -1700,7 +1662,8 @@ class CleantalkAntispam {
         if($request_id !== FALSE){
             $DB->Query('DELETE FROM cleantalk_cids WHERE module=\''. $module .'\' AND cid=' . $id);
 
-            $ct_key = COption::GetOptionString('cleantalk.antispam', 'key', '');
+            $ct_key_site = COption::GetOptionString('cleantalk.antispam', '_key', '', $site["LID"]);
+            $ct_key = empty($ct_key_site) ? COption::GetOptionString('cleantalk.antispam', 'key', '') : $ct_key_site;
             $ct_ws = self::GetWorkServer();
 
             $ct = new Cleantalk();

@@ -18,12 +18,21 @@ $MESS['CLEANTALK_TITLE']        = 'Настройки модуля';
 $MESS['CLEANTALK_LABEL_GLOBAL_CHECK']        = 'Защита любых форм';
 $MESS['CLEANTALK_LABEL_GLOBAL_CHECK_WITHOUT_EMAIL'] = 'Проверять все POST данные';
 $MESS['CLEANTALK_WARNING_GLOBAL_CHECK_WITHOUT_EMAIL'] = '- Внимание, возможны конфликты!';
+$MESS['CLEANTALK_LABEL_BOT_DETECTOR'] = 'Использовать Anti-Spam by CleanTalk JavaScript библиотеку';
+$MESS['CLEANTALK_DESCRIPTION_BOT_DETECTOR'] = 'Эта опция включает внешнюю Anti-Spam by CleanTalk JavaScript библиотеку для получения данных о посетителях';
 $MESS['CLEANTALK_LABEL_SFW']        = 'Spam FireWall';
+$MESS['CLEANTALK_LABEL_UNIQ_GET_OPTION']        = 'Добавление уникального гет параметра';
+$MESS['CLEANTALK_LABEL_UNIQ_GET_OPTION_DESC']        = 'Если посетитель попадает на страницу файервола, плагин помещает уникальный GET параметр в URL-адрес, чтобы избежать проблем с кэшированием.';
 $MESS['CLEANTALK_LABEL_NOTIFY']        = "Нравится антиспам от CleanTalk? Помогите другим узнать о нас! <a target='_blank' href='http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/#rating'>Оставьте отзыв на Битрикс.Маркетплейс</a>";
 $MESS['CLEANTALK_ENTER_KEY']        = 'Введите ключ';
 $MESS['CLEANTALK_KEY_VALID']        = 'Ключ активен';
 $MESS['CLEANTALK_KEY_NOT_VALID']    = 'Ключ не активен';
 $MESS['CLEANTALK_EMAIL_REGISTRATION_WARNING']	= 'Для регистрации будет использована почта администратора';
+$MESS['CLEANTALK_API_KEY_GETTING_WARNING']	= sprintf(
+    'Пожалуйста, используйте ключ доступа из вашей %s панели управления CleanTalk %s',
+    '<a href="https://cleantalk.org/my/?cp_mode=antispam" target="_blank">',
+    '</a>'
+);
 $MESS['CLEANTALK_LICENSE_AGREEMENT'] = 'Лицензионное соглашение';
 $MESS['CLEANTALK_KEY']                           = 'Ключ доступа';
 $MESS['CLEANTALK_EXCLUSIONS']                    = 'Исключения';
@@ -45,3 +54,4 @@ $MESS['CLEANTALK_WRONG_REGEXP_NOTIFY'] = 'Исключение полей фор
 $MESS['CLEANTALK_WRONG_DEFAULT_SETTINGS'] = 'Невоможно загрузить опции по умолчанию. Ошибка в имени модуля.';
 $MESS['CLEANTALK_WRONG_CURRENT_SETTINGS'] = 'Невоможно загрузить текущие опции.';
 $MESS['CLEANTALK_RESET_OPTIONS_FAILED'] = 'Невоможно сбросить опции.';
+$MESS['CLEANTALK_MULTISITE_LABEL_KEY'] = 'Если вы хотите использовать отдельный ключ доступа для этого сайта, вставьте его здесь. В противном случае оставьте поле пустым.';
