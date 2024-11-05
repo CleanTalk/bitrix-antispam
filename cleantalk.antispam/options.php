@@ -21,7 +21,11 @@ $cleantalk_is_wrong_regexp = false;
 $cleantalk_is_wrong_url_regexp = false;
 $is_account_exists = false;
 
-$sites_from_bd = CSite::GetList("", "", Array("ACTIVE" => "Y"));
+// Attention! Probable reference call on CSite::GetList on old versions, do not use non-variables in params.
+// init referenced variables for CSite::GetList
+$get_list__by = "sort";
+$get_list__order = "desc";
+$sites_from_bd = CSite::GetList($get_list__by, $get_list__order, Array("ACTIVE" => "Y"));
 $sites = array();
 $sub_tabs = array();
 while( $site = $sites_from_bd->Fetch() ) {
@@ -615,7 +619,7 @@ $oTabControl->Begin();
             <label for="form_exclusions_webform"><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_SITES' );?>:</td>
         <td  valign="top">
             <select name="form_exclusions_sites[]" id="form_exclusions_sites" multiple>
-                <?php $rsSites = CSite::GetList($by ="sort", $order="desc");
+                <?php $rsSites = CSite::GetList($get_list__by, $get_list__order);
                 $excluded_sites = explode(",", $current_options['site_exclusions']);
                 while ($arSite = $rsSites->Fetch()) {
                     echo "<option value = \"".$arSite['ID']."\" " . (in_array($arSite['ID'], $excluded_sites) ? "selected" : "") . ">".$arSite['NAME']."</option>";
