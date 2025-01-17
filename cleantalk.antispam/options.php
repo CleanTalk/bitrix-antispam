@@ -85,6 +85,7 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
 
         // Send empty feedback for version comparison in Dashboard
         $new_key = isset( $new_key ) ? $new_key : $old_key;
+        $new_key = trim($new_key);
         $result = CleantalkAPI::method__send_empty_feedback($new_key, CLEANTALK_USER_AGENT);
 
         /**
