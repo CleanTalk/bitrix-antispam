@@ -541,12 +541,10 @@ $oTabControl->Begin();
                     name="form_global_check_without_email"
                     id="form_global_check_without_email"
                 <?php
-                if( $current_options['form_global_check'] === '0' ) {
-                    if ($current_options['form_global_check_without_email'] === '1') {
+                if( $current_options['form_global_check'] === '1' && $current_options['form_global_check_without_email'] === '1' ) {
                         echo 'checked="checked"';
-                    } else {
+                } elseif ( $current_options['form_global_check'] === '0' ) {
                         echo "disabled";
-                    }
                 }
                 ?>
                     value="1" /> <?php echo GetMessage( 'CLEANTALK_WARNING_GLOBAL_CHECK_WITHOUT_EMAIL' ); ?>
