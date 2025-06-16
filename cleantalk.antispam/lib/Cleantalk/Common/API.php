@@ -658,8 +658,8 @@ class API
 		if ($url == self::$URL) {
 			if (class_exists('COption')) {
 				$use_custom_server = \COption::GetOptionString( 'cleantalk.antispam', 'use_custom_server', '' );
-				if ($use_custom_server == '1') {
-					$url = 'https://api.cleantalk.ru';
+				if ($use_custom_server !== '') {
+					$url = 'https://api.' . $use_custom_server;
 				}
 			}
 		}

@@ -184,8 +184,8 @@ class CleantalkAntispam {
             if ( $bot_detector ) {
                 if (class_exists('COption')) {
                     $use_custom_server = \COption::GetOptionString( 'cleantalk.antispam', 'use_custom_server', '' );
-                    if ($use_custom_server == '1') {
-                        Asset::getInstance()->addJs('https://moderate.cleantalk.ru/ct-bot-detector-wrapper.js');
+                    if ($use_custom_server !== '') {
+                        Asset::getInstance()->addJs('https://moderate.' . $use_custom_server . '/ct-bot-detector-wrapper.js');
                     } else {
                         Asset::getInstance()->addJs('https://moderate.cleantalk.org/ct-bot-detector-wrapper.js');
                     }
@@ -1720,10 +1720,10 @@ class CleantalkAntispam {
 
         if (class_exists('COption')) {
             $use_custom_server = \COption::GetOptionString( 'cleantalk.antispam', 'use_custom_server', '' );
-            if ($use_custom_server == '1') {
+            if ($use_custom_server !== '') {
                 return array(
-                    'work_url' => 'http://moderate.cleantalk.ru',
-                    'server_url' => 'http://moderate.cleantalk.ru',
+                    'work_url' => 'http://moderate.' . $use_custom_server,
+                    'server_url' => 'http://moderate.' . $use_custom_server,
                     'server_ttl' => 0,
                     'server_changed' => 0,
                 );
@@ -1775,9 +1775,9 @@ class CleantalkAntispam {
 
         if (class_exists('COption')) {
             $use_custom_server = \COption::GetOptionString( 'cleantalk.antispam', 'use_custom_server', '' );
-            if ($use_custom_server == '1') {
-                $work_url = 'http://moderate.cleantalk.ru';
-                $server_url = 'http://moderate.cleantalk.ru';
+            if ($use_custom_server !== '') {
+                $work_url = 'http://moderate.' . $use_custom_server;
+                $server_url = 'http://moderate.' . $use_custom_server;
             }
         }
 

@@ -204,25 +204,22 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
 
         // Custom server
         if (isset($_POST['use_custom_server']) && $_POST['use_custom_server'] !== '') {
-            if (strpos($_POST['use_custom_server'], 'cleantalk.ru') !== false) {
-                if (file_get_contents('https://moderate.cleantalk.ru') === false) {
-                    Option::set( $sModuleId, 'use_custom_server', '' );
-                    CAdminNotify::Add(array(
-                        'MESSAGE' => GetMessage( 'CLEANTALK_SERVER_NOT_AVAILABLE' ),
-                        'TAG' => 'server_not_available',
-                        'MODULE_ID' => 'main',
-                        'ENABLE_CLOSE' => 'Y'));
-                } else {
-                    Option::set( $sModuleId, 'use_custom_server', '1' );
-                    CAdminNotify::DeleteByTag('server_not_available');
-                }
-            } else {
+            // Remove path, query, fragment
+            $domain = preg_replace('/[\/\?#].*$/', '', $_POST['use_custom_server']);
+            // Remove invalid characters (keep letters, numbers, hyphens, dots)
+            $domain = preg_replace('/[^a-zA-Z0-9\.\-]/', '', $domain);
+            // Convert to lowercase and trim
+            $domain = strtolower(trim($domain));
+            if (file_get_contents('https://moderate.' . $domain) === false) {
                 Option::set( $sModuleId, 'use_custom_server', '' );
                 CAdminNotify::Add(array(
                     'MESSAGE' => GetMessage( 'CLEANTALK_SERVER_NOT_AVAILABLE' ),
                     'TAG' => 'server_not_available',
                     'MODULE_ID' => 'main',
                     'ENABLE_CLOSE' => 'Y'));
+            } else {
+                Option::set( $sModuleId, 'use_custom_server', $domain );
+                CAdminNotify::DeleteByTag('server_not_available');
             }
         }
     }
@@ -742,7 +739,7 @@ $oTabControl->Begin();
                     type="text"
                     name="use_custom_server"
                     id="use_custom_server"
-                    value="<?php echo $current_options['use_custom_server'] == '1' ? 'cleantalk.ru' : ''; ?>" />
+                    value="<?php echo $current_options['use_custom_server']; ?>" />
             <div style="padding: 10px 0 10px 0">
                 <?php echo GetMessage( 'CLEANTALK_USE_CUSTOM_SERVER_DESCRIPTION' ); ?>
             </div>
