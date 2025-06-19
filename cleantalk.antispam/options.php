@@ -203,6 +203,9 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
         }
 
         // Custom server
+        if (isset($_POST['use_custom_server']) && $_POST['use_custom_server'] == '' && COption::GetOptionString($sModuleId, "use_custom_server") !== '') {
+            Option::set( $sModuleId, 'use_custom_server', '' );
+        }
         if (isset($_POST['use_custom_server']) && $_POST['use_custom_server'] !== '') {
             // Remove path, query, fragment
             $domain = preg_replace('/[\/\?#].*$/', '', $_POST['use_custom_server']);
@@ -210,7 +213,10 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
             $domain = preg_replace('/[^a-zA-Z0-9\.\-]/', '', $domain);
             // Convert to lowercase and trim
             $domain = strtolower(trim($domain));
-            if (file_get_contents('https://moderate.' . $domain) === false) {
+            // use default bitrix http client to make request
+            $httpClient = new \Bitrix\Main\Web\HttpClient();
+            $response = $httpClient->get('https://moderate.' . $domain);
+            if ($response === false) {
                 Option::set( $sModuleId, 'use_custom_server', '' );
                 CAdminNotify::Add(array(
                     'MESSAGE' => GetMessage( 'CLEANTALK_SERVER_NOT_AVAILABLE' ),
