@@ -201,6 +201,33 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
         } else {
             CAgent::RemoveModuleAgents("cleantalk.antispam");
         }
+
+        // Custom server
+        if (isset($_POST['use_custom_server']) && $_POST['use_custom_server'] == '' && COption::GetOptionString($sModuleId, "use_custom_server") !== '') {
+            Option::set( $sModuleId, 'use_custom_server', '' );
+        }
+        if (isset($_POST['use_custom_server']) && $_POST['use_custom_server'] !== '') {
+            // Remove path, query, fragment
+            $domain = preg_replace('/[\/\?#].*$/', '', $_POST['use_custom_server']);
+            // Remove invalid characters (keep letters, numbers, hyphens, dots)
+            $domain = preg_replace('/[^a-zA-Z0-9\.\-]/', '', $domain);
+            // Convert to lowercase and trim
+            $domain = strtolower(trim($domain));
+            // use default bitrix http client to make request
+            $httpClient = new \Bitrix\Main\Web\HttpClient();
+            $response = $httpClient->get('https://moderate.' . $domain);
+            if ($response === false) {
+                Option::set( $sModuleId, 'use_custom_server', '' );
+                CAdminNotify::Add(array(
+                    'MESSAGE' => GetMessage( 'CLEANTALK_SERVER_NOT_AVAILABLE' ),
+                    'TAG' => 'server_not_available',
+                    'MODULE_ID' => 'main',
+                    'ENABLE_CLOSE' => 'Y'));
+            } else {
+                Option::set( $sModuleId, 'use_custom_server', $domain );
+                CAdminNotify::DeleteByTag('server_not_available');
+            }
+        }
     }
 
     foreach( $sites as $site ) {
@@ -708,6 +735,20 @@ $oTabControl->Begin();
                     id="complete_deactivation"
                 <?php if ( $current_options['complete_deactivation'] === '1') :?> checked="checked"<?php endif; ?>
                     value="1" />
+        </td>
+    </tr>
+    <tr>
+        <td width="50%" valign="top">
+            <label for="use_custom_server"><?php echo GetMessage( 'CLEANTALK_USE_CUSTOM_SERVER' );?>:</td>
+        <td  valign="top">
+            <input
+                    type="text"
+                    name="use_custom_server"
+                    id="use_custom_server"
+                    value="<?php echo $current_options['use_custom_server']; ?>" />
+            <div style="padding: 10px 0 10px 0">
+                <?php echo GetMessage( 'CLEANTALK_USE_CUSTOM_SERVER_DESCRIPTION' ); ?>
+            </div>
         </td>
     </tr>
     <!--HIDDEN FIELDSET-->

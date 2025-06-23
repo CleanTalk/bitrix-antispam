@@ -182,7 +182,14 @@ class CleantalkAntispam {
         if( ! $USER->IsAdmin() ){
 
             if ( $bot_detector ) {
-                Asset::getInstance()->addJs('https://moderate.cleantalk.org/ct-bot-detector-wrapper.js');
+                if (class_exists('COption')) {
+                    $use_custom_server = \COption::GetOptionString( 'cleantalk.antispam', 'use_custom_server', '' );
+                    if ($use_custom_server !== '') {
+                        Asset::getInstance()->addJs('https://moderate.' . $use_custom_server . '/ct-bot-detector-wrapper.js');
+                    } else {
+                        Asset::getInstance()->addJs('https://moderate.cleantalk.org/ct-bot-detector-wrapper.js');
+                    }
+                }
             }
 
             // Set cookies
@@ -1710,6 +1717,19 @@ class CleantalkAntispam {
      */
     private static function GetWorkServer() {
         global $DB;
+
+        if (class_exists('COption')) {
+            $use_custom_server = \COption::GetOptionString( 'cleantalk.antispam', 'use_custom_server', '' );
+            if ($use_custom_server !== '') {
+                return array(
+                    'work_url' => 'http://moderate.' . $use_custom_server,
+                    'server_url' => 'http://moderate.' . $use_custom_server,
+                    'server_ttl' => 0,
+                    'server_changed' => 0,
+                );
+            }
+        }
+
         $result = $DB->Query('SELECT work_url,server_url,server_ttl,server_changed FROM cleantalk_server LIMIT 1')->Fetch();
         if($result !== FALSE)
             return array(
@@ -1750,7 +1770,17 @@ class CleantalkAntispam {
      */
     private static function SetWorkServer($work_url = 'http://moderate.cleantalk.org', $server_url = 'http://moderate.cleantalk.org', $server_ttl = 0, $server_changed = 0) {
         global $DB;
+
         $result = $DB->Query('SELECT count(*) AS count FROM cleantalk_server')->Fetch();
+
+        if (class_exists('COption')) {
+            $use_custom_server = \COption::GetOptionString( 'cleantalk.antispam', 'use_custom_server', '' );
+            if ($use_custom_server !== '') {
+                $work_url = 'http://moderate.' . $use_custom_server;
+                $server_url = 'http://moderate.' . $use_custom_server;
+            }
+        }
+
         if($result['count'] == 0){
             $arInsert = $DB->PrepareInsert(
                 'cleantalk_server',

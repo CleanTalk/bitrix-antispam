@@ -55,3 +55,6 @@ $MESS['CLEANTALK_WRONG_DEFAULT_SETTINGS'] = 'Невоможно загрузит
 $MESS['CLEANTALK_WRONG_CURRENT_SETTINGS'] = 'Невоможно загрузить текущие опции.';
 $MESS['CLEANTALK_RESET_OPTIONS_FAILED'] = 'Невоможно сбросить опции.';
 $MESS['CLEANTALK_MULTISITE_LABEL_KEY'] = 'Если вы хотите использовать отдельный ключ доступа для этого сайта, вставьте его здесь. В противном случае оставьте поле пустым.';
+$MESS['CLEANTALK_USE_CUSTOM_SERVER'] = 'Использовать кастомный сервер';
+$MESS['CLEANTALK_USE_CUSTOM_SERVER_DESCRIPTION'] = 'Использовать кастомный сервер для проверки спама. Можете ввести cleantalk.ru и плагин будет использовать только ru сервера. Опция для критических ситуаций, когда невозможен выбор сервера автоматически.';
+$MESS['CLEANTALK_SERVER_NOT_AVAILABLE'] = 'Указанные сервера не доступны, обратитесь в тех поддержку https://cleantalk.org/my/support/open';
