@@ -150,7 +150,9 @@ class cleantalk_antispam extends CModule {
         //Complete deactivation removes all the options
         if ( Option::get( 'cleantalk.antispam', 'complete_deactivation') == 1 ) {
             $ct_option_names = array_keys(Option::getForModule('cleantalk.antispam'));
-            Option::delete('cleantalk.antispam',$ct_option_names);
+            foreach ( $ct_option_names as $option_name ) {
+                Option::delete('cleantalk.antispam', array('name' => $option_name));
+            }
         }
 
         if (IsModuleInstalled('blog')){
