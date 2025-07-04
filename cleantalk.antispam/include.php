@@ -778,7 +778,7 @@ class CleantalkAntispam {
                     array('AUTHOR_ID'=>$arFields['AUTHOR_ID'], 'APPROVED'=>'Y'),
                     TRUE
                 );
-                if(intval($approved_messages) > 5) {
+                if(intval($approved_messages) > 5 && !defined('CLEANTALK__IGNORE_APPROVED_COMMENTS_COUNT_RULE')) {
                     return;
                 }
                 $aComment['sender_email'] = $USER->GetEmail();
