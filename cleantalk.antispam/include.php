@@ -786,11 +786,19 @@ class CleantalkAntispam {
                 $aComment['sender_email'] = isset($arFields['EMAIL']) ? $arFields['EMAIL'] : '';
             }
 
-            $aComment['type'] = 'comment';
-            $aComment['sender_nickname'] = isset($arFields['AUTHOR_NAME']) ? $arFields['AUTHOR_NAME'] : '';
-            $aComment['subject'] = '';
-            $aComment['message'] = isset($arFields['POST_MESSAGE']) ? array($arFields['POST_MESSAGE']) : array();
-            $aComment['example'] = array();
+            if (isset($arFields['TITLE']) && isset($arFields['DESCRIPTION'])) {
+                $aComment['type'] = 'topic_add';
+                $aComment['sender_nickname'] = isset($arFields['LAST_POSTER_NAME']) ? $arFields['LAST_POSTER_NAME'] : '';
+                $aComment['subject'] = isset($arFields['TITLE']) ? array($arFields['TITLE']) : '';
+                $aComment['message'] = isset($arFields['DESCRIPTION']) ? array($arFields['DESCRIPTION']) : array();
+                $aComment['example'] = array();
+            } else {
+                $aComment['type'] = 'comment';
+                $aComment['sender_nickname'] = isset($arFields['AUTHOR_NAME']) ? $arFields['AUTHOR_NAME'] : '';
+                $aComment['subject'] = '';
+                $aComment['message'] = isset($arFields['POST_MESSAGE']) ? array($arFields['POST_MESSAGE']) : array();
+                $aComment['example'] = array();
+            }
 
             if(COption::GetOptionInt('cleantalk.antispam', 'form_send_example', 0) == 1){
                 $arTopic = CForumTopic::GetByID($arFields['TOPIC_ID']);
@@ -1270,7 +1278,17 @@ class CleantalkAntispam {
             }
 
             $type = $arEntity['type'];
-            if($type != 'comment' && $type != 'webform' && $type != 'register' && $type != 'order' && $type != 'feedback_general_contact_form' && $type != 'private_message' && strpos($type, 'contact_form_bitrix') === false){
+            $allowed_types = array(
+                'topic_add',
+                'comment',
+                'webform',
+                'register',
+                'order',
+                'feedback_general_contact_form',
+                'private_message',
+            );
+
+            if(!in_array($type, $allowed_types) && strpos($type, 'contact_form_bitrix') === false){
                 CEventLog::Add(array(
                     'SEVERITY' => 'SECURITY',
                     'AUDIT_TYPE_ID' => 'CLEANTALK_E_INTERNAL',
@@ -1379,6 +1397,7 @@ class CleantalkAntispam {
             );
 
             switch ($type) {
+                case 'topic_add':
                 case 'comment':
                     $timelabels_key = 'mail_error_comment';
                     if (is_array($arEntity['message'])) {
@@ -1389,11 +1408,10 @@ class CleantalkAntispam {
                     }
                     $request_params['message'] = $arEntity['message'];
                     $request_params['example'] = $arEntity['example'];
-                    $request_params['post_info']['comment_type'] = 'comment';
+                    $request_params['post_info']['comment_type'] = $type;
 
                     $ct_request = new CleantalkRequest($request_params);
                     $ct_result = $ct->isAllowMessage($ct_request);
-
                     break;
 
                 case 'order':
