@@ -29,10 +29,13 @@ $sites_from_bd = CSite::GetList($get_list__by, $get_list__order, Array("ACTIVE" 
 $sites = array();
 $sub_tabs = array();
 while( $site = $sites_from_bd->Fetch() ) {
-    $site["ID"] = htmlspecialcharsbx($site["ID"]);
-    $site["NAME"] = htmlspecialcharsbx($site["NAME"]);
-    $sites[] = $site;
-    $sub_tabs[] = array("DIV" => "opt_site_".$site["ID"], "TAB" => "(".$site["ID"].") ".$site["NAME"], 'TITLE' => '');
+    $site_id = htmlspecialcharsbx($site["ID"]);
+    $site_name = htmlspecialcharsbx($site["NAME"]);
+    $sites[] = [
+        "ID" => $site_id,
+        "NAME" =>$site_name
+    ];
+    $sub_tabs[] = array("DIV" => "opt_site_".$site_id, "TAB" => "(".$site_id.") ".$site_name, 'TITLE' => '');
 }
 
 $subTabControl = new CAdminViewTabControl("subTabControl", $sub_tabs);
@@ -231,13 +234,14 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
     }
 
     foreach( $sites as $site ) {
-        $key = "key_" . $site["SITE_ID"];
+        $site_id = $site["ID"];
+        $key = "key_" . $site_id;
         if ( isset($_POST[$key]) ) {
             if ( empty($_POST[$key]) ) {
-                COption::RemoveOption($sModuleId, "_key", $site["SITE_ID"]);
+                COption::RemoveOption($sModuleId, "_key", $site_id);
             } else {
                 // @ToDo add key_is_ok checking here and output error message
-                COption::SetOptionString($sModuleId, "_key", $_POST[$key], false, $site["SITE_ID"]);
+                COption::SetOptionString($sModuleId, "_key", $_POST[$key], false, $site_id);
             }
         }
     }
@@ -450,11 +454,12 @@ $oTabControl->Begin();
                 $subTabControl->Begin();
                 foreach ( $sites as $site )
                 {
+                    $site_id = $site["ID"];
                     $subTabControl->BeginNextTab();
-                    $api_key_subsite = Option::get($sModuleId, '_key', '', $site["SITE_ID"]);
+                    $api_key_subsite = Option::get($sModuleId, '_key', '', $site_id);
                     ?>
                     <?= GetMessage( 'CLEANTALK_MULTISITE_LABEL_KEY' ) ?>
-                    <input type="text" name="key_<?= $site["SITE_ID"] ?>" id="key_<?= $site["SITE_ID"] ?>" value="<?= $api_key_subsite ?>" />
+                    <input type="text" name="key_<?= $site_id ?>" id="key_<?= $site_id ?>" value="<?= $api_key_subsite ?>" />
             <?php }
                 $subTabControl->End();
             ?>
