@@ -21,4 +21,5 @@ $cleantalk_antispam_default_option = array(
     'form_exclusions_fields__regexp' => 0,
     'form_exclusions_webform' => '',
     'complete_deactivation' => 0,
+    'use_custom_server' => '',
 );

@@ -23,7 +23,7 @@ use Cleantalk\Common\Variables\Server;
 use Cleantalk\ApbctBitrix\SFW;
 
 if ( ! defined( 'CLEANTALK_USER_AGENT' ) )
-    define( 'CLEANTALK_USER_AGENT', 'bitrix-3.12.0' );
+    define( 'CLEANTALK_USER_AGENT', 'bitrix-3.14.0' );
 
 define('APBCT_TBL_FIREWALL_DATA', 'cleantalk_sfw');      // Table with firewall data.
 define('APBCT_TBL_FIREWALL_LOG',  'cleantalk_sfw_logs'); // Table with firewall logs.
@@ -182,7 +182,14 @@ class CleantalkAntispam {
         if( ! $USER->IsAdmin() ){
 
             if ( $bot_detector ) {
-                Asset::getInstance()->addJs('https://moderate.cleantalk.org/ct-bot-detector-wrapper.js');
+                if (class_exists('COption')) {
+                    $use_custom_server = \COption::GetOptionString( 'cleantalk.antispam', 'use_custom_server', '' );
+                    if ($use_custom_server !== '') {
+                        Asset::getInstance()->addJs('https://moderate.' . $use_custom_server . '/ct-bot-detector-wrapper.js');
+                    } else {
+                        Asset::getInstance()->addJs('https://moderate.cleantalk.org/ct-bot-detector-wrapper.js');
+                    }
+                }
             }
 
             // Set cookies
@@ -771,7 +778,7 @@ class CleantalkAntispam {
                     array('AUTHOR_ID'=>$arFields['AUTHOR_ID'], 'APPROVED'=>'Y'),
                     TRUE
                 );
-                if(intval($approved_messages) > 5) {
+                if(intval($approved_messages) > 5 && !defined('CLEANTALK__IGNORE_APPROVED_COMMENTS_COUNT_RULE')) {
                     return;
                 }
                 $aComment['sender_email'] = $USER->GetEmail();
@@ -779,11 +786,19 @@ class CleantalkAntispam {
                 $aComment['sender_email'] = isset($arFields['EMAIL']) ? $arFields['EMAIL'] : '';
             }
 
-            $aComment['type'] = 'comment';
-            $aComment['sender_nickname'] = isset($arFields['AUTHOR_NAME']) ? $arFields['AUTHOR_NAME'] : '';
-            $aComment['subject'] = '';
-            $aComment['message'] = isset($arFields['POST_MESSAGE']) ? array($arFields['POST_MESSAGE']) : array();
-            $aComment['example'] = array();
+            if (isset($arFields['TITLE']) && isset($arFields['DESCRIPTION'])) {
+                $aComment['type'] = 'topic_add';
+                $aComment['sender_nickname'] = isset($arFields['LAST_POSTER_NAME']) ? $arFields['LAST_POSTER_NAME'] : '';
+                $aComment['subject'] = isset($arFields['TITLE']) ? array($arFields['TITLE']) : '';
+                $aComment['message'] = isset($arFields['DESCRIPTION']) ? array($arFields['DESCRIPTION']) : array();
+                $aComment['example'] = array();
+            } else {
+                $aComment['type'] = 'comment';
+                $aComment['sender_nickname'] = isset($arFields['AUTHOR_NAME']) ? $arFields['AUTHOR_NAME'] : '';
+                $aComment['subject'] = '';
+                $aComment['message'] = isset($arFields['POST_MESSAGE']) ? array($arFields['POST_MESSAGE']) : array();
+                $aComment['example'] = array();
+            }
 
             if(COption::GetOptionInt('cleantalk.antispam', 'form_send_example', 0) == 1){
                 $arTopic = CForumTopic::GetByID($arFields['TOPIC_ID']);
@@ -1263,7 +1278,17 @@ class CleantalkAntispam {
             }
 
             $type = $arEntity['type'];
-            if($type != 'comment' && $type != 'webform' && $type != 'register' && $type != 'order' && $type != 'feedback_general_contact_form' && $type != 'private_message' && strpos($type, 'contact_form_bitrix') === false){
+            $allowed_types = array(
+                'topic_add',
+                'comment',
+                'webform',
+                'register',
+                'order',
+                'feedback_general_contact_form',
+                'private_message',
+            );
+
+            if(!in_array($type, $allowed_types) && strpos($type, 'contact_form_bitrix') === false){
                 CEventLog::Add(array(
                     'SEVERITY' => 'SECURITY',
                     'AUDIT_TYPE_ID' => 'CLEANTALK_E_INTERNAL',
@@ -1372,6 +1397,7 @@ class CleantalkAntispam {
             );
 
             switch ($type) {
+                case 'topic_add':
                 case 'comment':
                     $timelabels_key = 'mail_error_comment';
                     if (is_array($arEntity['message'])) {
@@ -1382,11 +1408,10 @@ class CleantalkAntispam {
                     }
                     $request_params['message'] = $arEntity['message'];
                     $request_params['example'] = $arEntity['example'];
-                    $request_params['post_info']['comment_type'] = 'comment';
+                    $request_params['post_info']['comment_type'] = $type;
 
                     $ct_request = new CleantalkRequest($request_params);
                     $ct_result = $ct->isAllowMessage($ct_request);
-
                     break;
 
                 case 'order':
@@ -1710,6 +1735,19 @@ class CleantalkAntispam {
      */
     private static function GetWorkServer() {
         global $DB;
+
+        if (class_exists('COption')) {
+            $use_custom_server = \COption::GetOptionString( 'cleantalk.antispam', 'use_custom_server', '' );
+            if ($use_custom_server !== '') {
+                return array(
+                    'work_url' => 'http://moderate.' . $use_custom_server,
+                    'server_url' => 'http://moderate.' . $use_custom_server,
+                    'server_ttl' => 0,
+                    'server_changed' => 0,
+                );
+            }
+        }
+
         $result = $DB->Query('SELECT work_url,server_url,server_ttl,server_changed FROM cleantalk_server LIMIT 1')->Fetch();
         if($result !== FALSE)
             return array(
@@ -1750,7 +1788,17 @@ class CleantalkAntispam {
      */
     private static function SetWorkServer($work_url = 'https://moderate.cleantalk.org', $server_url = 'https://moderate.cleantalk.org', $server_ttl = 0, $server_changed = 0) {
         global $DB;
+
         $result = $DB->Query('SELECT count(*) AS count FROM cleantalk_server')->Fetch();
+
+        if (class_exists('COption')) {
+            $use_custom_server = \COption::GetOptionString( 'cleantalk.antispam', 'use_custom_server', '' );
+            if ($use_custom_server !== '') {
+                $work_url = 'http://moderate.' . $use_custom_server;
+                $server_url = 'http://moderate.' . $use_custom_server;
+            }
+        }
+
         if($result['count'] == 0){
             $arInsert = $DB->PrepareInsert(
                 'cleantalk_server',

@@ -21,14 +21,21 @@ $cleantalk_is_wrong_regexp = false;
 $cleantalk_is_wrong_url_regexp = false;
 $is_account_exists = false;
 
-$sites_from_bd = CSite::GetList("", "", Array("ACTIVE" => "Y"));
+// Attention! Probable reference call on CSite::GetList on old versions, do not use non-variables in params.
+// init referenced variables for CSite::GetList
+$get_list__by = "sort";
+$get_list__order = "desc";
+$sites_from_bd = CSite::GetList($get_list__by, $get_list__order, Array("ACTIVE" => "Y"));
 $sites = array();
 $sub_tabs = array();
 while( $site = $sites_from_bd->Fetch() ) {
-    $site["ID"] = htmlspecialcharsbx($site["ID"]);
-    $site["NAME"] = htmlspecialcharsbx($site["NAME"]);
-    $sites[] = $site;
-    $sub_tabs[] = array("DIV" => "opt_site_".$site["ID"], "TAB" => "(".$site["ID"].") ".$site["NAME"], 'TITLE' => '');
+    $site_id = htmlspecialcharsbx($site["ID"]);
+    $site_name = htmlspecialcharsbx($site["NAME"]);
+    $sites[] = [
+        "ID" => $site_id,
+        "NAME" =>$site_name
+    ];
+    $sub_tabs[] = array("DIV" => "opt_site_".$site_id, "TAB" => "(".$site_id.") ".$site_name, 'TITLE' => '');
 }
 
 $subTabControl = new CAdminViewTabControl("subTabControl", $sub_tabs);
@@ -81,6 +88,7 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
 
         // Send empty feedback for version comparison in Dashboard
         $new_key = isset( $new_key ) ? $new_key : $old_key;
+        $new_key = trim($new_key);
         $result = CleantalkAPI::method__send_empty_feedback($new_key, CLEANTALK_USER_AGENT);
 
         /**
@@ -196,16 +204,44 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
         } else {
             CAgent::RemoveModuleAgents("cleantalk.antispam");
         }
+
+        // Custom server
+        if (isset($_POST['use_custom_server']) && $_POST['use_custom_server'] == '' && COption::GetOptionString($sModuleId, "use_custom_server") !== '') {
+            Option::set( $sModuleId, 'use_custom_server', '' );
+        }
+        if (isset($_POST['use_custom_server']) && $_POST['use_custom_server'] !== '') {
+            // Remove path, query, fragment
+            $domain = preg_replace('/[\/\?#].*$/', '', $_POST['use_custom_server']);
+            // Remove invalid characters (keep letters, numbers, hyphens, dots)
+            $domain = preg_replace('/[^a-zA-Z0-9\.\-]/', '', $domain);
+            // Convert to lowercase and trim
+            $domain = strtolower(trim($domain));
+            // use default bitrix http client to make request
+            $httpClient = new \Bitrix\Main\Web\HttpClient();
+            $response = $httpClient->get('https://moderate.' . $domain);
+            if ($response === false) {
+                Option::set( $sModuleId, 'use_custom_server', '' );
+                CAdminNotify::Add(array(
+                    'MESSAGE' => GetMessage( 'CLEANTALK_SERVER_NOT_AVAILABLE' ),
+                    'TAG' => 'server_not_available',
+                    'MODULE_ID' => 'main',
+                    'ENABLE_CLOSE' => 'Y'));
+            } else {
+                Option::set( $sModuleId, 'use_custom_server', $domain );
+                CAdminNotify::DeleteByTag('server_not_available');
+            }
+        }
     }
 
     foreach( $sites as $site ) {
-        $key = "key_" . $site["SITE_ID"];
+        $site_id = $site["ID"];
+        $key = "key_" . $site_id;
         if ( isset($_POST[$key]) ) {
             if ( empty($_POST[$key]) ) {
-                COption::RemoveOption($sModuleId, "_key", $site["SITE_ID"]);
+                COption::RemoveOption($sModuleId, "_key", $site_id);
             } else {
                 // @ToDo add key_is_ok checking here and output error message
-                COption::SetOptionString($sModuleId, "_key", $_POST[$key], false, $site["SITE_ID"]);
+                COption::SetOptionString($sModuleId, "_key", $_POST[$key], false, $site_id);
             }
         }
     }
@@ -418,11 +454,12 @@ $oTabControl->Begin();
                 $subTabControl->Begin();
                 foreach ( $sites as $site )
                 {
+                    $site_id = $site["ID"];
                     $subTabControl->BeginNextTab();
-                    $api_key_subsite = Option::get($sModuleId, '_key', '', $site["SITE_ID"]);
+                    $api_key_subsite = Option::get($sModuleId, '_key', '', $site_id);
                     ?>
                     <?= GetMessage( 'CLEANTALK_MULTISITE_LABEL_KEY' ) ?>
-                    <input type="text" name="key_<?= $site["SITE_ID"] ?>" id="key_<?= $site["SITE_ID"] ?>" value="<?= $api_key_subsite ?>" />
+                    <input type="text" name="key_<?= $site_id ?>" id="key_<?= $site_id ?>" value="<?= $api_key_subsite ?>" />
             <?php }
                 $subTabControl->End();
             ?>
@@ -536,12 +573,10 @@ $oTabControl->Begin();
                     name="form_global_check_without_email"
                     id="form_global_check_without_email"
                 <?php
-                if( $current_options['form_global_check'] === '0' ) {
-                    if ($current_options['form_global_check_without_email'] === '1') {
+                if( $current_options['form_global_check'] === '1' && $current_options['form_global_check_without_email'] === '1' ) {
                         echo 'checked="checked"';
-                    } else {
+                } elseif ( $current_options['form_global_check'] === '0' ) {
                         echo "disabled";
-                    }
                 }
                 ?>
                     value="1" /> <?php echo GetMessage( 'CLEANTALK_WARNING_GLOBAL_CHECK_WITHOUT_EMAIL' ); ?>
@@ -615,7 +650,7 @@ $oTabControl->Begin();
             <label for="form_exclusions_webform"><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_SITES' );?>:</td>
         <td  valign="top">
             <select name="form_exclusions_sites[]" id="form_exclusions_sites" multiple>
-                <?php $rsSites = CSite::GetList($by ="sort", $order="desc");
+                <?php $rsSites = CSite::GetList($get_list__by, $get_list__order);
                 $excluded_sites = explode(",", $current_options['site_exclusions']);
                 while ($arSite = $rsSites->Fetch()) {
                     echo "<option value = \"".$arSite['ID']."\" " . (in_array($arSite['ID'], $excluded_sites) ? "selected" : "") . ">".$arSite['NAME']."</option>";
@@ -705,6 +740,20 @@ $oTabControl->Begin();
                     id="complete_deactivation"
                 <?php if ( $current_options['complete_deactivation'] === '1') :?> checked="checked"<?php endif; ?>
                     value="1" />
+        </td>
+    </tr>
+    <tr>
+        <td width="50%" valign="top">
+            <label for="use_custom_server"><?php echo GetMessage( 'CLEANTALK_USE_CUSTOM_SERVER' );?>:</td>
+        <td  valign="top">
+            <input
+                    type="text"
+                    name="use_custom_server"
+                    id="use_custom_server"
+                    value="<?php echo $current_options['use_custom_server']; ?>" />
+            <div style="padding: 10px 0 10px 0">
+                <?php echo GetMessage( 'CLEANTALK_USE_CUSTOM_SERVER_DESCRIPTION' ); ?>
+            </div>
         </td>
     </tr>
     <!--HIDDEN FIELDSET-->

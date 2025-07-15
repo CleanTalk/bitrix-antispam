@@ -39,4 +39,16 @@ class Helper extends \Cleantalk\Common\Helper {
     {
         \COption::SetOptionInt('cleantalk.antispam', 'sfw_last_update', time());
     }
+
+    /**
+     * @inheritDoc
+     */
+    protected static function getSiteUrl()
+    {
+        return sprintf(
+            '%s://%s',
+            isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http',
+            $_SERVER['HTTP_HOST']
+        );
+    }
 }

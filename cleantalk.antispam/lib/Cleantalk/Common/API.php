@@ -16,7 +16,7 @@ namespace Cleantalk\Common;
 class API
 {
 	/* Default params  */
-	const URL = 'https://api.cleantalk.org';
+	public static $URL = 'https://api.cleantalk.org';
 	const AGENT = 'ct-php-lib-1.0';
 	
 	/**
@@ -205,7 +205,7 @@ class API
 		
 		if($date) $request['date'] = $date;
 		
-		$result = static::send_request($request, self::URL, 20);
+		$result = static::send_request($request, self::$URL, 20);
 		$result = $do_check ? static::check_response($result, 'spam_check_cms') : $result;
 		
 		return $result;
@@ -234,7 +234,7 @@ class API
             $request['date'] = $date;
         }
 		
-		$result = static::send_request($request, self::URL, 10);
+		$result = static::send_request($request, self::$URL, 10);
 		$result = $do_check ? static::check_response($result, 'spam_check') : $result;
 		
 		return $result;
@@ -631,8 +631,13 @@ class API
 	 *
 	 * @return array|bool
 	 */
-	public static function send_request($data, $url = self::URL, $timeout = 10, $ssl = false, $ssl_path = '')
+	public static function send_request($data, $url = null, $timeout = 10, $ssl = false, $ssl_path = '')
 	{
+		// Set default URL if not provided
+		if ($url === null) {
+			$url = self::$URL;
+		}
+
 		// Possibility to switch agent vaersion
 		$data['agent'] = !empty($data['agent'])
 			? $data['agent']
@@ -650,6 +655,14 @@ class API
 		}
 		
 		// Possibility to switch API url
+		if ($url == self::$URL) {
+			if (class_exists('COption')) {
+				$use_custom_server = \COption::GetOptionString( 'cleantalk.antispam', 'use_custom_server', '' );
+				if ($use_custom_server !== '') {
+					$url = 'https://api.' . $use_custom_server;
+				}
+			}
+		}
 		$url = defined('CLEANTALK_API_URL') ? CLEANTALK_API_URL : $url;
 		
 		if(function_exists('curl_init')){
