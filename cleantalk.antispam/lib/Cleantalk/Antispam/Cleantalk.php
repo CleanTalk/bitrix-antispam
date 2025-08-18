@@ -26,24 +26,19 @@ class Cleantalk {
      * @var int
      */
     public $debug = 0;
+
   
     /**
-  * Maximum data size in bytes
-  * @var int
-  */
-  private $dataMaxSise = 32768;
-  
-  /**
-  * Data compression rate 
-  * @var int
-  */
-  private $compressRate = 6;
+     * Data compression rate 
+    * @var int
+    */
+    private $compressRate = 6;
   
     /**
-  * Server connection timeout in seconds 
-  * @var int
-  */
-  private $server_timeout = 15;
+     * Server connection timeout in seconds 
+    * @var int
+    */
+    private $server_timeout = 15;
 
     /**
      * Cleantalk server url
@@ -192,31 +187,6 @@ class Cleantalk {
         }
     return $request;
     }
-    
-  /**
-     * Compress data and encode to base64 
-     * @param type string
-     * @return string 
-     */
-  private function compressData($data = null){
-    
-    if (strlen($data) > $this->dataMaxSise && function_exists('gzencode') && function_exists('base64_encode')){
-
-      $localData = gzencode($data, $this->compressRate, FORCE_GZIP);
-
-      if ($localData === false)
-        return $data;
-      
-      $localData = base64_encode($localData);
-      
-      if ($localData === false)
-        return $data;
-      
-      return $localData;
-    }
-
-    return $data;
-  } 
 
     /**
      * Create msg for cleantalk server
@@ -233,8 +203,6 @@ class Cleantalk {
                 $request->sender_email = $this->stringToUTF8($request->sender_email, $this->data_codepage);
                 $request->sender_nickname = $this->stringToUTF8($request->sender_nickname, $this->data_codepage);
 
-                $request->message = $this->compressData($request->message);
-        $request->example = $this->compressData($request->example);
                 break;
 
             case 'check_newuser':
