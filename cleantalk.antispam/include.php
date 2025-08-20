@@ -451,6 +451,48 @@ class CleantalkAntispam {
     }
 
     /**
+     * Checking the post (for example, for the blog module)
+     * @param array &$arFields
+     * @return null|boolean
+     */
+    static function OnBeforePostAddHandler(&$arFields)
+    {
+        global $APPLICATION, $USER;
+        $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
+        if ($ct_status != 1) {
+            return;
+        }
+
+        $aPost = array();
+        $aPost['type'] = 'comment';
+        $aPost['sender_email'] = '';
+        if (isset($arFields['AUTHOR_EMAIL'])) {
+            $aPost['sender_email'] = $arFields['AUTHOR_EMAIL'];
+        } elseif (isset($arFields['EMAIL'])) {
+            $aPost['sender_email'] = $arFields['EMAIL'];
+        } elseif (is_object($USER) && $USER->IsAuthorized()) {
+            $aPost['sender_email'] = $USER->GetEmail();
+        }
+        $aPost['sender_nickname'] = isset($arFields['AUTHOR_NAME']) ? $arFields['AUTHOR_NAME'] : '';
+        $aPost['subject'] = isset($arFields['TITLE']) ? $arFields['TITLE'] : '';
+        $aPost['message'] = isset($arFields['DETAIL_TEXT']) ? array($arFields['DETAIL_TEXT']) : array();
+        $aPost['example'] = array();
+
+        $aResult = self::CheckAllBefore($aPost, TRUE);
+
+        if(isset($aResult) && is_array($aResult)){
+            if($aResult['errno'] == 0){
+                if($aResult['allow'] == 1){
+                    return; // Не спам
+                }else{
+                    $APPLICATION->ThrowException($aResult['ct_result_comment']);
+                    return false;
+                }
+            }
+        }
+    }
+
+    /**
      * *** Web forms section ***
      */
 

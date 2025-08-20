@@ -73,29 +73,42 @@ class cleantalk_antispam extends CModule {
 
     function DoInstall() {
         global $DOCUMENT_ROOT, $APPLICATION;
-		
+
 		//Installng DB
-        if($this->InstallDB() && $this->InstallFiles()){	
+        if($this->InstallDB() && $this->InstallFiles()){
 			RegisterModule('cleantalk.antispam');
-            RegisterModuleDependences('main', 'OnPageStart', 'cleantalk.antispam', 'CleantalkAntispam', 'OnPageStartHandler');
-            RegisterModuleDependences('main', 'OnEventLogGetAuditTypes', 'cleantalk.antispam', 'CleantalkAntispam', 'OnEventLogGetAuditTypesHandler');
+			RegisterModuleDependences('main', 'OnPageStart', 'cleantalk.antispam', 'CleantalkAntispam', 'OnPageStartHandler');
+			RegisterModuleDependences('main', 'OnEventLogGetAuditTypes', 'cleantalk.antispam', 'CleantalkAntispam', 'OnEventLogGetAuditTypesHandler');
 			RegisterModuleDependences('main', 'OnBeforeUserRegister', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeUserRegisterHandler');
-            RegisterModuleDependences('main', 'OnBeforeUserSimpleRegister', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeUserRegisterHandler');
-            RegisterModuleDependences('main', 'OnBeforeUserAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeUserRegisterHandler');
+			RegisterModuleDependences('main', 'OnBeforeUserSimpleRegister', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeUserRegisterHandler');
+			RegisterModuleDependences('main', 'OnBeforeUserAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeUserRegisterHandler');
 			RegisterModuleDependences('main', 'OnEndBufferContent', 'cleantalk.antispam', 'CleantalkAntispam', 'OnEndBufferContentHandler');
-            if (IsModuleInstalled('blog')){
-              RegisterModuleDependences('blog', 'OnBeforeCommentAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeCommentAddHandler');
-            }
-            if (IsModuleInstalled('forum')){
-              RegisterModuleDependences('forum', 'OnBeforeMessageAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeMessageAddHandler');
-              RegisterModuleDependences('forum', 'OnAfterMessageAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnAfterMessageAddHandler');
-              RegisterModuleDependences('forum', 'OnMessageModerate', 'cleantalk.antispam', 'CleantalkAntispam', 'OnMessageModerateHandler');
-              RegisterModuleDependences('forum', 'OnBeforeMessageDelete', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeMessageDeleteHandler');
-			  RegisterModuleDependences('forum', 'onBeforePMSend', 'cleantalk.antispam', 'CleantalkAntispam', 'onBeforePMSendHandler');
-            }
-            if (IsModuleInstalled('prmedia.treelikecomments')){
-              RegisterModuleDependences('prmedia.treelikecomments', 'OnBeforePrmediaCommentAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforePrmediaCommentAddHandler');
-            }
+			if (IsModuleInstalled('blog')){
+				RegisterModuleDependences(
+					'blog',
+					'OnBeforeCommentAdd',
+					'cleantalk.antispam',
+					'CleantalkAntispam',
+					'OnBeforeCommentAddHandler'
+				);
+				RegisterModuleDependences(
+					"blog",
+					"OnBeforePostAdd",
+					"cleantalk.antispam",
+					"CleantalkAntispam",
+					"OnBeforePostAddHandler"
+				);
+			}
+			if (IsModuleInstalled('forum')){
+				RegisterModuleDependences('forum', 'OnBeforeMessageAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeMessageAddHandler');
+				RegisterModuleDependences('forum', 'OnAfterMessageAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnAfterMessageAddHandler');
+				RegisterModuleDependences('forum', 'OnMessageModerate', 'cleantalk.antispam', 'CleantalkAntispam', 'OnMessageModerateHandler');
+				RegisterModuleDependences('forum', 'OnBeforeMessageDelete', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeMessageDeleteHandler');
+				RegisterModuleDependences('forum', 'onBeforePMSend', 'cleantalk.antispam', 'CleantalkAntispam', 'onBeforePMSendHandler');
+			}
+			if (IsModuleInstalled('prmedia.treelikecomments')){
+				RegisterModuleDependences('prmedia.treelikecomments', 'OnBeforePrmediaCommentAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforePrmediaCommentAddHandler');
+			}
             if (IsModuleInstalled('bitrix.eshop'))
 			{
 				RegisterModuleDependences('sale', 'OnBeforeOrderAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeOrderAddHandler');
