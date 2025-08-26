@@ -238,6 +238,12 @@ class CleantalkAntispam {
                     return;
                 }
 
+                // Do skip for the registration requests - this have the direct integration hooked by OnBeforeUserRegisterHandler
+                $ct_new_user = COption::GetOptionInt('cleantalk.antispam', 'form_new_user', 0);
+                if ( $ct_new_user && isset($_POST['REGISTER'], $_POST['REGISTER']['EMAIL'], $_POST['REGISTER']['PASSWORD']) ) {
+                    return;
+                }
+
                 // Exclusion for web-forms ID
                 $ct_webform= COption::GetOptionInt('cleantalk.antispam', 'web_form', 0);
                 $webforms_id_checking = COption::GetOptionString( 'cleantalk.antispam', 'form_exclusions_webform', '' );
