@@ -20,7 +20,7 @@ use Cleantalk\Common\Firewall\Firewall;
 use Cleantalk\ApbctBitrix\RemoteCalls;
 use Cleantalk\ApbctBitrix\Cron;
 use Cleantalk\ApbctBitrix\DB;
-use Cleantalk\ApbctBitrix\CleantalkAjaxCatcher;
+use Cleantalk\ApbctBitrix\CleantalkExternalFormsAjaxHandler;
 use Cleantalk\Common\Variables\Server;
 use Cleantalk\ApbctBitrix\SFW;
 
@@ -1133,10 +1133,16 @@ class CleantalkAntispam {
 
             $ct_check_values = self::SetCheckJSValues();
 
+            $external_forms_enabled = COption::GetOptionString( 'cleantalk.antispam', 'form_external_ajax', '' );
+
+            $external_forms_snippet = $external_forms_enabled
+                ? file_get_contents(dirname(__FILE__) . '/assets/js/external.js')
+                : '';
+
             $js_template = "<script data-skip-moving = 'true'> "
             . "var ct_checkjs_val = '" . $ct_check_values[0] . "';"
             . file_get_contents(dirname(__FILE__) . '/assets/js/public.js')
-            . file_get_contents(dirname(__FILE__) . '/assets/js/external.js')
+            . $external_forms_snippet
             . " </script>";
 
             return $js_template;
@@ -1852,7 +1858,7 @@ class CleantalkAntispam {
     }
 
 
-    private static function apbct__filter_form_data($form_data)
+    public static function apbct__filter_form_data($form_data)
     {
         // It is a service field. Need to be deleted before the processing.
         if ( isset($form_data['apbct_visible_fields']) ) {
@@ -1979,11 +1985,21 @@ class CleantalkAntispam {
 
     public static function onProlog()
     {
+        if (self::siteIsExclusion() || self::urlIsExclusion()) {
+            return;
+        }
+
+        $external_forms_enabled = COption::GetOptionString( 'cleantalk.antispam', 'form_external_ajax', '' );
+
+        if (empty($external_forms_enabled)) {
+            return;
+        }
+
         $request = Context::getCurrent()->getRequest();
 
         // Проверяем, что это AJAX запрос
         if ($request->isAjaxRequest()) {
-            CleantalkAjaxCatcher::handleAjax($request);
+            CleantalkExternalFormsAjaxHandler::handleAjax($request);
         }
     }
 }

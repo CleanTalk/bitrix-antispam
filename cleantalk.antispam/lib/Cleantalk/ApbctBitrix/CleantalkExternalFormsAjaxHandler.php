@@ -6,7 +6,7 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\Web\Json;
 use CleantalkAntispam;
 
-class CleantalkAjaxCatcher
+class CleantalkExternalFormsAjaxHandler
 {
     public static function handleAjax($request)
     {
@@ -27,6 +27,9 @@ class CleantalkAjaxCatcher
         }
         // Remove the action parameter
         unset($formData['action']);
+
+        // Sanitize and filter form data
+        $formData = CleantalkAntispam::apbct__filter_form_data($formData);
 
         // Prepare user data for checking
         $arUser = array();
