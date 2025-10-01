@@ -8,6 +8,7 @@ require_once(dirname(__FILE__) . '/lib/autoload.php');
 
 //Antispam classes
 use Bitrix\Main\Page\Asset;
+use Bitrix\Main\Context;
 use Cleantalk\Antispam\Cleantalk;
 use Cleantalk\Antispam\CleantalkRequest;
 use Cleantalk\Antispam\CleantalkResponse;
@@ -19,6 +20,7 @@ use Cleantalk\Common\Firewall\Firewall;
 use Cleantalk\ApbctBitrix\RemoteCalls;
 use Cleantalk\ApbctBitrix\Cron;
 use Cleantalk\ApbctBitrix\DB;
+use Cleantalk\ApbctBitrix\CleantalkAjaxCatcher;
 use Cleantalk\Common\Variables\Server;
 use Cleantalk\ApbctBitrix\SFW;
 
@@ -1187,6 +1189,7 @@ class CleantalkAntispam {
                 'register',
                 'order',
                 'feedback_general_contact_form',
+                'feedback_ajax',
                 'private_message',
             );
 
@@ -1386,6 +1389,19 @@ class CleantalkAntispam {
                     $request_params['message'] = $arEntity['message'];
                     $request_params['tz'] = isset($arEntity['user_timezone']) ? $arEntity['user_timezone'] : NULL;
                     $request_params['post_info']['comment_type'] = 'private_message';
+                    $ct_request = new CleantalkRequest($request_params);
+                    $ct_result = $ct->isAllowMessage($ct_request);
+                    break;
+
+                case 'feedback_ajax':
+
+                    $timelabels_key = 'mail_error_comment';
+                    if (is_array($arEntity['message'])) {
+                        $arEntity['message'] = json_encode($arEntity['message']);
+                    }
+                    $request_params['message'] = $arEntity['message'];
+                    $request_params['tz'] = isset($arEntity['user_timezone']) ? $arEntity['user_timezone'] : NULL;
+                    $request_params['post_info']['comment_type'] = 'feedback_ajax';
                     $ct_request = new CleantalkRequest($request_params);
                     $ct_result = $ct->isAllowMessage($ct_request);
             }
@@ -1959,5 +1975,15 @@ class CleantalkAntispam {
             }
         }
         return false;
+    }
+
+    public static function onProlog()
+    {
+        $request = Context::getCurrent()->getRequest();
+
+        // Проверяем, что это AJAX запрос
+        if ($request->isAjaxRequest()) {
+            CleantalkAjaxCatcher::handleAjax($request);
+        }
     }
 }
