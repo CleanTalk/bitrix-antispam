@@ -187,7 +187,7 @@ class CleantalkAntispam {
                     if ($use_custom_server !== '') {
                         Asset::getInstance()->addJs('https://moderate.' . $use_custom_server . '/ct-bot-detector-wrapper.js');
                     } else {
-                        Asset::getInstance()->addJs('https://moderate.cleantalk.org/ct-bot-detector-wrapper.js');
+                        Asset::getInstance()->addJs('https://fd.cleantalk.org/ct-bot-detector-wrapper.js');
                     }
                 }
             }
