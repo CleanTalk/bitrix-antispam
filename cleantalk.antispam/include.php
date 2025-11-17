@@ -100,7 +100,7 @@ class CleantalkAntispam {
         }
 
         // AJAX FLOW
-        if ( isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) && strtolower( $_SERVER['HTTP_X_REQUESTED_WITH'] ) == 'xmlhttprequest'){
+        if ( static::isAjaxFlow() ){
             $output_string = json_encode(array(
                 'apbct' => array(
                     'blocked' => true,
@@ -125,6 +125,35 @@ class CleantalkAntispam {
 
         // DIE WITH TEXT BY DEFAULT
         static::CleantalkTextDie($output_string);
+    }
+
+    /**
+     * Check if is AJAX flow detected.
+     * @return bool
+     */
+    private static function isAjaxFlow()
+    {
+        // AJAX FLOW - comprehensive detection
+        return (
+            // Traditional XMLHttpRequest
+            (
+                isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest'
+            ) ||
+            // Fetch API with JSON response expected
+            (
+                isset($_SERVER['HTTP_ACCEPT']) &&
+                strpos(strtolower($_SERVER['HTTP_ACCEPT']), 'application/json') !== false
+            ) ||
+            // Other common AJAX patterns
+            (
+                isset($_SERVER['HTTP_ACCEPT']) &&
+                (
+                    strpos(strtolower($_SERVER['HTTP_ACCEPT']), 'application/xml') !== false ||
+                    strpos(strtolower($_SERVER['HTTP_ACCEPT']), 'text/xml') !== false
+                )
+            )
+        );
     }
 
     /**
