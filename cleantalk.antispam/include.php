@@ -83,18 +83,25 @@ class CleantalkAntispam {
      * Show message when spam is blocked
      * @param string message
      */
+    private static function CleantalkDie($message){
 
-    static function CleantalkDie($message){
+        $default_message = 'Forbidden. Seems to be spam. Anti-Spam by CleanTalk';
 
-        if( isset( $_POST['feedback_type'] ) && $_POST['feedback_type'] == 'buyoneclick' ) {
+        if (!is_string($message) || empty($message)) {
+            $message = $default_message;
+        }
 
-            $result = Array( 'error' => true, 'msg' => 'js_kr_error_send' );
-            print json_encode( $result );
+        $output_string = $message;
 
-            // AJAX response
-        }elseif( isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) && strtolower( $_SERVER['HTTP_X_REQUESTED_WITH'] ) == 'xmlhttprequest'){
+        // CUSTOM BLOCK
+        if ( isset( $_POST['feedback_type'] ) && $_POST['feedback_type'] == 'buyoneclick' ) {
+            $output_string = json_encode(array( 'error' => true, 'msg' => 'js_kr_error_send' ));
+            static::CleantalkJSONDie($output_string);
+        }
 
-            die(json_encode(array(
+        // AJAX FLOW
+        if ( static::isAjaxFlow() ){
+            $output_string = json_encode(array(
                 'apbct' => array(
                     'blocked' => true,
                     'comment' => $message,
@@ -102,17 +109,102 @@ class CleantalkAntispam {
                 'error' => array(
                     'msg' => $message,
                 )
-            )));
-
-        }else{
-
-            $error_tpl = file_get_contents( dirname( __FILE__ ) . "/error.html" );
-            print str_replace( '%ERROR_TEXT%', $message, $error_tpl );
-
+            ));
+            static::CleantalkJSONDie($output_string);
         }
 
-        die();
+        // DIE WITH HTML TEMPLATE
+        $error_tpl = @file_get_contents( dirname( __FILE__ ) . "/error.html" );
+        if (false !== $error_tpl) {
+            if (stripos($error_tpl, '<meta charset=') === false) {
+                $error_tpl = str_replace('<head>', '<head><meta charset="UTF-8">', $error_tpl);
+            }
+            $output_string = str_replace('%ERROR_TEXT%', $message, $error_tpl);
+            static::CleantalkHTMLDie($output_string);
+        }
+
+        // DIE WITH TEXT BY DEFAULT
+        static::CleantalkTextDie($output_string);
     }
+
+    /**
+     * Check if is AJAX flow detected.
+     * @return bool
+     */
+    private static function isAjaxFlow()
+    {
+        // AJAX FLOW - comprehensive detection
+        return (
+            // Traditional XMLHttpRequest
+            (
+                isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest'
+            ) ||
+            // Fetch API with JSON response expected
+            (
+                isset($_SERVER['HTTP_ACCEPT']) &&
+                strpos(strtolower($_SERVER['HTTP_ACCEPT']), 'application/json') !== false
+            ) ||
+            // Other common AJAX patterns
+            (
+                isset($_SERVER['HTTP_ACCEPT']) &&
+                (
+                    strpos(strtolower($_SERVER['HTTP_ACCEPT']), 'application/xml') !== false ||
+                    strpos(strtolower($_SERVER['HTTP_ACCEPT']), 'text/xml') !== false
+                )
+            )
+        );
+    }
+
+    /**
+     * Die with application/json header.
+     * @param string $response_string
+     *
+     * @return void
+     */
+    private static function CleantalkJSONDie($response_string)
+    {
+        if (!headers_sent()) {
+            http_response_code(403);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            header('Pragma: no-cache');
+            header('Content-Type: application/json; charset=UTF-8');
+        }
+        die($response_string);
+    }
+    /**
+     * Die with text/plain header.
+     * @param string $response_string
+     *
+     * @return void
+     */
+    private static function CleantalkTextDie($response_string)
+    {
+        if (!headers_sent()) {
+            http_response_code(403);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            header('Pragma: no-cache');
+            header('Content-Type: text/plain; charset=UTF-8');
+        }
+        die($response_string);
+    }
+    /**
+     * Die with text/html header.
+     * @param string $response_string
+     *
+     * @return void
+     */
+    private static function CleantalkHTMLDie($response_string)
+    {
+        if (!headers_sent()) {
+            http_response_code(403);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            header('Pragma: no-cache');
+            header('Content-Type: text/html; charset=UTF-8');
+        }
+        die($response_string);
+    }
+
     private static function apbct_run_cron()
     {
         $cron = new Cron();
