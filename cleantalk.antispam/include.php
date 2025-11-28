@@ -1536,6 +1536,11 @@ class CleantalkAntispam {
                 'event_token' => isset($_POST['ct_bot_detector_event_token']) ? $_POST['ct_bot_detector_event_token'] : null,
             );
 
+            // Fix encoding recursively for message
+            if (is_array($arEntity['message'])) {
+                $arEntity['message'] = self::fix_encoding_recursive($arEntity['message']);
+            }
+
             switch ($type) {
                 case 'topic_add':
                 case 'comment':
@@ -1733,6 +1738,30 @@ class CleantalkAntispam {
         }
 
         return false;
+    }
+
+    /**
+     * Fix encoding recursively in array
+     * @param array $array
+     * @param string $from
+     * @param string $to
+     */
+    private static function fix_encoding_recursive($array, $from = 'CP1251', $to = 'UTF-8') {
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $array[$key] = self::fix_encoding_recursive($value, $from, $to);
+            } else {
+                if (is_string($value) && !mb_check_encoding($value, $to)) {
+                    $converted = iconv($from, $to . '//IGNORE', $value);
+                    if (mb_check_encoding($converted, $to)) {
+                        $array[$key] = $converted;
+                    } else {
+                        unset($array[$key]);
+                    }
+                }
+            }
+        }
+        return $array;
     }
 
     /**
