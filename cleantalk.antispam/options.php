@@ -138,6 +138,7 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
         Option::set( $sModuleId, 'form_comment_treelike',           $_POST['form_comment_treelike'] == '1'           ? 1 : 0 );
         Option::set( $sModuleId, 'form_send_example',               $_POST['form_send_example'] == '1'               ? 1 : 0 );
         Option::set( $sModuleId, 'form_order',                      $_POST['form_order'] == '1'                      ? 1 : 0 );
+        Option::set( $sModuleId, 'form_external_ajax',              $_POST['form_external_ajax'] == '1'              ? 1 : 0 );
         Option::set( $sModuleId, 'web_form',                        $_POST['web_form'] == '1'                        ? 1 : 0 );
         Option::set( $sModuleId, 'is_paid',                         $_POST['is_paid'] == '1'                         ? 1 : 0 );
         Option::set( $sModuleId, 'last_checked',                    $_POST['last_checked'] == '1'                    ? 1 : 0 );
@@ -545,6 +546,15 @@ $oTabControl->Begin();
             <label for="web_form"><?php echo GetMessage( 'CLEANTALK_LABEL_WEB_FORMS' );?>:</td>
         <td  valign="top">
             <input type="checkbox" name="web_form" id="web_form" <?php if ( $current_options['web_form'] === '1' ):?> checked="checked"<?php endif; ?>value="1" />
+        </td>
+    </tr>
+    <tr>
+        <td width="50%" valign="top">
+            <label for="form_external_ajax"><?php echo GetMessage( 'CLEANTALK_LABEL_FORM_EXTERNAL_AJAX' );?>:</label>
+        </td>
+        <td  valign="top">
+            <input type="checkbox" name="form_external_ajax" id="form_external_ajax" <?php if ( $current_options['form_external_ajax'] === '1' ):?> checked="checked"<?php endif; ?>value="1" />
+            <?php echo GetMessage( 'CLEANTALK_DESCRIPTION_EXTERNAL_AJAX' ); ?>
         </td>
     </tr>
     <tr>
