@@ -34,6 +34,14 @@ define('APBCT_SPAMSCAN_LOGS',     'cleantalk_spamscan_logs'); // Table with sess
 define('APBCT_SELECT_LIMIT',      5000); // Select limit for logs.
 define('APBCT_WRITE_LIMIT',       5000); // Write limit for firewall data.
 
+// Register IntegrationFactory for autoload
+\Bitrix\Main\Loader::registerAutoLoadClasses(
+    'cleantalk.antispam',
+    [
+        'Cleantalk\\Antispam\\Integrations\\IntegrationFactory' => 'lib/Cleantalk/Integrations/IntegrationFactory.php',
+    ]
+);
+
 
 /**
  * CleanTalk module class
@@ -256,6 +264,7 @@ class CleantalkAntispam {
         $last_checked            = COption::GetOptionInt( 'cleantalk.antispam', 'last_checked', 0 );
         $show_review             = COption::GetOptionInt( 'cleantalk.antispam', 'show_review', 0 );
         $bot_detector            = COption::GetOptionInt( 'cleantalk.antispam', 'bot_detector', 0 );
+        $form_external_ajax            = COption::GetOptionInt( 'cleantalk.antispam', 'form_external_ajax', 0 );
         $is_sfw                  = COption::GetOptionInt( 'cleantalk.antispam', 'form_sfw', 0 );
         $sfw_last_update         = COption::GetOptionInt( 'cleantalk.antispam',  'sfw_last_update', 0);
         $sfw_last_send_log       = COption::GetOptionInt( 'cleantalk.antispam',  'sfw_last_send_log', 0);
@@ -272,6 +281,11 @@ class CleantalkAntispam {
         }
 
         if( ! $USER->IsAdmin() ){
+
+            // JS External protection
+            if ($form_external_ajax) {
+                Asset::getInstance()->addJs('/bitrix/js/cleantalk.antispam/cleantalk-antispam-external-protection.js');
+            }
 
             if ( $bot_detector ) {
                 if (class_exists('COption')) {
