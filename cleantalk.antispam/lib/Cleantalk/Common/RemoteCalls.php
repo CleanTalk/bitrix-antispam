@@ -3,6 +3,8 @@
 namespace Cleantalk\Common;
 
 use Cleantalk\Common\Variables\Get;
+use Cleantalk\Common\Variables\Request;
+use Cleantalk\Common\Helper;
 
 abstract class RemoteCalls
 {
@@ -28,6 +30,16 @@ abstract class RemoteCalls
     {
         $this->api_key = $api_key;
         $this->available_rc_actions = $this->getAvailableRcActions();
+    }
+
+    /**
+     * @param $name
+     * @return mixed
+     * @psalm-taint-source input
+     */
+    public static function getVariable($name)
+    {
+        return Request::get($name);
     }
 
     /**
