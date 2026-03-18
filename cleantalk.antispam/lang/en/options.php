@@ -59,3 +59,5 @@ $MESS['CLEANTALK_RESET_OPTIONS_FAILED'] = 'Can not reset options to defaults.';
 $MESS['CLEANTALK_MULTISITE_LABEL_KEY'] = 'If you want to use specific Access Key for this website paste it here. Otherwise, leave it empty.';
 $MESS['CLEANTALK_USE_CUSTOM_SERVER'] = 'Use custom server';
 $MESS['CLEANTALK_USE_CUSTOM_SERVER_DESCRIPTION'] = 'Use custom server for spam checking. You can enter cleantalk.ru and the plugin will use only ru servers. This option is for critical situations when it is impossible to choose the server automatically.';
+$MESS['CLEANTALK_CURL_NOT_AVAILABLE'] = 'cURL is not available.';
+$MESS['CLEANTALK_CURL_NOT_AVAILABLE_DETAILS'] = 'cURL support is required';

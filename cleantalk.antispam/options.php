@@ -334,6 +334,19 @@ function ct_get_options($sModuleId){
     return $result;
 }
 
+// Check CURL available
+$curl_available = !function_exists('curl_init');
+if ( ! $curl_available ) {
+    $messageData = [
+            "MESSAGE" => GetMessage('CLEANTALK_CURL_NOT_AVAILABLE'),
+            "TYPE" => "ERROR",
+            "DETAILS" => GetMessage('CLEANTALK_CURL_NOT_AVAILABLE_DETAILS'),
+            "HTML" => false
+    ];
+    $adminMessage = new \CAdminMessage($messageData);
+    echo $adminMessage->Show();
+}
+
 /**
  * Describe tabs
  */
