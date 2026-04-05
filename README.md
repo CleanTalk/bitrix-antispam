@@ -12,6 +12,8 @@ http://marketplace.1c-bitrix.ru/solutions/cleantalk.antispam/
 Support,
 https://cleantalk.org/forum/viewforum.php?f=17
 
+If you find this project useful, please consider starring ⭐ it on GitHub — it helps us grow and support development!
+
 ## Requirements
 
 * CleanTalk account https://cleantalk.org/register?product=anti-spam
