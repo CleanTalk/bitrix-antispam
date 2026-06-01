@@ -418,7 +418,7 @@ class CleantalkAntispam {
                             }else{
                                 if( $arUser['type'] == 'contact_form_bitrix_smt' ){
 
-                                    echo '<div class="smt-form smt-form_bordered"><div class="smt-alert smt-alert_warning">' . $aResult['ct_result_comment'] . '</div></div>';
+                                    echo '<div class="smt-form smt-form_bordered"><div class="smt-alert smt-alert_warning">' . htmlspecialcharsbx($aResult['ct_result_comment']) . '</div></div>';
                                     die();
 
                                 }elseif( $arUser['type'] == 'contact_form_bitrix_iblock_ajax' ){
@@ -1866,9 +1866,9 @@ class CleantalkAntispam {
         if(empty($feedback) || $feedback != 'Y' && $feedback != 'N')
             return;
 
-        $request_id = $DB->Query('SELECT ct_request_id FROM cleantalk_cids WHERE module=\''. $module .'\' AND cid=' . $id)->Fetch();
+        $request_id = $DB->Query('SELECT ct_request_id FROM cleantalk_cids WHERE module=\''. $DB->ForSql($module) .'\' AND cid=' . (int)$id)->Fetch();
         if($request_id !== FALSE){
-            $DB->Query('DELETE FROM cleantalk_cids WHERE module=\''. $module .'\' AND cid=' . $id);
+            $DB->Query('DELETE FROM cleantalk_cids WHERE module=\''. $DB->ForSql($module) .'\' AND cid=' . (int)$id);
 
             $ct_key_site = COption::GetOptionString('cleantalk.antispam', '_key', '', $site["LID"]);
             $ct_key = empty($ct_key_site) ? COption::GetOptionString('cleantalk.antispam', 'key', '') : $ct_key_site;
@@ -1905,7 +1905,7 @@ class CleantalkAntispam {
         if(empty($id) || intval($id) < 0)
             return;
 
-        $ret_val = $DB->Query('SELECT ct_request_id, ct_result_comment FROM cleantalk_cids WHERE module=\''. $module .'\' AND cid=' . $id)->Fetch();
+        $ret_val = $DB->Query('SELECT ct_request_id, ct_result_comment FROM cleantalk_cids WHERE module=\''. $DB->ForSql($module) .'\' AND cid=' . (int)$id)->Fetch();
         return $ret_val;
     }
 

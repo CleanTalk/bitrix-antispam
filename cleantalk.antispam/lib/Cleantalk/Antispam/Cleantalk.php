@@ -281,10 +281,10 @@ class Cleantalk {
             // see http://stackoverflow.com/a/23322368
             curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
 
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disabling CA cert verivication and
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);     // Disabling common name verification
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); // Verify CA certificate
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);    // Verify common name matches host
 
-            if ($this->ssl_on && $this->ssl_path != '') {
+            if ($this->ssl_path != '') {
                 curl_setopt($ch, CURLOPT_CAINFO, $this->ssl_path);
             }
 

@@ -40,9 +40,12 @@ while( $site = $sites_from_bd->Fetch() ) {
 
 $subTabControl = new CAdminViewTabControl("subTabControl", $sub_tabs);
 
-$current_options = ct_get_options($sModuleId);
+    $current_options = ct_get_options($sModuleId);
 
-if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' ) {
+    global $APPLICATION;
+    $ct_module_right = $APPLICATION->GetGroupRight($sModuleId);
+
+if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] == 'Y' && check_bitrix_sessid() && $ct_module_right >= 'W' ) {
     //try to get default options
     $default_options = ct_get_default_options($sModuleId);
 
@@ -218,18 +221,30 @@ if ( ! empty($REQUEST_METHOD) && $REQUEST_METHOD == 'POST' && $_POST['Update'] =
             // Convert to lowercase and trim
             $domain = strtolower(trim($domain));
             // use default bitrix http client to make request
-            $httpClient = new \Bitrix\Main\Web\HttpClient();
-            $response = $httpClient->get('https://moderate.' . $domain);
-            if ($response === false) {
+            $allowed_servers = array('cleantalk.org', 'cleantalk.ru');
+            if ( ! in_array($domain, $allowed_servers, true) ) {
                 Option::set( $sModuleId, 'use_custom_server', '' );
                 CAdminNotify::Add(array(
-                    'MESSAGE' => GetMessage( 'CLEANTALK_SERVER_NOT_AVAILABLE' ),
-                    'TAG' => 'server_not_available',
+                    'MESSAGE' => GetMessage( 'CLEANTALK_SERVER_NOT_ALLOWED' ),
+                    'TAG' => 'server_not_allowed',
                     'MODULE_ID' => 'main',
                     'ENABLE_CLOSE' => 'Y'));
             } else {
-                Option::set( $sModuleId, 'use_custom_server', $domain );
-                CAdminNotify::DeleteByTag('server_not_available');
+                // use default bitrix http client to make request
+                $httpClient = new \Bitrix\Main\Web\HttpClient();
+                $response = $httpClient->get('https://moderate.' . $domain);
+                if ($response === false) {
+                    Option::set( $sModuleId, 'use_custom_server', '' );
+                    CAdminNotify::Add(array(
+                        'MESSAGE' => GetMessage( 'CLEANTALK_SERVER_NOT_AVAILABLE' ),
+                        'TAG' => 'server_not_available',
+                        'MODULE_ID' => 'main',
+                        'ENABLE_CLOSE' => 'Y'));
+                } else {
+                    Option::set( $sModuleId, 'use_custom_server', $domain );
+                    CAdminNotify::DeleteByTag('server_not_available');
+                    CAdminNotify::DeleteByTag('server_not_allowed');
+                }
             }
         }
     }
@@ -404,16 +419,16 @@ $oTabControl->Begin();
             <!--LABEL-->
             <td width="50%" valign="top"><label for="key"><?php echo GetMessage( 'CLEANTALK_LABEL_KEY' );?>:</td>
             <td  valign="top">
-                <input type="text" name="key" id="key" value="<?php echo $current_options['key'] ?>" /> <span><?php
+                <input type="text" name="key" id="key" value="<?php echo htmlspecialcharsbx($current_options['key']) ?>" /> <span><?php
                     if ($key_is_ok === '0') {
                         echo "<span style='color: red'>".GetMessage( 'CLEANTALK_KEY_NOT_VALID' )."</span>";
                     }
                     ?></span>
                 <!--HIDDEN FIELDSET-->
-                <input type="hidden" name="is_paid" value="<?php echo $current_options['is_paid'] ?>" />
+                <input type="hidden" name="is_paid" value="<?php echo htmlspecialcharsbx($current_options['is_paid']) ?>" />
                 <input type="hidden" name="last_checked" value="0" />
-                <input type="hidden" name="moderate_ip" value="<?php echo $current_options['moderate_ip'] ?>" />
-                <input type="hidden" name="ip_license" value="<?php echo $current_options['ip_license'] ?>" />
+                <input type="hidden" name="moderate_ip" value="<?php echo htmlspecialcharsbx($current_options['moderate_ip']) ?>" />
+                <input type="hidden" name="ip_license" value="<?php echo htmlspecialcharsbx($current_options['ip_license']) ?>" />
             </td>
             <?php
         }
@@ -423,7 +438,7 @@ $oTabControl->Begin();
     <?php if ( $key_is_ok === '0' ){ ?>
         <tr>
             <td width="50%" valign="top">
-                <a target="_blank" href="https://cleantalk.org/register?platform=bitrix&email=<?php echo Option::get("main", "email_from"); ?>&website=<?php echo $_SERVER["SERVER_NAME"]; ?>">
+                <a target="_blank" href="https://cleantalk.org/register?platform=bitrix&email=<?php echo urlencode(Option::get("main", "email_from")); ?>&website=<?php echo urlencode($_SERVER["SERVER_NAME"]); ?>">
                     <input
                             type="button"
                             name="getmanualkey"
@@ -443,13 +458,13 @@ $oTabControl->Begin();
         </tr>
         <?php } ?>
         <tr>
-            <td colspan='2' style='text-align: center;'><?php echo GetMessage( 'CLEANTALK_EMAIL_REGISTRATION_WARNING' )."(". Option::get("main", "email_from"); ?>).<br> <a target="_blank" href="https://cleantalk.org/publicoffer"><?php echo GetMessage( 'CLEANTALK_LICENSE_AGREEMENT' ); ?></a></td>
+            <td colspan='2' style='text-align: center;'><?php echo GetMessage( 'CLEANTALK_EMAIL_REGISTRATION_WARNING' )."(". htmlspecialcharsbx(Option::get("main", "email_from")); ?>).<br> <a target="_blank" href="https://cleantalk.org/publicoffer"><?php echo GetMessage( 'CLEANTALK_LICENSE_AGREEMENT' ); ?></a></td>
         </tr>
     <?php }else{ ?>
         <tr>
             <td width="50%"></td>
             <td valign="top">
-                <a target="_blank" href="https://cleantalk.org/my?user_token=<?php echo $current_options['user_token']; ?>">
+                <a target="_blank" href="https://cleantalk.org/my?user_token=<?php echo urlencode($current_options['user_token']); ?>">
                     <input type="button" name="getmanualkey" value="<?php echo GetMessage( 'CLEANTALK_GET_TO_CP' ) ?>" />
                 </a>
             </td>
@@ -473,7 +488,7 @@ $oTabControl->Begin();
                     $api_key_subsite = Option::get($sModuleId, '_key', '', $site_id);
                     ?>
                     <?= GetMessage( 'CLEANTALK_MULTISITE_LABEL_KEY' ) ?>
-                    <input type="text" name="key_<?= $site_id ?>" id="key_<?= $site_id ?>" value="<?= $api_key_subsite ?>" />
+                    <input type="text" name="key_<?= $site_id ?>" id="key_<?= $site_id ?>" value="<?= htmlspecialcharsbx($api_key_subsite) ?>" />
             <?php }
                 $subTabControl->End();
             ?>
@@ -691,7 +706,7 @@ $oTabControl->Begin();
             <div class="ui-ctl ui-ctl-textarea">
                     <?php
                     echo ('<textarea class="ui-ctl-element" name="form_exclusions_url" id="form_exclusions_url" cols="45" rows="10">');
-                    echo ($current_options['form_exclusions_url']);
+                    echo htmlspecialcharsbx($current_options['form_exclusions_url']);
                     echo ('</textarea>');
                     ?>
             </div>
@@ -717,7 +732,7 @@ $oTabControl->Begin();
             <label for="form_exclusions_fields"><?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_FIELDS' );?>:</td>
         <td  valign="top">
             <div class="ui-ctl ui-ctl-textarea">
-                <input type="text" name="form_exclusions_fields" id="form_exclusions_fields" value="<?php echo $current_options['form_exclusions_fields']; ?>" />
+                <input type="text" name="form_exclusions_fields" id="form_exclusions_fields" value="<?php echo htmlspecialcharsbx($current_options['form_exclusions_fields']); ?>" />
             </div>
             <input
                     type="checkbox"
@@ -744,7 +759,7 @@ $oTabControl->Begin();
                     type="text"
                     name="form_exclusions_webform"
                     id="form_exclusions_webform"
-                    value="<?php echo $current_options['form_exclusions_webform']; ?>" />
+                    value="<?php echo htmlspecialcharsbx($current_options['form_exclusions_webform']); ?>" />
             <div style="padding: 10px 0 10px 0">
                 <?php echo GetMessage( 'CLEANTALK_EXCLUSIONS_WEBFORM_DESCRIPTION' ); ?>
             </div>
@@ -773,17 +788,17 @@ $oTabControl->Begin();
                     type="text"
                     name="use_custom_server"
                     id="use_custom_server"
-                    value="<?php echo $current_options['use_custom_server']; ?>" />
+                    value="<?php echo htmlspecialcharsbx($current_options['use_custom_server']); ?>" />
             <div style="padding: 10px 0 10px 0">
                 <?php echo GetMessage( 'CLEANTALK_USE_CUSTOM_SERVER_DESCRIPTION' ); ?>
             </div>
         </td>
     </tr>
     <!--HIDDEN FIELDSET-->
-    <input type="hidden" name="is_paid" value="<?php echo $current_options['is_paid'] ?>" />
+    <input type="hidden" name="is_paid" value="<?php echo htmlspecialcharsbx($current_options['is_paid']) ?>" />
     <input type="hidden" name="last_checked" value="0" />
-    <input type="hidden" name="moderate_ip" value="<?php echo $current_options['moderate_ip'] ?>" />
-    <input type="hidden" name="ip_license" value="<?php echo $current_options['ip_license'] ?>" />
+    <input type="hidden" name="moderate_ip" value="<?php echo htmlspecialcharsbx($current_options['moderate_ip']) ?>" />
+    <input type="hidden" name="ip_license" value="<?php echo htmlspecialcharsbx($current_options['ip_license']) ?>" />
     <?php $oTabControl->Buttons(); ?>
     <input type="submit" name="Update" value="<?php echo GetMessage( 'CLEANTALK_BUTTON_SAVE' ) ?>" />
     <input type="submit" name="reset" value="<?php echo GetMessage( 'CLEANTALK_BUTTON_RESET' ) ?>" />

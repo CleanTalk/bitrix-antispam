@@ -234,7 +234,13 @@ abstract class Cron
             return;
         }
 
+        $allowed_handlers = array('apbct_sfw_update', 'apbct_sfw_send_logs');
+
         foreach( $tasks as $task ){
+
+            if( ! in_array( $this->tasks[$task]['handler'], $allowed_handlers, true ) ) {
+                continue;
+            }
 
             if( method_exists( '\CleantalkAntispam',$this->tasks[$task]['handler'] ) ){
 
