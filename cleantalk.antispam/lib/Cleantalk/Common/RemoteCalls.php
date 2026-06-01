@@ -72,7 +72,7 @@ abstract class RemoteCalls
                 $this->setLastCall( $action );
 
                 // Check API key
-                if( $token === strtolower( md5( $this->api_key ) ) ){
+                if( ! empty( $this->api_key ) && $token === strtolower( md5( $this->api_key ) ) ){
 
                     // Flag to let plugin know that Remote Call is running.
                     $this->rc_running = true;
@@ -82,8 +82,9 @@ abstract class RemoteCalls
                     if( method_exists( static::class, $action_method ) ){
 
                         // Delay before perform action;
-                        if ( Get::get( 'delay' ) ) {
-                            sleep(Get::get('delay'));
+                        $delay = (int) Get::get( 'delay' );
+                        if ( $delay > 0 ) {
+                            sleep( min( $delay, 5 ) );
                         }
 
                         $action_result = static::$action_method();
