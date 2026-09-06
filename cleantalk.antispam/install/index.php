@@ -11,7 +11,7 @@ use Bitrix\Main\Config\Option;
 /**
  * Installer for CleanTalk module
  *
- * @author 	Cleantalk team <http://cleantalk.org>
+ * @author 	Cleantalk team <https://cleantalk.org>
  */
 class cleantalk_antispam extends CModule {
 

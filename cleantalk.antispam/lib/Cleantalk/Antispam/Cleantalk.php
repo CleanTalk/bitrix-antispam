@@ -9,7 +9,7 @@ namespace Cleantalk\Antispam;
  * @package Cleantalk
  * @subpackage Base
  * @author Cleantalk team (welcome@cleantalk.org)
- * @copyright (C) 2014 CleanTalk team (http://cleantalk.org)
+ * @copyright (C) 2014 CleanTalk team (https://cleantalk.org)
  * @license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
  * @see https://github.com/CleanTalk/php-antispam 
  *
@@ -281,10 +281,10 @@ class Cleantalk {
             // see http://stackoverflow.com/a/23322368
             curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
 
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disabling CA cert verivication and
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);     // Disabling common name verification
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); // Verify CA certificate
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);    // Verify common name matches host
 
-            if ($this->ssl_on && $this->ssl_path != '') {
+            if ($this->ssl_path != '') {
                 curl_setopt($ch, CURLOPT_CAINFO, $this->ssl_path);
             }
 

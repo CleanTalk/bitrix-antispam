@@ -8,7 +8,7 @@ namespace Cleantalk\Common;
  * @package Antispam by CleanTalk
  * @Version 2.1.1
  * @author Cleantalk team (welcome@cleantalk.org)
- * @copyright (C) 2014 CleanTalk team (http://cleantalk.org)
+ * @copyright (C) 2014 CleanTalk team (https://cleantalk.org)
  * @license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
  *
  */
@@ -234,7 +234,13 @@ abstract class Cron
             return;
         }
 
+        $allowed_handlers = array('apbct_sfw_update', 'apbct_sfw_send_logs');
+
         foreach( $tasks as $task ){
+
+            if( ! in_array( $this->tasks[$task]['handler'], $allowed_handlers, true ) ) {
+                continue;
+            }
 
             if( method_exists( '\CleantalkAntispam',$this->tasks[$task]['handler'] ) ){
 

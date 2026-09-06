@@ -44,11 +44,11 @@ class SFW extends \Cleantalk\Common\Firewall\Modules\SFW
 				'{SFW_DIE_CLICK_TO_PASS}'          => $this->__('Please click the link below to pass the protection,', 'cleantalk-spam-protect'),
 				'{SFW_DIE_YOU_WILL_BE_REDIRECTED}' => sprintf( $this->__('Or you will be automatically redirected to the requested page after %d seconds.', 'cleantalk-spam-protect'), 3),
 				'{CLEANTALK_TITLE}'                => ($this->test ? $this->__('This is the testing page for SpamFireWall', 'cleantalk-spam-protect') : ''),
-				'{REMOTE_ADDRESS}'                 => $result['ip'],
+				'{REMOTE_ADDRESS}'                 => htmlspecialcharsbx($result['ip']),
 				'{SERVICE_ID}'                     => $net_count['net_count'],
 				'{HOST}'                           => '',
 				'{GENERATED}'                      => '<p>The page was generated at&nbsp;' . date( 'D, d M Y H:i:s' ) . "</p>",
-				'{REQUEST_URI}'                    => $request_uri,
+				'{REQUEST_URI}'                    => htmlspecialcharsbx($request_uri),
 				
 				// Cookie
 				'{COOKIE_PREFIX}'      => '',
@@ -99,7 +99,7 @@ class SFW extends \Cleantalk\Common\Firewall\Modules\SFW
 			
 		}
 
-        die( "IP BLACKLISTED. Blocked by SFW " . $result['ip'] );
+        die( "IP BLACKLISTED. Blocked by SFW " . htmlspecialcharsbx($result['ip']) );
 
     }
 
