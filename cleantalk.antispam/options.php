@@ -350,7 +350,7 @@ function ct_get_options($sModuleId){
 }
 
 // Check CURL available
-$curl_available = !function_exists('curl_init');
+$curl_available = function_exists('curl_init');
 if ( ! $curl_available ) {
     $messageData = [
             "MESSAGE" => GetMessage('CLEANTALK_CURL_NOT_AVAILABLE'),
