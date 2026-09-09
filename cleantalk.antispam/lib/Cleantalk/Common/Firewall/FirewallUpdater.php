@@ -217,10 +217,10 @@ class FirewallUpdater
 
                         if( empty( $result['error'] ) && is_int( $result ) ) {
 
-                            // @todo We have to handle errors here
-                            $this->deleteMainDataTables();
-                            // @todo We have to handle errors here
-                            $this->renameDataTables();
+                            $atomic_result = $this->replaceDataTablesAtomically();
+                            if( ! empty( $atomic_result['error'] ) ){
+                                return array( 'error' => 'SFW_UPDATE: ' . $atomic_result['error'] );
+                            }
 
                             //Files array is empty update sfw stats
                             $helper::SfwUpdate_DoFinisnAction();
@@ -379,23 +379,65 @@ class FirewallUpdater
     }
 
     /**
-     * Removing a temporary updating table
+     * Replace main SFW table with temp table atomically using RENAME TABLE.
+     * Main is renamed to _old, temp to main in one statement so the table is never missing.
+     * Same approach as in WordPress plugin (replaceDataTablesAtomically).
      *
-     * @param DB $db database handler
+     * @return true|array true on success, array with 'error' key on failure
      */
-    private function deleteMainDataTables()
+    private function replaceDataTablesAtomically()
     {
-        $this->db->execute( 'DROP TABLE `'. APBCT_TBL_FIREWALL_DATA .'`;' );
+        $table_name = $this->db->prefix . $this->fw_data_table_name;
+        $table_name_temp = $table_name . '_temp';
+        $table_name_old = $table_name . '_old';
+
+        if( ! $this->isTableExists( $table_name_temp ) ){
+            return array( 'error' => 'ATOMIC RENAME: TEMP TABLE NOT EXISTS: ' . $table_name_temp );
+        }
+
+        if( $this->isTableExists( $table_name_old ) ){
+            if( $this->db->execute( 'DROP TABLE IF EXISTS `' . $table_name_old . '`;' ) === false ){
+                return array(
+                    'error' => 'ATOMIC RENAME: FAILED TO DROP OLD TABLE: ' . $table_name_old
+                    . ( $this->db->get_last_error() ? ' DB Error: ' . $this->db->get_last_error() : '' )
+                );
+            }
+        }
+
+        if( $this->isTableExists( $table_name ) ){
+            $query = 'RENAME TABLE `' . $table_name . '` TO `' . $table_name_old . '`, `' . $table_name_temp . '` TO `' . $table_name . '`;';
+        } else {
+            $query = 'RENAME TABLE `' . $table_name_temp . '` TO `' . $table_name . '`;';
+        }
+
+        if( $this->db->execute( $query ) === false ){
+            return array(
+                'error' => 'ATOMIC RENAME: FAILED: ' . $query
+                . ( $this->db->get_last_error() ? ' DB Error: ' . $this->db->get_last_error() : '' )
+            );
+        }
+
+        if( $this->isTableExists( $table_name_old ) ){
+            $this->db->execute( 'DROP TABLE IF EXISTS `' . $table_name_old . '`;' );
+        }
+
+        return true;
     }
 
     /**
-     * Renamin a temporary updating table into production table name
+     * Check if a table exists in the database.
      *
-     * @param DB $db database handler
+     * @param string $table_name
+     * @return bool
      */
-    private function renameDataTables()
+    private function isTableExists( $table_name )
     {
-        $this->db->execute( 'ALTER TABLE `'. APBCT_TBL_FIREWALL_DATA .'_temp` RENAME `'. APBCT_TBL_FIREWALL_DATA .'`;' );
+        $sql = "SHOW TABLES LIKE '" . addslashes( $table_name ) . "';";
+        $result = $this->db->fetch( $sql );
+        if( is_array( $result ) ){
+            return ! empty( $result );
+        }
+        return (bool) $result;
     }
 
 }

@@ -23,7 +23,7 @@ use Cleantalk\Common\Variables\Server;
 use Cleantalk\ApbctBitrix\SFW;
 
 if ( ! defined( 'CLEANTALK_USER_AGENT' ) )
-    define( 'CLEANTALK_USER_AGENT', 'bitrix-3.15.0' );
+    define( 'CLEANTALK_USER_AGENT', 'bitrix-3.16.0' );
 
 define('APBCT_TBL_FIREWALL_DATA', 'cleantalk_sfw');      // Table with firewall data.
 define('APBCT_TBL_FIREWALL_LOG',  'cleantalk_sfw_logs'); // Table with firewall logs.
@@ -33,6 +33,14 @@ define('APBCT_TBL_SESSIONS',      'cleantalk_sessions'); // Table with session d
 define('APBCT_SPAMSCAN_LOGS',     'cleantalk_spamscan_logs'); // Table with session data.
 define('APBCT_SELECT_LIMIT',      5000); // Select limit for logs.
 define('APBCT_WRITE_LIMIT',       5000); // Write limit for firewall data.
+
+// Register IntegrationFactory for autoload
+\Bitrix\Main\Loader::registerAutoLoadClasses(
+    'cleantalk.antispam',
+    [
+        'Cleantalk\\Antispam\\Integrations\\IntegrationFactory' => 'lib/Cleantalk/Integrations/IntegrationFactory.php',
+    ]
+);
 
 
 /**
@@ -83,18 +91,25 @@ class CleantalkAntispam {
      * Show message when spam is blocked
      * @param string message
      */
+    private static function CleantalkDie($message){
 
-    static function CleantalkDie($message){
+        $default_message = 'Forbidden. Seems to be spam. Anti-Spam by CleanTalk';
 
-        if( isset( $_POST['feedback_type'] ) && $_POST['feedback_type'] == 'buyoneclick' ) {
+        if (!is_string($message) || empty($message)) {
+            $message = $default_message;
+        }
 
-            $result = Array( 'error' => true, 'msg' => 'js_kr_error_send' );
-            print json_encode( $result );
+        $output_string = $message;
 
-            // AJAX response
-        }elseif( isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) && strtolower( $_SERVER['HTTP_X_REQUESTED_WITH'] ) == 'xmlhttprequest'){
+        // CUSTOM BLOCK
+        if ( isset( $_POST['feedback_type'] ) && $_POST['feedback_type'] == 'buyoneclick' ) {
+            $output_string = json_encode(array( 'error' => true, 'msg' => 'js_kr_error_send' ));
+            static::CleantalkJSONDie($output_string);
+        }
 
-            die(json_encode(array(
+        // AJAX FLOW
+        if ( static::isAjaxFlow() ){
+            $output_string = json_encode(array(
                 'apbct' => array(
                     'blocked' => true,
                     'comment' => $message,
@@ -102,17 +117,102 @@ class CleantalkAntispam {
                 'error' => array(
                     'msg' => $message,
                 )
-            )));
-
-        }else{
-
-            $error_tpl = file_get_contents( dirname( __FILE__ ) . "/error.html" );
-            print str_replace( '%ERROR_TEXT%', $message, $error_tpl );
-
+            ));
+            static::CleantalkJSONDie($output_string);
         }
 
-        die();
+        // DIE WITH HTML TEMPLATE
+        $error_tpl = @file_get_contents( dirname( __FILE__ ) . "/error.html" );
+        if (false !== $error_tpl) {
+            if (stripos($error_tpl, '<meta charset=') === false) {
+                $error_tpl = str_replace('<head>', '<head><meta charset="UTF-8">', $error_tpl);
+            }
+            $output_string = str_replace('%ERROR_TEXT%', $message, $error_tpl);
+            static::CleantalkHTMLDie($output_string);
+        }
+
+        // DIE WITH TEXT BY DEFAULT
+        static::CleantalkTextDie($output_string);
     }
+
+    /**
+     * Check if is AJAX flow detected.
+     * @return bool
+     */
+    private static function isAjaxFlow()
+    {
+        // AJAX FLOW - comprehensive detection
+        return (
+            // Traditional XMLHttpRequest
+            (
+                isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest'
+            ) ||
+            // Fetch API with JSON response expected
+            (
+                isset($_SERVER['HTTP_ACCEPT']) &&
+                strpos(strtolower($_SERVER['HTTP_ACCEPT']), 'application/json') !== false
+            ) ||
+            // Other common AJAX patterns
+            (
+                isset($_SERVER['HTTP_ACCEPT']) &&
+                (
+                    strpos(strtolower($_SERVER['HTTP_ACCEPT']), 'application/xml') !== false ||
+                    strpos(strtolower($_SERVER['HTTP_ACCEPT']), 'text/xml') !== false
+                )
+            )
+        );
+    }
+
+    /**
+     * Die with application/json header.
+     * @param string $response_string
+     *
+     * @return void
+     */
+    private static function CleantalkJSONDie($response_string)
+    {
+        if (!headers_sent()) {
+            http_response_code(403);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            header('Pragma: no-cache');
+            header('Content-Type: application/json; charset=UTF-8');
+        }
+        die($response_string);
+    }
+    /**
+     * Die with text/plain header.
+     * @param string $response_string
+     *
+     * @return void
+     */
+    private static function CleantalkTextDie($response_string)
+    {
+        if (!headers_sent()) {
+            http_response_code(403);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            header('Pragma: no-cache');
+            header('Content-Type: text/plain; charset=UTF-8');
+        }
+        die($response_string);
+    }
+    /**
+     * Die with text/html header.
+     * @param string $response_string
+     *
+     * @return void
+     */
+    private static function CleantalkHTMLDie($response_string)
+    {
+        if (!headers_sent()) {
+            http_response_code(403);
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            header('Pragma: no-cache');
+            header('Content-Type: text/html; charset=UTF-8');
+        }
+        die($response_string);
+    }
+
     private static function apbct_run_cron()
     {
         $cron = new Cron();
@@ -164,6 +264,7 @@ class CleantalkAntispam {
         $last_checked            = COption::GetOptionInt( 'cleantalk.antispam', 'last_checked', 0 );
         $show_review             = COption::GetOptionInt( 'cleantalk.antispam', 'show_review', 0 );
         $bot_detector            = COption::GetOptionInt( 'cleantalk.antispam', 'bot_detector', 0 );
+        $form_external_ajax            = COption::GetOptionInt( 'cleantalk.antispam', 'form_external_ajax', 0 );
         $is_sfw                  = COption::GetOptionInt( 'cleantalk.antispam', 'form_sfw', 0 );
         $sfw_last_update         = COption::GetOptionInt( 'cleantalk.antispam',  'sfw_last_update', 0);
         $sfw_last_send_log       = COption::GetOptionInt( 'cleantalk.antispam',  'sfw_last_send_log', 0);
@@ -181,13 +282,18 @@ class CleantalkAntispam {
 
         if( ! $USER->IsAdmin() ){
 
+            // JS External protection
+            if ($form_external_ajax) {
+                Asset::getInstance()->addJs('/bitrix/js/cleantalk.antispam/cleantalk-antispam-external-protection.js');
+            }
+
             if ( $bot_detector ) {
                 if (class_exists('COption')) {
                     $use_custom_server = \COption::GetOptionString( 'cleantalk.antispam', 'use_custom_server', '' );
                     if ($use_custom_server !== '') {
                         Asset::getInstance()->addJs('https://moderate.' . $use_custom_server . '/ct-bot-detector-wrapper.js');
                     } else {
-                        Asset::getInstance()->addJs('https://moderate.cleantalk.org/ct-bot-detector-wrapper.js');
+                        Asset::getInstance()->addJs('https://fd.cleantalk.org/ct-bot-detector-wrapper.js');
                     }
                 }
             }
@@ -235,6 +341,12 @@ class CleantalkAntispam {
                     strpos($_SERVER['REQUEST_URI'], 'bitrix/tools/conversion/') !== false
                 )
                 {
+                    return;
+                }
+
+                // Do skip for the registration requests - this have the direct integration hooked by OnBeforeUserRegisterHandler
+                $ct_new_user = COption::GetOptionInt('cleantalk.antispam', 'form_new_user', 0);
+                if ( $ct_new_user && isset($_POST['REGISTER'], $_POST['REGISTER']['EMAIL'], $_POST['REGISTER']['PASSWORD']) ) {
                     return;
                 }
 
@@ -445,6 +557,48 @@ class CleantalkAntispam {
                         $APPLICATION->ThrowException($aResult['ct_result_comment']);
                         return false;
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * Checking the post (for example, for the blog module)
+     * @param array &$arFields
+     * @return null|boolean
+     */
+    static function OnBeforePostAddHandler(&$arFields)
+    {
+        global $APPLICATION, $USER;
+        $ct_status = COption::GetOptionInt('cleantalk.antispam', 'status', 0);
+        if ($ct_status != 1) {
+            return;
+        }
+
+        $aPost = array();
+        $aPost['type'] = 'comment';
+        $aPost['sender_email'] = '';
+        if (isset($arFields['AUTHOR_EMAIL'])) {
+            $aPost['sender_email'] = $arFields['AUTHOR_EMAIL'];
+        } elseif (isset($arFields['EMAIL'])) {
+            $aPost['sender_email'] = $arFields['EMAIL'];
+        } elseif (is_object($USER) && $USER->IsAuthorized()) {
+            $aPost['sender_email'] = $USER->GetEmail();
+        }
+        $aPost['sender_nickname'] = isset($arFields['AUTHOR_NAME']) ? $arFields['AUTHOR_NAME'] : '';
+        $aPost['subject'] = isset($arFields['TITLE']) ? $arFields['TITLE'] : '';
+        $aPost['message'] = isset($arFields['DETAIL_TEXT']) ? array($arFields['DETAIL_TEXT']) : array();
+        $aPost['example'] = array();
+
+        $aResult = self::CheckAllBefore($aPost, TRUE);
+
+        if(isset($aResult) && is_array($aResult)){
+            if($aResult['errno'] == 0){
+                if($aResult['allow'] == 1){
+                    return; // Не спам
+                }else{
+                    $APPLICATION->ThrowException($aResult['ct_result_comment']);
+                    return false;
                 }
             }
         }
@@ -1396,6 +1550,11 @@ class CleantalkAntispam {
                 'event_token' => isset($_POST['ct_bot_detector_event_token']) ? $_POST['ct_bot_detector_event_token'] : null,
             );
 
+            // Fix encoding recursively for message
+            if (is_array($arEntity['message'])) {
+                $arEntity['message'] = self::fix_encoding_recursive($arEntity['message']);
+            }
+
             switch ($type) {
                 case 'topic_add':
                 case 'comment':
@@ -1593,6 +1752,30 @@ class CleantalkAntispam {
         }
 
         return false;
+    }
+
+    /**
+     * Fix encoding recursively in array
+     * @param array $array
+     * @param string $from
+     * @param string $to
+     */
+    private static function fix_encoding_recursive($array, $from = 'CP1251', $to = 'UTF-8') {
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $array[$key] = self::fix_encoding_recursive($value, $from, $to);
+            } else {
+                if (is_string($value) && !mb_check_encoding($value, $to)) {
+                    $converted = iconv($from, $to . '//IGNORE', $value);
+                    if (mb_check_encoding($converted, $to)) {
+                        $array[$key] = $converted;
+                    } else {
+                        unset($array[$key]);
+                    }
+                }
+            }
+        }
+        return $array;
     }
 
     /**

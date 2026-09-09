@@ -73,29 +73,42 @@ class cleantalk_antispam extends CModule {
 
     function DoInstall() {
         global $DOCUMENT_ROOT, $APPLICATION;
-		
+
 		//Installng DB
-        if($this->InstallDB() && $this->InstallFiles()){	
+        if($this->InstallDB() && $this->InstallFiles()){
 			RegisterModule('cleantalk.antispam');
-            RegisterModuleDependences('main', 'OnPageStart', 'cleantalk.antispam', 'CleantalkAntispam', 'OnPageStartHandler');
-            RegisterModuleDependences('main', 'OnEventLogGetAuditTypes', 'cleantalk.antispam', 'CleantalkAntispam', 'OnEventLogGetAuditTypesHandler');
+			RegisterModuleDependences('main', 'OnPageStart', 'cleantalk.antispam', 'CleantalkAntispam', 'OnPageStartHandler');
+			RegisterModuleDependences('main', 'OnEventLogGetAuditTypes', 'cleantalk.antispam', 'CleantalkAntispam', 'OnEventLogGetAuditTypesHandler');
 			RegisterModuleDependences('main', 'OnBeforeUserRegister', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeUserRegisterHandler');
-            RegisterModuleDependences('main', 'OnBeforeUserSimpleRegister', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeUserRegisterHandler');
-            RegisterModuleDependences('main', 'OnBeforeUserAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeUserRegisterHandler');
+			RegisterModuleDependences('main', 'OnBeforeUserSimpleRegister', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeUserRegisterHandler');
+			RegisterModuleDependences('main', 'OnBeforeUserAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeUserRegisterHandler');
 			RegisterModuleDependences('main', 'OnEndBufferContent', 'cleantalk.antispam', 'CleantalkAntispam', 'OnEndBufferContentHandler');
-            if (IsModuleInstalled('blog')){
-              RegisterModuleDependences('blog', 'OnBeforeCommentAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeCommentAddHandler');
-            }
-            if (IsModuleInstalled('forum')){
-              RegisterModuleDependences('forum', 'OnBeforeMessageAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeMessageAddHandler');
-              RegisterModuleDependences('forum', 'OnAfterMessageAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnAfterMessageAddHandler');
-              RegisterModuleDependences('forum', 'OnMessageModerate', 'cleantalk.antispam', 'CleantalkAntispam', 'OnMessageModerateHandler');
-              RegisterModuleDependences('forum', 'OnBeforeMessageDelete', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeMessageDeleteHandler');
-			  RegisterModuleDependences('forum', 'onBeforePMSend', 'cleantalk.antispam', 'CleantalkAntispam', 'onBeforePMSendHandler');
-            }
-            if (IsModuleInstalled('prmedia.treelikecomments')){
-              RegisterModuleDependences('prmedia.treelikecomments', 'OnBeforePrmediaCommentAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforePrmediaCommentAddHandler');
-            }
+			if (IsModuleInstalled('blog')){
+				RegisterModuleDependences(
+					'blog',
+					'OnBeforeCommentAdd',
+					'cleantalk.antispam',
+					'CleantalkAntispam',
+					'OnBeforeCommentAddHandler'
+				);
+				RegisterModuleDependences(
+					"blog",
+					"OnBeforePostAdd",
+					"cleantalk.antispam",
+					"CleantalkAntispam",
+					"OnBeforePostAddHandler"
+				);
+			}
+			if (IsModuleInstalled('forum')){
+				RegisterModuleDependences('forum', 'OnBeforeMessageAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeMessageAddHandler');
+				RegisterModuleDependences('forum', 'OnAfterMessageAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnAfterMessageAddHandler');
+				RegisterModuleDependences('forum', 'OnMessageModerate', 'cleantalk.antispam', 'CleantalkAntispam', 'OnMessageModerateHandler');
+				RegisterModuleDependences('forum', 'OnBeforeMessageDelete', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeMessageDeleteHandler');
+				RegisterModuleDependences('forum', 'onBeforePMSend', 'cleantalk.antispam', 'CleantalkAntispam', 'onBeforePMSendHandler');
+			}
+			if (IsModuleInstalled('prmedia.treelikecomments')){
+				RegisterModuleDependences('prmedia.treelikecomments', 'OnBeforePrmediaCommentAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforePrmediaCommentAddHandler');
+			}
             if (IsModuleInstalled('bitrix.eshop'))
 			{
 				RegisterModuleDependences('sale', 'OnBeforeOrderAdd', 'cleantalk.antispam', 'CleantalkAntispam', 'OnBeforeOrderAddHandler');
@@ -190,49 +203,96 @@ class cleantalk_antispam extends CModule {
     }
 
     function InstallFiles() {
-     
-	    $results = $this->install_ct_template__in_dirs(
-		    $this->SAR_template_file,
-		    array(
-			    $this->SAR_bitrix_template_dir,
-			    $this->SAR_local_template_dir,
-			    /** @todo (.../bitrix/templates/.default/components/bitrix/system.auth.registration/) research it */
-			    // Copy system.auth.registration default template from system dir to local dir and insert addon into
-		    ),
-		    $this->SAR_pattern,
-		    $this->ct_template_addon_tag,
-		    $this->ct_template_addon_body
-	    );
-	    
-	    foreach ($results as $dir => $result){
-	    	if(is_dir($dir) && $result != 0){
-			    error_log('CLEANTALK_ERROR: INSTALLING_IN_TEMPLATE_FILES: ' . $dir . sprintf('%02d', $result ));
-		    }
-	    }
+		// Copy JS to public Bitrix directory
+		global $DOCUMENT_ROOT;
+		$publicJsDir = $DOCUMENT_ROOT . '/bitrix/js/cleantalk.antispam';
+		if (!is_dir($publicJsDir)) {
+			mkdir($publicJsDir, 0755, true);
+		}
+		$srcJs = dirname(__FILE__, 2) . '/js/cleantalk-antispam-external-protection.js';
+		$dstJs = $publicJsDir . '/cleantalk-antispam-external-protection.js';
+		if (file_exists($srcJs)) {
+			copy($srcJs, $dstJs);
+		}
+
+		// Copy ajax_handler.php to /bitrix/tools/cleantalk.antispam/
+		$toolsDir = $DOCUMENT_ROOT . '/bitrix/tools/cleantalk.antispam';
+		if (!is_dir($toolsDir)) {
+			mkdir($toolsDir, 0755, true);
+		}
+		$srcAjax = dirname(__FILE__, 2) . '/ajax_handler.php';
+		$dstAjax = $toolsDir . '/ajax_handler.php';
+		if (file_exists($srcAjax)) {
+			copy($srcAjax, $dstAjax);
+		}
+
+		$results = $this->install_ct_template__in_dirs(
+			$this->SAR_template_file,
+			array(
+				$this->SAR_bitrix_template_dir,
+				$this->SAR_local_template_dir,
+				/** @todo (.../bitrix/templates/.default/components/bitrix/system.auth.registration/) research it */
+				// Copy system.auth.registration default template from system dir to local dir and insert addon into
+			),
+			$this->SAR_pattern,
+			$this->ct_template_addon_tag,
+			$this->ct_template_addon_body
+		);
 	
+		foreach ($results as $dir => $result){
+			if(is_dir($dir) && $result != 0){
+				error_log('CLEANTALK_ERROR: INSTALLING_IN_TEMPLATE_FILES: ' . $dir . sprintf('%02d', $result ));
+			}
+		}
+
 		return true;
     }
 
     function UnInstallFiles() {
 	
-	    $results = $this->uninstall_ct_template__in_dirs(
-		    $this->SAR_template_file,
-		    array(
-			    $this->SAR_bitrix_template_dir,
-			    $this->SAR_local_template_dir,
-			    /** @todo (.../bitrix/templates/.default/components/bitrix/system.auth.registration/) research it */
-			    // Copy system.auth.registration default template from system dir to local dir and insert addon into
-	        ),
-		    $this->ct_template_addon_tag
-	    );
-	    foreach ($results as $dir => $result){
-		    if(is_dir($dir) && $result != 0){
-			    error_log('CLEANTALK_ERROR: UNINSTALLING_IN_TEMPLATE_FILES: ' . $dir . sprintf('%02d', $result ));
-		    }
-	    }
+			$results = $this->uninstall_ct_template__in_dirs(
+				$this->SAR_template_file,
+				array(
+					$this->SAR_bitrix_template_dir,
+					$this->SAR_local_template_dir,
+					/** @todo (.../bitrix/templates/.default/components/bitrix/system.auth.registration/) research it */
+					// Copy system.auth.registration default template from system dir to local dir and insert addon into
+				),
+				$this->ct_template_addon_tag
+			);
+			foreach ($results as $dir => $result){
+				if(is_dir($dir) && $result != 0){
+					error_log('CLEANTALK_ERROR: UNINSTALLING_IN_TEMPLATE_FILES: ' . $dir . sprintf('%02d', $result ));
+				}
+			}
 
-		return true;
+			// Remove JS directory
+			global $DOCUMENT_ROOT;
+			$publicJsDir = $DOCUMENT_ROOT . '/bitrix/js/cleantalk.antispam';
+			if (is_dir($publicJsDir)) {
+				$this->removeDirWithFiles($publicJsDir);
+			}
+
+			// Remove ajax_handler.php directory
+			$toolsDir = $DOCUMENT_ROOT . '/bitrix/tools/cleantalk.antispam';
+			if (is_dir($toolsDir)) {
+				$this->removeDirWithFiles($toolsDir);
+			}
+
+			return true;
     }
+
+	function removeDirWithFiles($dir) {
+		if (is_dir($dir)) {
+			$files = glob($dir . '/*');
+			foreach ($files as $file) {
+				if (is_file($file)) {
+					@unlink($file);
+				}
+			}
+			@rmdir($dir);
+		}
+	}
 
     function InstallDB() {
 		
