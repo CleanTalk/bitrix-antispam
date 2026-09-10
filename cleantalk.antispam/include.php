@@ -2135,7 +2135,13 @@ class CleantalkAntispam {
 
                 foreach (array_keys($form_data) as $key) {
                     foreach ($excluded_fields as $exclusion_regexp) {
-                        if (preg_match('/' . $exclusion_regexp . '/', $key) === 1) {
+                        $prev_limit = ini_set('pcre.backtrack_limit', 100000);
+                        $match_result = @preg_match('/' . $exclusion_regexp . '/', $key);
+                        ini_set('pcre.backtrack_limit', $prev_limit);
+                        if ($match_result === false) {
+                            continue;
+                        }
+                        if ($match_result === 1) {
                             unset($form_data[$key]);
                         }
                     }
