@@ -123,7 +123,7 @@ $arRes = (is_array($arRes) ? $arRes : array($arRes)); // info about topic, forum
 			</td>
 			<td class="forum-cell-post">
 				<div class="forum-post-date">
-					<div class="forum-post-number"><noindex><a rel="nofollow" href="http://<?=$_SERVER["HTTP_HOST"]?><?=$res["URL"]["MESSAGE"]?>#message<?=$res["ID"]?>" <?
+					<div class="forum-post-number"><noindex><a rel="nofollow" href="http://<?=htmlspecialcharsbx($_SERVER["HTTP_HOST"])?><?=htmlspecialcharsbx($res["URL"]["MESSAGE"])?>#message<?=(int)$res["ID"]?>" <?
 						?>onclick="prompt(this.title + ' [' + this.innerHTML + ']', this.href); return false;" title="<?=GetMessage("F_ANCHOR")?>">#<?=$res["NUMBER"]?></a></noindex><?
 				if ($arRes["USER"]["PERMISSION"] >= "Q" && $res["SHOW_CONTROL"] != "N"):
 					?>&nbsp;<input type="checkbox" name="message_id[]" value="<?=$res["ID"]?>" id="message_id_<?=$res["ID"]?>_" <?
