@@ -103,7 +103,7 @@ class CleantalkAntispam {
 
         // CUSTOM BLOCK
         if ( isset( $_POST['feedback_type'] ) && $_POST['feedback_type'] == 'buyoneclick' ) {
-            $output_string = json_encode(array( 'error' => true, 'msg' => 'js_kr_error_send' ));
+            $output_string = json_encode(array( 'error' => true, 'msg' => 'js_kr_error_send' ), JSON_UNESCAPED_UNICODE);
             static::CleantalkJSONDie($output_string);
         }
 
@@ -117,7 +117,7 @@ class CleantalkAntispam {
                 'error' => array(
                     'msg' => $message,
                 )
-            ));
+            ), JSON_UNESCAPED_UNICODE);
             static::CleantalkJSONDie($output_string);
         }
 
